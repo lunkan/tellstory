@@ -1,0 +1,78 @@
+{
+  "name": "tile",
+  "version": "1.0.0",
+  "tiles": [{
+    "name": "continent",
+    "attentionValue": 0,
+    "subTiles": [{
+      "name": "water",
+      "threshold": 0.25
+    }, {
+      "name": "land",
+      "threshold": 1
+    }]
+  }, {
+    "name": "water",
+    "attentionValue": 0,
+    "subTiles": [{
+      "name": "water",
+      "threshold": 1
+    }]
+  }, {
+    "name": "land",
+    "attentionValue": 0,
+    "subTiles": [{
+      "name": "forrest",
+      "threshold": 0.5
+    }, {
+      "name": "grassland",
+      "threshold": 1
+    }]
+  }, {
+    "name": "elevation",
+    "attentionValue": 0
+  }, {
+    "name": "forrest",
+    "attentionValue": 0,
+    "subTiles": [{
+      "name": "forrest",
+      "threshold": 0.75
+    }, {
+      "name": "village",
+      "threshold": 0.85
+    }, {
+      "name": "scattered-farmstead",
+      "threshold": 1
+    }]
+  }, {
+    "name": "grassland",
+    "attentionValue": 0,
+    "subTiles": [{
+      "name": "grassland",
+      "threshold": 0.5
+    }, {
+      "name": "village",
+      "threshold": 0.75
+    }, {
+      "name": "scattered-farmstead",
+      "threshold": 1
+    }]
+  }, {
+    "name": "village",
+    "attentionValue": 3,
+    "subTiles": [{
+      "name": "house",
+      "threshold": 1
+    }]
+  }, {
+    "name": "scattered-farmstead",
+    "attentionValue": 1,
+    "subTiles": [{
+      "name": "house",
+      "threshold": 1
+    }]
+  }, {
+    "name": "house",
+    "attentionValue": 1
+  }]
+}

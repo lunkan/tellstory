@@ -1,0 +1,142 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 2rem;
+}
+
+form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+input {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: #f4f4f4;
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+main {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.error {
+  color: #c00;
+}
+
+.wrapper {
+  display: flex;
+  width: 100%;
+  gap: 32px;
+}
+
+.column {
+  flex: 1 1 50%;
+}
+
+/* ******** */
+
+.feed--section-heading {
+  margin: 36px 0 24px;
+}
+
+.feed-direction--heading {
+  margin-bottom: 0;
+}
+
+.feed-direction--show-detail-btn {
+  border: 0;
+  font-size: 14px;
+  padding: 4px 8px;
+}
+
+.feed-direction--details-box {
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+  padding: 16px 16px 24px 16px;
+  margin: 24px 0;
+}
+
+.location-data--table {
+  border: solid 1px #ccc;
+  border-spacing: 0;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.location-data--table-ribbon {
+  background-color: #eee;
+  font-weight: 400;
+}
+
+.location-data--table td, .location-data--table th {
+  text-align: left;
+  border: solid 1px #ccc;
+  padding: 2px 4px;
+}
+
+.location-data--table td {
+  font-weight: 400;
+}
+
+.location-data--inner-table {
+  border-collapse: collapse;
+  border: 0;
+  border-spacing: 0;
+}
+
+.location-data--inner-table td, .location-data--inner-table th {
+  border: 0;
+}
+
+.id-label {
+  font-size: 12px;
+}
+
+.feed--heading {
+  font-size: 10px;
+  color: #333;
+  margin: 24px 0 12px;
+  text-transform: uppercase;
+}
+
+.debug-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 600px;
+  background-color: #fff;
+  padding: 24px;
+  box-sizing: border-box;
+  box-shadow: 1px 1px 10px 3px rgba(0, 0, 0, 0.25);
+  overflow: auto;
+}
+
+.debug-panel--open-btn, .debug-panel--close-btn {
+    border: 0;
+    padding: 6px 10px;
+    border-radius: 5px;
+    position: absolute;
+    right: 24px;
+    top: 24px;
+}

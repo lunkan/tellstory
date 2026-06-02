@@ -1,0 +1,159 @@
+import { QuadNodeKey } from "./quad-node-key";
+import { QuadNodeBounds } from "./quad-node-bounds";
+import { Tile } from "./tile";
+import { QuadNodeData as QuadNodeData, QuadNodePoint, QuadNodesRect } from "../../storyteller/types";
+
+export class QuadNode {
+    public readonly key: QuadNodeKey;
+    public readonly bounds: QuadNodeBounds;
+
+    public tile: Tile | undefined;
+
+    public get depth() {
+        return this.key.depth;
+    }
+
+    private _quadrants: QuadNode[] = [];
+
+    constructor(key: QuadNodeKey) {
+        this.key = key;
+        this.bounds = QuadNodeBounds.fromKey(this.key);
+    }
+
+    public getPoint(): QuadNodePoint {
+        return {
+            x: this.bounds.x,
+            y: this.bounds.y,
+            z: this.depth,
+        };
+    }
+
+    public getCenterPoint(): QuadNodePoint {
+        return {
+            x: this.bounds.x + this.bounds.size / 2,
+            y: this.bounds.y + this.bounds.size / 2,
+            z: this.depth,
+        }
+    }
+
+    public getQuadrants(createIfMissing?: boolean): QuadNode[] {
+        if (this._quadrants.length || !createIfMissing) {
+            return this._quadrants;
+        } else if (this.depth + 1 >= QuadNodeKey.MAX_DEPTH) {
+            return this._quadrants; // Creat no more levels after depth of MAX_DEPTH
+        }
+
+        for (let i = 0; i < 4; i++) {
+            const quadrantKey = this.key.createChildKey(i as any);
+            const quadrant = new QuadNode(quadrantKey);
+            this._quadrants.push(quadrant);
+        }
+
+        return this._quadrants;
+    }
+
+    public getQuadrantAt(x: 1 | 0, y: 1 | 0, createIfMissing?: boolean): QuadNode | undefined {
+        const quadrants = this.getQuadrants(createIfMissing);
+        if (x === 0 && y === 0) {
+            return quadrants[0];
+        } else if (x === 1 && y === 0) {
+            return quadrants[1];
+        } else if (x === 0 && y === 1) {
+            return quadrants[2];
+        } else if (x === 1 && y === 1) {
+            return quadrants[3];
+        }
+
+        return;
+    }
+
+    public findByKey(key: QuadNodeKey): QuadNode | undefined {
+        if (this.key.isMatch(key)) {
+            return this;
+        } else if (!this.key.isDescendant(key)) {
+            return;
+        }
+
+        for (const child of this.getQuadrants()) {
+            const node = child.findByKey(key);
+            if (node) {
+                return node;
+            }
+        }
+    }
+
+    public findByPoint(point: QuadNodePoint, createIfMissing: boolean): QuadNode | undefined {
+        if (this.depth > point.z || !this.bounds.contains2DPoint(point)) {
+            return;
+        } else if (this.depth === point.z) {
+            return this;
+        }
+
+        for (const quadrant of this.getQuadrants(createIfMissing)) {
+            const node = quadrant.findByPoint(point, createIfMissing);
+            if (node) {
+                return node;
+            }
+        }
+    }    
+
+    public findByRect(rect: QuadNodesRect, createIfMissing: boolean): QuadNode[] {
+        if (this.depth > rect.z || !this.bounds.intersects2DRect(rect)) {
+           return [];
+        } else if (this.depth === rect.z) {
+            return [this];
+        }
+
+        const nodes: QuadNode[] = [];
+        for (const quadrant of this.getQuadrants(createIfMissing)) {
+            nodes.push(...quadrant.findByRect(rect, createIfMissing));
+        }
+        
+        return nodes;
+    }
+
+    public getNormalizedRelativePosition(node: QuadNode): QuadNodePoint | undefined {
+        if (!node) {
+            return;
+        }
+
+        const z = this._compare(node.getPoint().z, this.getPoint().z);
+        if (z < 0) {
+            return { x: 0, y: 0, z };
+        }
+
+        const relCenter = node.getCenterPoint();
+        const currCenter = this.getCenterPoint();
+
+        return {
+            x: this._compare(relCenter.x, currCenter.x),
+            y: this._compare(relCenter.y, currCenter.y),
+            z,
+        };
+    }
+
+    public toString(): string {
+        return JSON.stringify({
+            key: this.key.toString(),
+            depth: this.depth,
+            bounds: this.bounds.toString(),
+            tile: this.tile?.toString(),
+        }, null, 4);
+    }
+
+    public getJSON(): QuadNodeData {
+        return {
+            key: this.key.id,
+            depth: this.depth,
+            point: this.getPoint(),
+            bounds: this.bounds.getJSON(),
+            tile: this.tile?.getJSON(),
+        }
+    }
+
+    private _compare(a: number, b: number) {
+        if (a > b) return 1;
+        if (a < b) return -1;
+        return 0;
+    }
+}
