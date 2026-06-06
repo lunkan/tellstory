@@ -1,26 +1,66 @@
-import { useState } from "react";
-import { useLocationStore } from "./store/locationStore";
+import { useEffect, useRef, useState } from "react";
 import { Typewriter } from "./Typewriter";
+import { useScene, useSceneStore } from "./store/sceneStore";
 
 export function NewFeed() {
-    const messageQueue = useLocationStore((state) => state.messageQueue);
-    const [sceneId, setSceneId] = useState('');
+    const {
+        sceneId,
+        leadingText,
+        sceneTransition,
+        quadrantSummary,
+        adjacentSummary,
+        directionAttention,
+    } = useScene();
+    const sceneReadyForInteraction = useSceneStore((state) => state.sceneReadyForInteraction);
+    const [currentSceneId, setCurrentSceneId] = useState('');
     const [sceneTransitionCompleted, setSceneTransitionCompleted] = useState(false);
     const [quadrantSummaryCompleted, setQuadrantSummaryCompleted] = useState(false);
+    const [adjacentSummaryCompleted, setAdjacentSummaryCompleted] = useState(false);
+    const setSceneReadyForInteraction = useSceneStore((state) => state.setSceneReadyForInteraction);
+    const setSceneIntroductionComplete = useSceneStore((state) => state.setSceneIntroductionComplete);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const bottomRef = useRef<HTMLDivElement>(null);
 
-    const scene = messageQueue.find((message) => message.descriptionType === 'enter');
-    if (!scene) {
-         return (<div>No scene</div>);
-    } else if (sceneId !== scene.eventId) {
-        setSceneId(scene.eventId);
-        setSceneTransitionCompleted(false);
-        setQuadrantSummaryCompleted(false);
-    }
+    useEffect(() => {
+        const observer = new IntersectionObserver(([entry]) => {
+            if (!entry.isIntersecting) {
+                bottomRef.current?.scrollIntoView();
+            }
+        }, {
+            root: scrollContainerRef.current,
+            threshold: 0,
+        });
 
-    const messagesByScene = messageQueue.filter((message) => message.eventId === scene.eventId);
-    const sceneTransition = messagesByScene.find((message) => message.descriptionType === 'sceneTransition');
-    const quadrantSummary = messagesByScene.find((message) => message.descriptionType === 'quadrantSummary');
-    const adjacentSummary = messagesByScene.find((message) => message.descriptionType === 'adjacentSummary');
+        const bottom = bottomRef.current;
+        if (bottom) observer.observe(bottom);
+
+        return () => observer.disconnect();
+    }, [scrollContainerRef, bottomRef]);
+
+    useEffect(() => {
+        if (!sceneId) {
+            return;
+        } else if (sceneId !== currentSceneId) {
+            console.log('clear');
+            setCurrentSceneId(sceneId);
+            setSceneTransitionCompleted(false);
+            setQuadrantSummaryCompleted(false);
+            setSceneIntroductionComplete(false);
+            setSceneReadyForInteraction(false);
+            return;
+        }
+        
+        if (sceneTransitionCompleted) {
+            console.log('Introduction complete');
+            setSceneIntroductionComplete(true);
+        }
+
+        if (sceneTransitionCompleted && quadrantSummaryCompleted && adjacentSummaryCompleted) {
+            console.log('Ready for interaction');
+            setSceneReadyForInteraction(true);
+        }
+
+    } , [setSceneReadyForInteraction, sceneId, currentSceneId, sceneTransitionCompleted, quadrantSummaryCompleted, adjacentSummaryCompleted]);
 
     function handleAnimationComplete(type: string): void {
         switch(type) {
@@ -30,8 +70,11 @@ export function NewFeed() {
             case 'quadrantSummary':
                 setQuadrantSummaryCompleted(true);
                 break;
+            case 'adjacentSummary':
+                setAdjacentSummaryCompleted(true);
+                break;
         }
-    }   
+    }
 
     function renderLoader() {
         return (
@@ -49,7 +92,7 @@ export function NewFeed() {
         if (!sceneTransition?.text) {
             return (
                 <div>
-                    <h2 className="feed--heading">{scene?.text}</h2>
+                    <h2 className="feed--heading">{leadingText}</h2>
                     <div>{renderLoader()}</div>
                 </div>
             );
@@ -93,11 +136,27 @@ export function NewFeed() {
         );
     }
 
+    function renderDirectionAttention() {
+        if (!sceneReadyForInteraction || !adjacentSummaryCompleted || !directionAttention?.text) {
+            return null;
+        }
+
+        return (
+            <div>
+                <h2 className="feed--heading">Direction attention</h2>
+                <Typewriter type="adjacentSummary" text={directionAttention?.text}></Typewriter>
+            </div>
+        );
+    }
+
     return (
-        <div>
+        <div className="feed" ref={scrollContainerRef}>
+            <div className="feed--shade"></div>
             {renderSceneTransition()}
             {renderQuadrantSummary()}
             {renderAdjacentSummary()}
+            {renderDirectionAttention()}
+            <div ref={bottomRef}></div>
         </div>
     );
 }

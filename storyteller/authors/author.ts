@@ -5,6 +5,23 @@ import { Game } from "../../engine/core/game.js";
 import { Character } from "../../engine/core/character.js";
 import { DirectionSummary, LocationDirectionDescription, LocationProfile } from "../types.js";
 
+const SHARED_SCENE_DESCRIPTION_PROMT: string =
+`You are a game writer.
+Describe from a second-person point of view what our main character transition
+see at his current location.
+
+Rule:
+- Answer directly
+
+Description should:
+- Focus on what he see in this location.
+- Describe the lansdcape surrounding him.
+- Only contain details mentioned by  "Description of current location"
+- Contain max 40 words
+- Only contain description text, no prefix, suffix or headings
+- Translate respons into Swedish.
+`;
+
 const SHARED_SCENE_TRANSITION_PROMT: string =
 `You are a game writer.
 Describe from a second-person point of view how the landscape change when our
@@ -80,12 +97,58 @@ export class Author {
         this._game = game;
     }
 
-    public async describeDirections(character: Character, currentLocation: LocationProfile, premisesLocations: LocationProfile[]): Promise<LocationDirectionDescription[]> {
-        const requests = premisesLocations.map(async (premisesLocationProfile, i) => {
+    public async describeScene(location: LocationProfile): Promise<string> {
+        const instructions = `
+            Description of location:
+            - ${location.description}
+        `;
+
+        return await generateReply(instructions, { sharedPromt: SHARED_SCENE_DESCRIPTION_PROMT });
+    }
+
+    public describeDirection(character: Character, currentLocation: LocationProfile, premisesLocation: LocationProfile): Promise<LocationDirectionDescription> {
+        const memories = character.findMemories({
+            types: [ChronicleEventType.Enter],
+            locationId: premisesLocation.key,
+        });
+
+        const frequency = memories.length;
+        const recency = frequency > 0 ? this._game.getTime() - memories[0].timestamp : -1;
+
+        const instruction = `
+            Description of location of interest:
+            - ${premisesLocation.description}
+
+            Description of current location:
+            - ${currentLocation.description}
+
+            Details about our character:
+            - He has just arrived to the new location.
+            - He has been here ${getFrequencyPhrase(frequency)}.
+            - He has been here ${getRecencyPhrase(recency)}.
+        `;
+
+        //const response = await 
+        return generateReply(instruction, { sharedPromt: SHARED_LOCATION_DIRECTION_PROMT }).then((response) => {
+            console.log(`Finish direction profile request ${premisesLocation.key}`);
+
+            return {
+                key: premisesLocation.key,
+                description: response,
+            };
+        });
+
+        //return requests;
+    }
+
+    public describeDirections(character: Character, currentLocation: LocationProfile, premisesLocations: LocationProfile[]): Promise<LocationDirectionDescription>[] {
+        return premisesLocations.map((premisesLocationProfile, i) => {
             const memories = character.findMemories({
                 types: [ChronicleEventType.Enter],
                 locationId: premisesLocationProfile.key,
             });
+
+            currentLocation
 
             const frequency = memories.length;
             const recency = frequency > 0 ? this._game.getTime() - memories[0].timestamp : -1;
@@ -103,16 +166,18 @@ export class Author {
                 - He has been here ${getRecencyPhrase(recency)}.
             `;
 
-            const response = await generateReply(instruction, { sharedPromt: SHARED_LOCATION_DIRECTION_PROMT });
-            console.log(`Finish direction profile request ${i}`);
+            //const response = await 
+            return generateReply(instruction, { sharedPromt: SHARED_LOCATION_DIRECTION_PROMT }).then((response) => {
+                console.log(`Finish direction profile request ${i}`);
 
-            return {
-                key: premisesLocationProfile.key,
-                description: response,
-            }
+                return {
+                    key: premisesLocationProfile.key,
+                    description: response,
+                };
+            });
         });
 
-        return Promise.all(requests);
+        //return requests;
     }
 
     public async describeSceneTransition(character: Character, fromLocation: LocationProfile, toLocation: LocationProfile): Promise<string> {

@@ -1,6 +1,6 @@
 body {
   font-family: system-ui, sans-serif;
-  margin: 2rem;
+  margin: 0;
 }
 
 form {
@@ -140,3 +140,104 @@ main {
     right: 24px;
     top: 24px;
 }
+
+.game-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.game-screen--feed {
+  flex: 0 1 50%;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  overflow: hidden;
+}
+
+.game-screen--control {
+  flex: 1 1 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.feed {
+  height: 100%;
+  width: 100%;
+  max-height: 250px;
+  overflow: hidden;
+}
+
+.feed--shade {
+  height: 100px;
+  position: sticky;
+  width: 100%;
+  top: 0px;
+  left: 0;
+  background: linear-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+}
+
+.navigation-ctrl-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 24px 0;
+  /*opacity: 0;
+  transition: opacity 1s ease-in-out;*/
+}
+
+/*.navigation-ctrl-wrapper--ready {
+  opacity: 1;
+}*/
+
+.nav-sector {
+  opacity: 0;
+  cursor: pointer;
+  stroke: #ffffff;
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  transition: opacity 1s ease;
+}
+
+.navigation-ctrl-wrapper--interruptible .nav-sector--center {
+  opacity: 0.5;
+}
+
+.navigation-ctrl-wrapper--interruptible .nav-sector--center:hover {
+  opacity: 1;
+}
+
+.navigation-ctrl-wrapper--ready .nav-sector {
+  opacity: 0.5;
+}
+
+.navigation-ctrl-wrapper--ready .nav-sector:hover {
+  opacity: 1;
+}
+
+/*.nav-sector:hover {
+  opacity: 1;
+}
+
+.nav-sector--center {
+  opacity: 1;
+}*/
+
+.title-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.title-screen--btn {
+  width: 200px;
+  height: 200px;
+  border-radius: 100px;
+  font-size: 20px;
+  color: #3C2F2F;
+  border-color: #3C2F2F;
+  background-color: #BE9B7B;
+}
+

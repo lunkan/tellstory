@@ -7,6 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/chat": "http://localhost:3000",
+      "/game": "http://localhost:3000",
     },
   },
 });

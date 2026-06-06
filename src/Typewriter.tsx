@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 type TypewriterProps = {
   type: string;
   text: string | undefined;
-  onAnimationComplete: (type: string) => void;
+  onAnimationComplete?: (type: string) => void;
 };
 
 export function Typewriter({ type, text, onAnimationComplete }: TypewriterProps) {
   const [animatedText, setAnimatedText] = useState('');
 
   useEffect(() => {
-    if (!text) {
+    if (!text || !text.startsWith(animatedText)) {
       setAnimatedText('');
       return;
     } else if (animatedText.length >= text.length) {
@@ -21,7 +21,7 @@ export function Typewriter({ type, text, onAnimationComplete }: TypewriterProps)
       const nextAnimatedText = animatedText + text[animatedText.length];
       setAnimatedText(animatedText + text[animatedText.length]);
       if (nextAnimatedText.length === text.length) {
-        onAnimationComplete(type);
+        onAnimationComplete?.(type);
       }
     }, 40);
 

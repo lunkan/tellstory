@@ -34,6 +34,38 @@ export function getRecencyPhrase(elapsedTime: number): string {
     }
 }
 
+export function getDirectionKey(delta: QuadNodePoint): number {
+    if (delta.z < 0) {
+        return DIRECTION.UP;
+    }
+
+    if (delta.x > 0) {
+        if (delta.y > 0) {
+            return DIRECTION.NORTH_WEST;
+        } else if (delta.y < 0) {
+            return DIRECTION.SOUTH_WEST;
+        } else {
+            return DIRECTION.WEST;
+        }
+    } else if (delta.x < 0) {
+        if (delta.y > 0) {
+            return DIRECTION.NORTH_EAST;
+        } else if (delta.y < 0) {
+            return DIRECTION.SOUTH_EAST;
+        } else {
+            return DIRECTION.EAST;
+        }
+    } else {
+        if (delta.y > 0) {
+            return DIRECTION.NORTH;
+        } else if (delta.y < 0) {
+            return DIRECTION.SOUTH;
+        } else {
+            return DIRECTION.NONE;
+        }
+    }
+}
+
 export function getDirectionName(delta: QuadNodePoint): string {
     if (delta.z < 0) {
         return DIRECTION_NAME[DIRECTION.UP];

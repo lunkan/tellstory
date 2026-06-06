@@ -1,14 +1,9 @@
 import type { Request, Response } from "express";
-//import { createAuthor } from "../../storyteller/storyteller.js";
-
-//import { createGame } from "../../engine/core/engine.js";
-//import { ChronicleEventType } from "../../engine/chronicle/chronicle.js";
 import { createGame } from "../../engine/core/engine.js";
 import { Explorer } from "../../storyteller/authors/explorer.js";
 import { ChronicleEventType } from "../../engine/chronicle/chronicle.js";
-import { LocationDirectionDescription, Metric, MetricData, Reply } from "../../storyteller/types.js";
+import { Reply } from "../../storyteller/types.js";
 import { createAuthor } from "../../storyteller/storyteller.js";
-import { compareMetric, getSquashedMetric, sumMetric } from "../../storyteller/authors/metrics.js";
 import { sendLocationMessage } from "../websocket/websocket-service.js";
 
 type ChatRequest = { message: string };
@@ -17,8 +12,6 @@ const currentGame = createGame();
 currentGame.newPlayer('Fantomen', { x: 0, y: 0, z: 2});
 
 const explorer = new Explorer();
-
-console.log('currentGame', currentGame.getPlayer('Fantomen')?.getCurrentLocation().toString());
 const author = createAuthor(currentGame);
 
 export async function postChat(
@@ -183,37 +176,94 @@ export async function postChat(
 
     console.log('FINISH LOCATIONS');
 
-    const sceneTransition = previousLocation && currentLocation ? await author.describeSceneTransition(player, previousLocation, currentLocation) : 'You have entered a new world';
+    /*const sceneTransition = previousLocation && currentLocation ? await author.describeSceneTransition(player, previousLocation, currentLocation) : 'You have entered a new world';
 
     sendLocationMessage({
         eventId,
         type: 'locationDescription',
         descriptionType: 'sceneTransition',
         text: sceneTransition,
-    });
+    });*/
 
-    const quadrantDirectionsSummary = await explorer.getQuadrantSummary(currentNode, quadrantNodes);
-    const quadrantSummary = currentLocation ? await author.summarizeQuadranDirections(player, quadrantDirectionsSummary) : '';
+    if (!previousLocation || !currentLocation) {
+      res.json({});
+      return;
+    }
 
-    sendLocationMessage({
+    author.describeSceneTransition(player, previousLocation, currentLocation).then((sceneTransition) => {
+      sendLocationMessage({
         eventId,
         type: 'locationDescription',
-        descriptionType: 'quadrantSummary',
-        text: quadrantSummary,
+        descriptionType: 'sceneTransition',
+        text: sceneTransition,
+      });
     });
 
-    const adjacentDirectionsSummary = await explorer.getAdjacentSummary(currentNode, adjacentNodes);
-    const adjacentSummary = currentLocation ? await author.summarizeAdjacentDirections(player, adjacentDirectionsSummary) : '';
+    explorer.getQuadrantSummary(currentNode, quadrantNodes).then((quadrantDirectionsSummary) => {
+      author.summarizeQuadranDirections(player, quadrantDirectionsSummary).then((quadrantSummary) => {
+        sendLocationMessage({
+          eventId,
+          type: 'locationDescription',
+          descriptionType: 'quadrantSummary',
+          text: quadrantSummary,
+        });
+      });
+    });
 
-    sendLocationMessage({
+    //const quadrantDirectionsSummary = await explorer.getQuadrantSummary(currentNode, quadrantNodes);
+    //const quadrantSummary = currentLocation ? await author.summarizeQuadranDirections(player, quadrantDirectionsSummary) : '';
+
+    //const adjacentDirectionsSummary = await explorer.getAdjacentSummary(currentNode, adjacentNodes);
+    //const adjacentSummary = currentLocation ? await author.summarizeAdjacentDirections(player, adjacentDirectionsSummary) : '';
+
+    explorer.getAdjacentSummary(currentNode, adjacentNodes).then((adjacentDirectionsSummary) => {
+      author.summarizeAdjacentDirections(player, adjacentDirectionsSummary).then((adjacentSummary) => {
+        sendLocationMessage({
+          eventId,
+          type: 'locationDescription',
+          descriptionType: 'adjacentSummary',
+          text: adjacentSummary,
+        });
+      });
+    });
+
+    /*sendLocationMessage({
         eventId,
         type: 'locationDescription',
         descriptionType: 'adjacentSummary',
         text: adjacentSummary,
+    });*/
+
+    explorer.getDirectionLocationProfiles(currentNode, quadrantNodes).then((quadrantDirectionProfiles) => {
+      quadrantDirectionProfiles.forEach((quadrantDirectionProfile) => {
+        author.describeDirection(player, currentLocation, quadrantDirectionProfile.profile).then((description) => {
+          sendLocationMessage({
+            eventId,
+            type: 'locationDescription',
+            descriptionType: 'quadrantDirection',
+            direction: quadrantDirectionProfile.directionKey,
+            text: description.description,
+          });
+        });
+      });
     });
 
-    const premises: LocationDirectionDescription[] = []; //currentLocation ? await author.describeDirections(player, currentLocation, quadrantLocations) : [];
-    const adjacent: LocationDirectionDescription[] = []; //currentLocation ? await author.describeDirections(player, currentLocation, adjacentLocations) : [];
+    explorer.getDirectionLocationProfiles(currentNode, adjacentNodes).then((adjacentDirectionProfiles) => {
+      adjacentDirectionProfiles.forEach((adjacentDirectionProfile) => {
+        author.describeDirection(player, currentLocation, adjacentDirectionProfile.profile).then((description) => {
+          sendLocationMessage({
+            eventId,
+            type: 'locationDescription',
+            descriptionType: 'adjacentDirection',
+            direction: adjacentDirectionProfile.directionKey,
+            text: description.description,
+          });
+        });
+      });
+    });
+
+    //const premises: LocationDirectionDescription[] = currentLocation ? await author.describeDirections(player, currentLocation, quadrantLocations) : [];
+    //const adjacent: LocationDirectionDescription[] = currentLocation ? await author.describeDirections(player, currentLocation, adjacentLocations) : [];
 
     const reply: Reply = {
       player: player.name,
@@ -237,11 +287,11 @@ export async function postChat(
         adjacent: adjacentLocations,
         quadrants: quadrantLocations
       },
-      sceneTransition,
+      /*sceneTransition,
       adjacentSummary,
-      quadrantSummary,
-      premises,
-      adjacent,
+      quadrantSummary,*/
+      //premises,
+      //adjacent,
     };
 
     res.json({ reply });

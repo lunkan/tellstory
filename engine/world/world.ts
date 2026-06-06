@@ -1,4 +1,5 @@
 import { QuadNodeDelta, QuadNodePoint } from "../../storyteller/types";
+import { Character } from "../core/character";
 import { WorldGenerator } from "../world-generator/world-generator";
 import { QuadNode } from "./quad-node";
 import { QuadNodeKey } from "./quad-node-key";
@@ -13,32 +14,14 @@ export class World {
         this._worldGen = new WorldGenerator;
     }
 
-    /*public getNormalizedRelativePosition(keyA: QuadNodeKey, keyB: QuadNodeKey): QuadNodePoint | undefined {
-        const nodeA = this._quadtree.findByKey(keyA);
-        const nodeB = this._quadtree.findByKey(keyB);
-
-        if (!nodeA || !nodeB) {
-            return;
-        }
-
-        const z = this._compare(nodeA.depth, nodeB.depth);
-        if (z > 0) {
-            return { x: 0, y: 0, z };
-        }
-
-        return {
-            x: this._compare(nodeA.depth, nodeB.depth),
-            y: this._compare(nodeA.depth, nodeB.depth),
-            z,
-        };
-    }*/
-
     public findNodeBykey(key: QuadNodeKey): QuadNode | undefined {
-        return this._quadtree.findByKey(key);
+        const node = this._quadtree.findByKey(key);
+        return node ? this._hydrate(node) : undefined;
     }
 
     public findNodeByPoint(point: QuadNodePoint): QuadNode | undefined {
-        return this._quadtree.findByPoint(point, true);
+        const node = this._quadtree.findByPoint(point, true);
+        return node ? this._hydrate(node) : undefined;
     }
 
     public findNeighbourNode(key: QuadNodeKey, deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): QuadNode | undefined {
@@ -107,9 +90,9 @@ export class World {
         return node;
     }
 
-    private _compare(a: number, b: number) {
+    /*private _compare(a: number, b: number) {
         if (a > b) return 1;
         if (a < b) return -1;
         return 0;
-    }
+    }*/
 }

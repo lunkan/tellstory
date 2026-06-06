@@ -2,7 +2,7 @@ import { QuadNode } from "../../engine/world/quad-node";
 import { createLocationProfile, getLocationProfiles } from "../../location-profile-repository";
 import { generateJSONReply, generateReply } from "../services/anthropic.service";
 import { DirectionLocationProfile, DirectionSummary, LocationProfile, TerrainSetting } from "../types";
-import { getDirectionName } from "./phraseology";
+import { getDirectionKey, getDirectionName } from "./phraseology";
 
 type LocationProfileInstructions = {
     key: string,
@@ -111,7 +111,7 @@ export class Explorer {
 
     public async getAdjacentSummary(currentNode: QuadNode, adjacentNodes: QuadNode[]): Promise<DirectionSummary> {
         const currentProfile = await this.getLocationProfile(currentNode);
-        const directionProfiles = await this._getDirectionLocationProfiles(currentNode, adjacentNodes);
+        const directionProfiles = await this.getDirectionLocationProfiles(currentNode, adjacentNodes);
 
         const promt = `
             Adjacent location descriptions:
@@ -131,7 +131,7 @@ export class Explorer {
     }
 
     public async getQuadrantSummary(currentNode: QuadNode, quadrantNodes: QuadNode[]): Promise<DirectionSummary> {
-        const directionProfiles = await this._getDirectionLocationProfiles(currentNode, quadrantNodes);
+        const directionProfiles = await this.getDirectionLocationProfiles(currentNode, quadrantNodes);
         const promt = `
             Subregion descriptions:
             ${directionProfiles.map((directionProfile) => {
@@ -157,6 +157,29 @@ export class Explorer {
     public async getLocationProfiles(nodes: QuadNode[]): Promise<LocationProfile[]> {
         const profileRequests = nodes.map((node) => this._fetchProfile(node));
         return Promise.all(profileRequests);
+    }
+
+    public async getDirectionLocationProfiles(currentNode: QuadNode, directionNodes: QuadNode[]): Promise<DirectionLocationProfile[]> {
+        const profileRequests = directionNodes.map((node) => this._fetchProfile(node));
+        const profiles = await Promise.all(profileRequests);
+
+        const directionNodeNames = directionNodes.map((node) => {
+            const relativePosition = currentNode.getNormalizedRelativePosition(node);
+            return relativePosition ? getDirectionName(relativePosition): '-';
+        });
+
+        const directionNodeKeys = directionNodes.map((node) => {
+            const relativePosition = currentNode.getNormalizedRelativePosition(node);
+            return relativePosition ? getDirectionKey(relativePosition) : undefined
+        });
+
+        return profiles.map((profile, i) => {
+            return {
+                directionName: directionNodeNames[i],
+                directionKey: directionNodeKeys[i],
+                profile,
+            };
+        });
     }
 
     private async _fetchProfile(node: QuadNode): Promise<LocationProfile> {
@@ -212,22 +235,4 @@ export class Explorer {
 
         return instructionText;
     }
-
-    private async _getDirectionLocationProfiles(currentNode: QuadNode, directionNodes: QuadNode[]): Promise<DirectionLocationProfile[]> {
-        const profileRequests = directionNodes.map((node) => this._fetchProfile(node));
-        const profiles = await Promise.all(profileRequests);
-
-        const directionNodeNames = directionNodes.map((node) => {
-            const relativePosition = currentNode.getNormalizedRelativePosition(node);
-            return relativePosition ? getDirectionName(relativePosition): '-';
-        });
-
-        return profiles.map((profile, i) => {
-            return {
-                directionName: directionNodeNames[i],
-                profile,
-            };
-        });
-    }
-
 }

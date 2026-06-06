@@ -1,26 +1,32 @@
-import { useState, type FormEvent } from "react";
+/*import { useState, type FormEvent } from "react";
 import { Reply } from "../storyteller/types";
 import { NewFeed } from "./NewFeed";
 import { DebugPanel } from "./DebugPanel";
+import { NavigationControl } from "./NavigationControl";*/
 import { useEffect } from "react";
 import { wsService } from "./websocket/websocketService";
+import { useGameStore } from "./store/gameStore";
+import { TitleScreen } from "./TitleScreen";
+import { GameScreen } from "./GameScreen";
 
-type ChatResponse = {
+/*type ChatResponse = {
   reply?: Reply;
   error?: string;
-};
+};*/
 
 export default function App() {
-  const [input, setInput] = useState("");
+  const activeGameId = useGameStore((state) => state.activeGameId);
+
+  /*const [input, setInput] = useState("");
   const [reply, setReply] = useState<Reply | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);*/
 
   useEffect(() => {
     wsService.connect();
   }, []);
 
-  async function handleSubmit(e: FormEvent) {
+  /*async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
@@ -44,9 +50,16 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  }*/
+
+  if (!activeGameId) {
+      return (<TitleScreen></TitleScreen>);
   }
 
-  return (
+  return (<GameScreen></GameScreen>);
+
+
+  /*return (
     <main>
       <h1>Tellstory Chat</h1>
       <form onSubmit={handleSubmit}>
@@ -64,6 +77,7 @@ export default function App() {
 
       <DebugPanel reply={reply}></DebugPanel>
       <NewFeed></NewFeed>
+      <NavigationControl></NavigationControl>
     </main>
-  );
+  );*/
 }

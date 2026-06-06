@@ -3,7 +3,7 @@ import { useLocationStore } from "../store/locationStore";
 class WebSocketService {
   private socket: WebSocket | null = null;
 
-  connect() {
+  public connect() {
     this.socket = new WebSocket("ws://localhost:8080");
 
     this.socket.onopen = () => {
@@ -44,9 +44,9 @@ class WebSocketService {
     };
   }
 
-  /*send(data: unknown) {
+  public send(data: unknown) {
     this.socket?.send(JSON.stringify(data));
-  }*/
+  }
 }
 
 export const wsService = new WebSocketService();

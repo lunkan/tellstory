@@ -1,3 +1,5 @@
+import { DIRECTION } from "../constants";
+
 export type Reply = {
   player: string;
   currentPoint: QuadNodePoint;
@@ -20,11 +22,11 @@ export type Reply = {
     adjacent: LocationProfile[],
     quadrants: LocationProfile[],
   },
-  sceneTransition: string;
-  adjacentSummary: string;
-  quadrantSummary: string;
-  premises: LocationDirectionDescription[];
-  adjacent: LocationDirectionDescription[];
+  sceneTransition?: string;
+  adjacentSummary?: string;
+  quadrantSummary?: string;
+  premises?: LocationDirectionDescription[];
+  adjacent?: LocationDirectionDescription[];
 };
 
 export type QuadNodeData = {
@@ -50,6 +52,7 @@ export type LocationProfile = {
 
 export type DirectionLocationProfile = {
     directionName: string;
+    directionKey?: DIRECTION;
     profile: LocationProfile;
 };
 
@@ -105,9 +108,29 @@ export type MetricData = {
     metric: Metric,
 };
 
+export type LocationMessageDescriptionType =
+    'sceneTransition' |
+    'adjacentSummary' |
+    'quadrantSummary' |
+    'adjacentDirection' |
+    'quadrantDirection' |
+    'enter' |
+    'spawn';
+
 export interface LocationMessage {
   eventId: string;
   type: 'locationDescription';
-  descriptionType: 'sceneTransition' | 'adjacentSummary' | 'quadrantSummary' | 'enter';
+  descriptionType: LocationMessageDescriptionType;
+  direction?: DIRECTION;
   text?: string;
+}
+
+export type DirectionData = {
+    type: 'adjacentDirection' | 'quadrantDirection';
+    direction: DIRECTION;
+};
+
+export type WebsocketMessage = {
+    type: string,
+    data: unknown,
 }

@@ -25,8 +25,18 @@ export class Game {
         return this._players.get(name);
     }
 
-    public newPlayer(name: string, point: QuadNodePoint): void {
-        const newPlayer = new Character(name, this.world, point);
+    public newPlayer(name: string, point: QuadNodePoint): Character {
+        /*const newPlayer = new Character(name, this, point);
+            this.game.newPlayer('Fantomen', { x: 0, y: 0, z: 2});
+        }*/
+
+        const startingNode = this.world.findNodeByPoint(point);
+        if (!startingNode) {
+            throw Error('No starting node for player');
+        }
+
+        const newPlayer = new Character(name, this.world, startingNode.getPoint());
         this._players.set(newPlayer.id, newPlayer);
+        return newPlayer;
     }
 }
