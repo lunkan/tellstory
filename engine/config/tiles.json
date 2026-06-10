@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "tiles": [{
     "name": "continent",
+    "category": "",
     "attentionValue": 0,
+    "meta": {
+      "color": "#000000"
+    },
     "subTiles": [{
       "name": "water",
       "threshold": 0.25
@@ -13,14 +17,33 @@
     }]
   }, {
     "name": "water",
+    "category": "typography",
     "attentionValue": 0,
+    "meta": {
+      "color": "#0093dd"
+    },
     "subTiles": [{
       "name": "water",
       "threshold": 1
     }]
   }, {
+    "name": "river",
+    "category": "vector",
+    "attentionValue": 1,
+    "meta": {
+      "color": "#0093dd"
+    },
+    "subTiles": [{
+      "name": "river",
+      "threshold": 1
+    }]
+  }, {
     "name": "land",
+    "category": "",
     "attentionValue": 0,
+    "meta": {
+      "color": "#000000"
+    },
     "subTiles": [{
       "name": "forrest",
       "threshold": 0.5
@@ -30,10 +53,18 @@
     }]
   }, {
     "name": "elevation",
-    "attentionValue": 0
+    "category": "typography",
+    "attentionValue": 0,
+    "meta": {
+      "color": "#98aeb9"
+    }
   }, {
     "name": "forrest",
+    "category": "biome",
     "attentionValue": 0,
+    "meta": {
+      "color": "#6f7a39"
+    },
     "subTiles": [{
       "name": "forrest",
       "threshold": 0.75
@@ -46,7 +77,11 @@
     }]
   }, {
     "name": "grassland",
+    "category": "biome",
     "attentionValue": 0,
+    "meta": {
+      "color": "#bfbb8e"
+    },
     "subTiles": [{
       "name": "grassland",
       "threshold": 0.5
@@ -59,20 +94,40 @@
     }]
   }, {
     "name": "village",
+    "category": "urban",
     "attentionValue": 3,
+    "meta": {
+      "color": "#000000"
+    },
     "subTiles": [{
       "name": "house",
       "threshold": 1
     }]
   }, {
     "name": "scattered-farmstead",
+    "category": "urban",
     "attentionValue": 1,
+    "meta": {
+      "color": "#000000"
+    },
     "subTiles": [{
       "name": "house",
       "threshold": 1
     }]
   }, {
     "name": "house",
+      "category": "building",
     "attentionValue": 1
+  }, {
+    "name": "road",
+    "category": "vector",
+    "attentionValue": 1,
+    "meta": {
+      "color": "#292100"
+    },
+    "subTiles": [{
+      "name": "road",
+      "threshold": 1
+    }]
   }]
 }

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+/*import { create } from "zustand";
 
 interface GameStore {
     activeGameId: string | null;
@@ -7,5 +7,7 @@ interface GameStore {
 
 export const useGameStore = create<GameStore>((set) => ({
     activeGameId: null,
-    setActiveGameId: (id) => set({ activeGameId: id }),
-}));
+    setActiveGameId: (id) => {
+        set({ activeGameId: id });
+    },
+}));*/

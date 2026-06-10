@@ -72,6 +72,15 @@ export type TerrainSetting = {
     value: number;
 }
 
+export type VectorSetting = {
+    type: string;
+    value: number;
+    direction: {
+        x: QuadNodeDelta,
+        y: QuadNodeDelta,
+    },
+}
+
 export type LocationDirectionDescription = {
     key: string;
     description: string; 
@@ -80,6 +89,12 @@ export type LocationDirectionDescription = {
 export type QuadNodeChildIndex = 0 | 1 | 2 | 3;
 
 export type QuadNodeDelta = 1 | -1 | 0;
+
+export type QuadNodeNormVector = {
+    x: QuadNodeDelta,
+    y: QuadNodeDelta,
+    z: number;
+};
 
 export type QuadNodes2DPoint = {
     x: number;

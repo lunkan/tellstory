@@ -34,11 +34,6 @@ pre {
   border-radius: 4px;
 }
 
-main {
-  max-width: 700px;
-  margin: 0 auto;
-}
-
 .error {
   color: #c00;
 }
@@ -145,6 +140,8 @@ main {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .game-screen--feed {
@@ -240,4 +237,157 @@ main {
   border-color: #3C2F2F;
   background-color: #BE9B7B;
 }
+
+.editor-menu-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.editor-menu-screen--menu {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  gap: 16px;
+  border: solid 1px #6F4436;
+  padding: 24px 24px 32px;
+}
+
+.editor-screen {
+  width: 100%;
+  height: 100vh;
+  /*display: flex; flex;*/
+  /*flex-direction: column;*/
+
+  display: grid;
+  grid-template-areas:
+    "topbar topbar"
+    "map palett";
+  grid-template-columns: 1fr 250px;
+  grid-template-rows: 40px 1fr;
+}
+
+.editor-topbar {
+  grid-area: topbar;
+  background-color: #212121;
+  padding: 4px 8px 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.editor-topbar--group {
+  display: flex;
+  gap: 4px;
+}
+
+.editor-topbar--btn {
+  font-size: 12px;
+  padding: 4px 8px;
+  background-color: #323232;
+  color: #ffffff;
+  border: transparent;
+}
+
+.editor-topbar--btn--selected {
+  font-size: 12px;
+  padding: 4px 8px;
+  background-color: #323232;
+  color: #ffffff;
+  border: transparent;
+  outline: solid 2px #fff;
+}
+
+.editor-map {
+  grid-area: map;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-palett {
+  color: #ffffff;
+  grid-area: palett;
+  background-color: #212121;
+  padding: 16px;
+}
+
+.editor-palett-controls {
+  margin: 24px 0;
+}
+.editor-palett-controls--range {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0;
+}
+.editor-palett-controls--range::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  background: #9a905d;
+  height: 2px;
+}
+.editor-palett-controls--range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ff0000;
+  margin: -7px 0;
+}
+.editor-palett-controls--label {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #ffffff;
+}
+
+.editor-palett--terrain-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.editor-palett--terrain-options-heading {
+  margin: 24px 0 8px;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #ffffff;
+}
+.editor-palett--terrain-options-list {
+  border-top: solid 1px #666;
+  margin: 0;
+  list-style: none;
+  padding: 0;
+}
+.editor-palett--terrain-options-list li {
+  border-bottom: solid 1px #666;
+}
+
+.editor-palett--terrain-option {
+  display: block;
+  font-size: 12px;
+  padding: 4px 8px;
+  background-color: transparent;
+  color: #ffffff;
+  border: transparent;
+  text-align: left;
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+
+.editor-palett--terrain-option:hover {
+  background-color: #323232;
+}
+
+.editor-palett--terrain-option-color {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: #ff0000;
+}
+
+.editor-palett--terrain-option--selected {
+  outline: solid 2px #fff;
+}
+
+
 

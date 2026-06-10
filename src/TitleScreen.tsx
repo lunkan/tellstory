@@ -1,7 +1,9 @@
-import { useGameStore } from "./store/gameStore";
+import { Link, useNavigate } from "react-router-dom";
+//import { useGameStore } from "./store/gameStore";
 
 export function TitleScreen() {
-    const setActiveGameId = useGameStore((state) => state.setActiveGameId);
+    //const setActiveGameId = useGameStore((state) => state.setActiveGameId);
+    const navigate = useNavigate();
 
     async function handleNewGame() {
         try {
@@ -17,7 +19,8 @@ export function TitleScreen() {
                 throw new Error(data.error ?? 'New game Request failed');
             }
 
-            setActiveGameId('New');
+            //setActiveGameId('New');
+            navigate('/game');
 
         } catch (err) {
             //setError(err instanceof Error ? err.message : "Unknown error");
@@ -29,6 +32,7 @@ export function TitleScreen() {
     return (
         <div className="title-screen">
             <button className="title-screen--btn" onClick={() => handleNewGame()}>Start</button>
+            <Link to="/editor">Editor</Link>
         </div>
     );
 }

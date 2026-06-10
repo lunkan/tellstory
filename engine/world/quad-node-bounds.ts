@@ -1,7 +1,7 @@
 import { QuadNodeBoundsData, QuadNodes2DPoint, QuadNodes2DRect } from "../../storyteller/types";
 import { QuadNodeKey } from "./quad-node-key";
 
-const QUAD_TREE_ROOT_SIZE: number = Math.pow(2, QuadNodeKey.MAX_DEPTH);
+export const QUAD_TREE_ROOT_SIZE: number = Math.pow(2, QuadNodeKey.MAX_DEPTH);
 
 export class QuadNodeBounds {
     public static fromKey(key: QuadNodeKey): QuadNodeBounds {

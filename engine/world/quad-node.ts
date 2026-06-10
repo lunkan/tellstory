@@ -1,7 +1,7 @@
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
-import { QuadNodeData as QuadNodeData, QuadNodePoint, QuadNodesRect } from "../../storyteller/types";
+import { QuadNodeData as QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect } from "../../storyteller/types";
 
 export class QuadNode {
     public readonly key: QuadNodeKey;
@@ -112,7 +112,7 @@ export class QuadNode {
         return nodes;
     }
 
-    public getNormalizedRelativePosition(node: QuadNode): QuadNodePoint | undefined {
+    public getNormalizedRelativePosition(node: QuadNode): QuadNodeNormVector | undefined {
         if (!node) {
             return;
         }
@@ -130,6 +130,23 @@ export class QuadNode {
             y: this._compare(relCenter.y, currCenter.y),
             z,
         };
+    }
+
+    public getNormalizedDistance(node: QuadNode): number {
+        if (node.depth !== this.depth) {
+            return -1;
+        }
+
+        const relCenter = node.getCenterPoint();
+        const currCenter = this.getCenterPoint();
+        const distance = Math.hypot(relCenter.x - currCenter.x, relCenter.y - currCenter.y);
+        const normDistance = Math.floor(distance / this.bounds.size);
+        return normDistance;
+    }
+
+    public isAdjacent(node: QuadNode): boolean {
+        const normDistance = this.getNormalizedDistance(node);
+        return normDistance === 1;
     }
 
     public toString(): string {
@@ -151,7 +168,7 @@ export class QuadNode {
         }
     }
 
-    private _compare(a: number, b: number) {
+    private _compare(a: number, b: number): QuadNodeDelta {
         if (a > b) return 1;
         if (a < b) return -1;
         return 0;
