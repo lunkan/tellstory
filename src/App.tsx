@@ -6,6 +6,8 @@ import { GameScreen } from "./GameScreen";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { EditorScreen } from "./editor/EditorScreen";
 import { EditoreMenuScreen } from "./editor/EditorMenuScreen";
+import { EditoreNewWorldScreen } from "./editor/EditorNewWorldScreen";
+import { EditoreLoadWorldScreen } from "./editor/EditorLoadWorldScreen";
 
 export default function App() {
     //const activeGameId = useGameStore((state) => state.activeGameId);
@@ -20,6 +22,8 @@ export default function App() {
                 <Route path="/" element={<TitleScreen />} />
                 <Route path="/game" element={<GameScreen />} />
                 <Route path="/editor" element={<EditoreMenuScreen />} />
+                <Route path="/editor/new" element={<EditoreNewWorldScreen />} />
+                <Route path="/editor/load" element={<EditoreLoadWorldScreen />} />
                 <Route path="/editor/:id" element={<EditorScreen />} />
             </Routes>
         </BrowserRouter>

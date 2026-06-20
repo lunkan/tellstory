@@ -12,7 +12,8 @@ export class ZoomHandler {
     }
 
     public onWheel(wheelDelta: number, point: DOMPoint): void {
-        const zoomDelta = wheelDelta / 1000;
+        const scaleMod = Math.max(1, this.renderer.scale);
+        const zoomDelta = (wheelDelta * scaleMod) / 1000;
 
         var viewportRect = this.viewport.getBoundingClientRect();
         var x = (point.x - viewportRect.left) - viewportRect.width / 2; //x position within the element.

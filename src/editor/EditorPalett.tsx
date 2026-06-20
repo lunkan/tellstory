@@ -13,24 +13,25 @@ export function EditorPalett() {
         useEditorStore.getState().setPaintValue(parseFloat(value));
     }
 
-    function renderTerrainOption(tileConfig: any) {
+    function renderTerrainOption(name: string, color: string) {
         const classes = ['editor-palett--terrain-option'];
-        if (selectedTerrain === tileConfig.name) {
+        if (selectedTerrain === name) {
             classes.push('editor-palett--terrain-option--selected');
         }
 
         return (
-            <button className={classes.join(' ')} onClick={() => handleSelectTerrain(tileConfig.name)}>
-                <span style={{backgroundColor: tileConfig.meta?.color }} className="editor-palett--terrain-option-color"></span>
-                <span>{tileConfig.name}</span>
+            <button className={classes.join(' ')} onClick={() => handleSelectTerrain(name)}>
+                <span style={{backgroundColor: color }} className="editor-palett--terrain-option-color"></span>
+                <span>{name}</span>
             </button>
         );
     }
 
+    const markers = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'marker');
     const typography = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'typography');
     const vectors = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'vector');
     const biome = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'biome');
-    const buildings = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'building');
+    const urban = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'urban');
 
     return (
         <div className="editor-palett">
@@ -51,28 +52,34 @@ export function EditorPalett() {
                 />
             </div>
             <div className="editor-palett--terrain-options">
+                <h3 className="editor-palett--terrain-options-heading">Spawn point</h3>
+                <ul className="editor-palett--terrain-options-list">
+                    {markers.map((tileConfig, i) => (
+                        <li key={i}>{renderTerrainOption(tileConfig.name, tileConfig.meta.color)}</li>
+                    ))}
+                </ul>
                 <h3 className="editor-palett--terrain-options-heading">Typography</h3>
                 <ul className="editor-palett--terrain-options-list">
                     {typography.map((tileConfig, i) => (
-                        <li key={i}>{renderTerrainOption(tileConfig)}</li>
+                        <li key={i}>{renderTerrainOption(tileConfig.name, tileConfig.meta.color)}</li>
                     ))}
                 </ul>
                 <h3 className="editor-palett--terrain-options-heading">Vectors</h3>
                 <ul className="editor-palett--terrain-options-list">
                     {vectors.map((tileConfig, i) => (
-                        <li key={i}>{renderTerrainOption(tileConfig)}</li>
+                        <li key={i}>{renderTerrainOption(tileConfig.name, tileConfig.meta.color)}</li>
                     ))}
                 </ul>
                 <h3 className="editor-palett--terrain-options-heading">Biome</h3>
                 <ul className="editor-palett--terrain-options-list">
                     {biome.map((tileConfig, i) => (
-                        <li key={i}>{renderTerrainOption(tileConfig)}</li>
+                        <li key={i}>{renderTerrainOption(tileConfig.name, tileConfig.meta.color)}</li>
                     ))}
                 </ul>
-                <h3 className="editor-palett--terrain-options-heading">Buildings</h3>
+                <h3 className="editor-palett--terrain-options-heading">Urban</h3>
                 <ul className="editor-palett--terrain-options-list">
-                    {buildings.map((tileConfig, i) => (
-                        <li key={i}>{renderTerrainOption(tileConfig)}</li>
+                    {urban.map((tileConfig, i) => (
+                        <li key={i}>{renderTerrainOption(tileConfig.name, tileConfig.meta.color)}</li>
                     ))}
                 </ul>
             </div>

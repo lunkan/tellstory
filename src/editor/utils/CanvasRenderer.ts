@@ -16,10 +16,13 @@
 2^12 = 4096x4096
 */
 
+import tilesJSON from '../../../engine/config/tiles.json' with { type: 'json' };
 import { QuadNode } from "../../../engine/world/quad-node";
 import { QUAD_TREE_ROOT_SIZE } from "../../../engine/world/quad-node-bounds";
 import { OverlayRenderer } from "./OverlayRenderer";
 import { TileRenderer } from './TileRenderer';
+import { hydrate } from '../../../engine/world-generator/world-generator';
+import { Marker } from '../../../storyteller/types';
 
 const SIZE: number = QUAD_TREE_ROOT_SIZE;
 
@@ -50,9 +53,16 @@ export type TileRect = {
     ySize: number;
 }
 
+/*export type Marker = {
+    point: GridPoint;
+    type: string;
+    id: string;
+}*/
+
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
     public readonly overlay: OverlayRenderer;
+    public readonly markers: Marker[];
 
     private _level: number = 5; // Based on scale
     private _scale: number = 0.5; // 100 x 10 = 1000px
@@ -61,6 +71,7 @@ export class CanvasRenderer {
 
     private _activeTile?: TileCoordinate | null;
     private _refreshRequest: number | undefined;
+
     private _quadTreeRoot: QuadNode;
 
     private get numTiles(): number {
@@ -95,16 +106,12 @@ export class CanvasRenderer {
             throw Error('No CTX');
         }
 
-        /*const viewportOffsetX = this.width / 2;
-        const viewportOffsetY = this.height / 2;
-        const gridOffsetX = (SIZE * this._scale) / 2;
-        const gridOffsetY = (SIZE * this._scale) / 2;
-        const tx = this._x + viewportOffsetX - gridOffsetX;
-        const ty = this._y + viewportOffsetY - gridOffsetY;*/
-
-        //ctx.setTransform(this._scale, 0, 0, this._scale, tx, ty);
         ctx.setTransform(this._transformMtx);
         return ctx;
+    }
+
+    public get scale(): number {
+        return this._scale;
     }
 
     public get width(): number {
@@ -115,10 +122,20 @@ export class CanvasRenderer {
         return this.canvas.height;
     }
 
-    constructor(quadTreeRoot: QuadNode, canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
+    constructor(quadTreeRoot: QuadNode, markers: Marker[], canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
         this._quadTreeRoot = quadTreeRoot;
+        this.markers = markers;
         this.canvas = canvas;
         this.overlay = new OverlayRenderer(overlay);
+    }
+
+    public getDepth(): number {
+        return this._level;
+    }
+
+    public setDepth(value: number): void {
+        this._level = Math.max(5, Math.min(value, 12));
+        this._invalidatTransform();
     }
 
     public setLine(lineId: string, p1: DOMPoint, p2: DOMPoint, color: string, dash: number[]): void {
@@ -151,8 +168,15 @@ export class CanvasRenderer {
         return new DOMPoint(gridPoint.x, gridPoint.y).matrixTransform(transform);
     }
 
+    public getGridPoint(viewportPoint: DOMPoint): GridPoint {
+        const transform = this._ctx.getTransform();
+        const inverse = transform.inverse();
+        const gridPoint = viewportPoint.matrixTransform(inverse);
+        return { x: gridPoint.x, y: gridPoint.y };
+    }
+
     public getNodeFromPoint(viewportPoint: DOMPoint): QuadNode | null {
-        const gridPoint = this._getGridPoint(viewportPoint);
+        const gridPoint = this.getGridPoint(viewportPoint);
         if (!this._gridPointInBounds(gridPoint)) {
             return null;
         }
@@ -165,7 +189,7 @@ export class CanvasRenderer {
     }
 
     public getTileFromPoint(viewportPoint: DOMPoint): TileCoordinate | null {
-        const gridPoint = this._getGridPoint(viewportPoint);
+        const gridPoint = this.getGridPoint(viewportPoint);
         if (!this._gridPointInBounds(gridPoint)) {
             return null;
         }
@@ -232,6 +256,7 @@ export class CanvasRenderer {
 
     private _draw(): void {
         this._drawTiles();
+        this._drawMarkers();
         this._drawGrid();
         this._drawActiveTile();
     }
@@ -283,7 +308,9 @@ export class CanvasRenderer {
                     y: y * this.tileSize,
                     z: this._level,
                 }, true);
-                
+
+                hydrate(node);
+
                 if (node && node.tile) {
                     const gridRect = this._getGridRectFromNode(node);
                     tileRenderer.draw(node.tile, gridRect);
@@ -292,18 +319,21 @@ export class CanvasRenderer {
         }
     }
 
+    private _drawMarkers(): void {
+        this.markers.forEach((marker) => {
+            const color = tilesJSON.tiles.find((tileConfig) => tileConfig.name === marker.type)?.meta?.color || '#000000';
+            this._ctx.beginPath();
+            this._ctx.arc(marker.point.x, marker.point.y, 5, 0, Math.PI * 2);
+            this._ctx.fillStyle = color;
+            this._ctx.fill();
+        });
+    }
+
     private _getGridRectFromNode(node: QuadNode) {
         const tileMod = SIZE / this.numTiles;
         const tileX = node.bounds.x / tileMod;
         const tileY = node.bounds.y / tileMod;
         return this._gridRectfromTile({ x: tileX, y: tileY, z: this._level });
-    }
-
-    private _getGridPoint(viewportPoint: DOMPoint): GridPoint {
-        const transform = this._ctx.getTransform();
-        const inverse = transform.inverse();
-        const gridPoint = viewportPoint.matrixTransform(inverse);
-        return { x: gridPoint.x, y: gridPoint.y };
     }
 
     private _gridPointInBounds(point: GridPoint): boolean {
@@ -326,8 +356,8 @@ export class CanvasRenderer {
     }
 
     private _visibleGridRect(): GridRect {
-        const topLeft = this._getGridPoint(new DOMPoint(0, 0));
-        const bottomRight = this._getGridPoint(new DOMPoint(this.width, this.height));
+        const topLeft = this.getGridPoint(new DOMPoint(0, 0));
+        const bottomRight = this.getGridPoint(new DOMPoint(this.width, this.height));
 
         const x = Math.max(0, topLeft.x);
         const y = Math.max(0, topLeft.y);

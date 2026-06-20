@@ -4,11 +4,12 @@ import { useNavigate } from "react-router-dom";
 export function EditoreMenuScreen() {
     const navigate = useNavigate();
 
-    async function handleContinue() {
-    }
+    function handleContinue() {}
 
-    async function handleNew() {
-        try {
+    function handleNew() {
+        navigate(`/editor/new`);
+
+        /*try {
             const res = await fetch("/world", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -26,11 +27,16 @@ export function EditoreMenuScreen() {
             //setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
             //setLoading(false);
-        }
+        }*/
     }
 
-    async function handleLoad() {
+    function handleLoad() {
         console.log('Load');
+        navigate(`/editor/load`);
+    }
+
+    function handleCancel() {
+        navigate(`/`);
     }
 
     return (
@@ -40,6 +46,7 @@ export function EditoreMenuScreen() {
                 <button className="editor-screen--menu-btn" onClick={() => handleContinue()}>Continue (...)</button>
                 <button className="editor-screen--menu-btn" onClick={() => handleNew()}>New</button>
                 <button className="editor-screen--menu-btn" onClick={() => handleLoad()}>Load</button>
+                <button className="editor-screen--menu-btn" onClick={() => handleCancel()}>Cancel</button>
             </div>
         </main>
     );

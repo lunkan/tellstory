@@ -2,19 +2,11 @@
   "name": "tile",
   "version": "1.0.0",
   "tiles": [{
-    "name": "continent",
-    "category": "",
-    "attentionValue": 0,
+    "name": "player-start",
+    "category": "marker",
     "meta": {
-      "color": "#000000"
-    },
-    "subTiles": [{
-      "name": "water",
-      "threshold": 0.25
-    }, {
-      "name": "land",
-      "threshold": 1
-    }]
+      "color": "#ff0000"
+    }
   }, {
     "name": "water",
     "category": "typography",
@@ -38,20 +30,6 @@
       "threshold": 1
     }]
   }, {
-    "name": "land",
-    "category": "",
-    "attentionValue": 0,
-    "meta": {
-      "color": "#000000"
-    },
-    "subTiles": [{
-      "name": "forrest",
-      "threshold": 0.5
-    }, {
-      "name": "grassland",
-      "threshold": 1
-    }]
-  }, {
     "name": "elevation",
     "category": "typography",
     "attentionValue": 0,
@@ -67,12 +45,6 @@
     },
     "subTiles": [{
       "name": "forrest",
-      "threshold": 0.75
-    }, {
-      "name": "village",
-      "threshold": 0.85
-    }, {
-      "name": "scattered-farmstead",
       "threshold": 1
     }]
   }, {
@@ -84,31 +56,14 @@
     },
     "subTiles": [{
       "name": "grassland",
-      "threshold": 0.5
-    }, {
-      "name": "village",
-      "threshold": 0.75
-    }, {
-      "name": "scattered-farmstead",
       "threshold": 1
     }]
   }, {
-    "name": "village",
-    "category": "urban",
-    "attentionValue": 3,
-    "meta": {
-      "color": "#000000"
-    },
-    "subTiles": [{
-      "name": "house",
-      "threshold": 1
-    }]
-  }, {
-    "name": "scattered-farmstead",
+    "name": "urban",
     "category": "urban",
     "attentionValue": 1,
     "meta": {
-      "color": "#000000"
+      "color": "#ff0000"
     },
     "subTiles": [{
       "name": "house",
@@ -116,8 +71,11 @@
     }]
   }, {
     "name": "house",
-      "category": "building",
-    "attentionValue": 1
+    "category": "urban",
+    "attentionValue": 1,
+    "meta": {
+      "color": "#B04028"
+    }
   }, {
     "name": "road",
     "category": "vector",

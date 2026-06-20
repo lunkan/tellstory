@@ -30,6 +30,7 @@ export class DrawHandler extends CanvasEventHandler {
             node.tile = new Tile();
         }
 
+        node.detach();
         node.tile.setTerrain({
             type: this._type,
             value: Math.max(0, Math.min(1, this._value)),

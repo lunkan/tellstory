@@ -74,9 +74,8 @@ export class Tile {
 
     public getJSON(): TileData {
         return {
-            elevation: this.elevation,
-            type: this.type,
-            value: this.value,
+            vectors: this._vectors,
+            terrain: this._terrain,
         };
     }
 }

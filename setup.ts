@@ -1,6 +1,21 @@
 import db from "./database.js";
 
-// storyteller/npx tsx setup.ts
+// npx tsx setup.ts
+
+db.run(`
+  CREATE TABLE IF NOT EXISTS worlds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    tiles TEXT NOT NULL,
+    markers TEXT NOT NULL
+  )
+`, (err) => {
+  if (err) {
+    console.error(err.message);
+  } else {
+    console.log("World table ready");
+  }
+});
 
 db.run(`
   CREATE TABLE IF NOT EXISTS locationProfiles (

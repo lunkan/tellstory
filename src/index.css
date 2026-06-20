@@ -15,6 +15,10 @@ input {
   font-size: 1rem;
 }
 
+input[type="checkbox"] {
+  flex: none;
+}
+
 button {
   padding: 0.5rem 1rem;
   font-size: 1rem;
@@ -255,6 +259,29 @@ pre {
   padding: 24px 24px 32px;
 }
 
+.editor-menu-screen--list {
+  list-style: none;
+  padding: 0;
+}
+
+.editor-menu-screen--list li button {
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.editor-menu-screen--form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap:8px;
+}
+
+.editor-menu-screen--header {
+  display: flex;
+  justify-content: space-between;
+}
+
 .editor-screen {
   width: 100%;
   height: 100vh;
@@ -282,6 +309,12 @@ pre {
   gap: 4px;
 }
 
+.editor-topbar--name-label {
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+}
+
 .editor-topbar--btn {
   font-size: 12px;
   padding: 4px 8px;
@@ -303,6 +336,20 @@ pre {
   grid-area: map;
   flex: 1;
   overflow: hidden;
+}
+
+.editor-zoom-level {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  border: solid 1px #000;
+  padding: 8px;
+  text-align: center;
+  background-color: #212121;
+  color: #ffffff;
+}
+.editor-zoom-level--depth-label {
+  font-size: 11px;
 }
 
 .editor-palett {

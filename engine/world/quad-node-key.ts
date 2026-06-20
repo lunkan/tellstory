@@ -12,6 +12,12 @@ export class QuadNodeKey {
         return (hash << 2n) | BigInt(quadrant);
     }
 
+    public static fromId(nodeId: string): QuadNodeKey {
+        const hashBits = nodeId.slice(0, QuadNodeKey.HASH_BIT_SIZE);
+        const depthBits = nodeId.slice(QuadNodeKey.HASH_BIT_SIZE);
+        return new QuadNodeKey(BigInt("0b" + hashBits), parseInt(depthBits, 2));
+    }
+
     public static getHashFromPath(path: QuadNodeChildIndex[]): bigint {
         if (!path.length) {
             return 0n;

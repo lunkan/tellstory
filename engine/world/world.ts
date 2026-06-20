@@ -1,5 +1,4 @@
 import { QuadNodeDelta, QuadNodePoint } from "../../storyteller/types";
-import { Character } from "../core/character";
 import { WorldGenerator } from "../world-generator/world-generator";
 import { QuadNode } from "./quad-node";
 import { QuadNodeKey } from "./quad-node-key";
@@ -9,8 +8,8 @@ export class World {
     private _worldGen: WorldGenerator;
 
     constructor() {
-        const rootKey = new QuadNodeKey(0n, 0);
-        this._quadtree = new QuadNode(rootKey);
+        //const rootKey = new QuadNodeKey(0n, 0);
+        this._quadtree = new QuadNode();//rootKey);
         this._worldGen = new WorldGenerator;
     }
 
@@ -89,10 +88,4 @@ export class World {
         node.tile = this._worldGen.generateTile(node.key);
         return node;
     }
-
-    /*private _compare(a: number, b: number) {
-        if (a > b) return 1;
-        if (a < b) return -1;
-        return 0;
-    }*/
 }

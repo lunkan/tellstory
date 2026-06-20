@@ -1,11 +1,12 @@
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
-import { QuadNodeData as QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect } from "../../storyteller/types";
+import { QuadNodeData as QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileDataEntry } from "../../storyteller/types";
 
 export class QuadNode {
     public readonly key: QuadNodeKey;
     public readonly bounds: QuadNodeBounds;
+    public readonly parent: QuadNode | undefined;
 
     public tile: Tile | undefined;
 
@@ -14,10 +15,34 @@ export class QuadNode {
     }
 
     private _quadrants: QuadNode[] = [];
+    private _detached: boolean = false;
 
-    constructor(key: QuadNodeKey) {
-        this.key = key;
+    //constructor(key: QuadNodeKey, parent: QuadNode) {
+    constructor(parent?: QuadNode, index?: any) {
+        if (!parent) {
+            this.key = new QuadNodeKey(0n, 0);
+        } else {
+            this.parent = parent;
+            this.key = parent.key.createChildKey(index);
+        }
+
+        //this.key = key;
         this.bounds = QuadNodeBounds.fromKey(this.key);
+    }
+
+    public detach(): void {
+        if (this._detached) {
+            return;
+        }
+
+        this._detached = true;
+        if (this.parent) {
+            this.parent.detach();
+        }
+    }
+
+    public isDetached(): boolean {
+        return this._detached;
     }
 
     public getPoint(): QuadNodePoint {
@@ -44,8 +69,8 @@ export class QuadNode {
         }
 
         for (let i = 0; i < 4; i++) {
-            const quadrantKey = this.key.createChildKey(i as any);
-            const quadrant = new QuadNode(quadrantKey);
+           // const quadrantKey = this.key.createChildKey(i as any);
+            const quadrant = new QuadNode(this, i); //new QuadNode(quadrantKey, this);
             this._quadrants.push(quadrant);
         }
 
@@ -56,10 +81,10 @@ export class QuadNode {
         const quadrants = this.getQuadrants(createIfMissing);
         if (x === 0 && y === 0) {
             return quadrants[0];
-        } else if (x === 1 && y === 0) {
-            return quadrants[1];
         } else if (x === 0 && y === 1) {
-            return quadrants[2];
+            return quadrants[1]; // fel (C - B)
+        } else if (x === 1 && y === 0) {
+            return quadrants[2]; // fel (C - B)
         } else if (x === 1 && y === 1) {
             return quadrants[3];
         }
@@ -67,15 +92,15 @@ export class QuadNode {
         return;
     }
 
-    public findByKey(key: QuadNodeKey): QuadNode | undefined {
+    public findByKey(key: QuadNodeKey, createIfMissing: boolean): QuadNode | undefined {
         if (this.key.isMatch(key)) {
             return this;
         } else if (!this.key.isDescendant(key)) {
             return;
         }
 
-        for (const child of this.getQuadrants()) {
-            const node = child.findByKey(key);
+        for (const child of this.getQuadrants(createIfMissing)) {
+            const node = child.findByKey(key, createIfMissing);
             if (node) {
                 return node;
             }
@@ -118,9 +143,9 @@ export class QuadNode {
         }
 
         const z = this._compare(node.getPoint().z, this.getPoint().z);
-        if (z < 0) {
+        /*if (z < 0) {
             return { x: 0, y: 0, z };
-        }
+        }*/
 
         const relCenter = node.getCenterPoint();
         const currCenter = this.getCenterPoint();
@@ -147,6 +172,25 @@ export class QuadNode {
     public isAdjacent(node: QuadNode): boolean {
         const normDistance = this.getNormalizedDistance(node);
         return normDistance === 1;
+    }
+
+    public getDetachedTiles(): TileDataEntry[] {
+        if (!this.isDetached()) {
+            return [];
+        }
+
+        const quadrantTiles = this._quadrants.flatMap((node: QuadNode) => node.getDetachedTiles());
+        if (!this.tile) {
+            return quadrantTiles;
+        }
+
+        const tileData: TileDataEntry = {
+            nodeId: this.key.id,
+            terrain: this.tile.terrain,
+            vectors: this.tile.vectors,
+        };
+
+        return [tileData, ...quadrantTiles];
     }
 
     public toString(): string {

@@ -62,9 +62,12 @@ export type DirectionSummary = {
 };
 
 export type TileData = {
-    elevation: number;
-    type: string;
-    value: number;
+    vectors: VectorSetting[],
+    terrain: TerrainSetting[],
+}
+
+export type TileDataEntry = TileData & {
+    nodeId: string,
 }
 
 export type TerrainSetting = {
@@ -148,4 +151,24 @@ export type DirectionData = {
 export type WebsocketMessage = {
     type: string,
     data: unknown,
+}
+
+export type WorldData = {
+  id: number;
+  name: string;
+  tiles: TileDataEntry[];
+  markers: Marker[];
+}
+
+export type WorldDataSummary = {
+  id: number;
+  name: string;
+}
+
+// ------
+
+export type Marker = {
+    point: QuadNodes2DPoint;
+    type: string;
+    id: string;
 }
