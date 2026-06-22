@@ -1,4 +1,4 @@
-import { create } from "zustand";
+/*import { create } from "zustand";
 import { DirectionData, LocationMessage } from "../../storyteller/types";
 import { wsService } from "../websocket/websocketService";
 import { useSceneStore } from "./sceneStore";
@@ -34,4 +34,4 @@ export const useLocationStore = create<LocationStore>((set) => ({
       data: direction,
     });
   },
-}));
+}));*/

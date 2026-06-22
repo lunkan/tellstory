@@ -92,7 +92,7 @@ export class QuadNode {
         return;
     }
 
-    public findByKey(key: QuadNodeKey, createIfMissing: boolean): QuadNode | undefined {
+    public findByKey(key: QuadNodeKey, createIfMissing: boolean = false): QuadNode | undefined {
         if (this.key.isMatch(key)) {
             return this;
         } else if (!this.key.isDescendant(key)) {
@@ -107,7 +107,7 @@ export class QuadNode {
         }
     }
 
-    public findByPoint(point: QuadNodePoint, createIfMissing: boolean): QuadNode | undefined {
+    public findByPoint(point: QuadNodePoint, createIfMissing: boolean = false): QuadNode | undefined {
         if (this.depth > point.z || !this.bounds.contains2DPoint(point)) {
             return;
         } else if (this.depth === point.z) {
@@ -122,7 +122,7 @@ export class QuadNode {
         }
     }    
 
-    public findByRect(rect: QuadNodesRect, createIfMissing: boolean): QuadNode[] {
+    public findByRect(rect: QuadNodesRect, createIfMissing: boolean = false): QuadNode[] {
         if (this.depth > rect.z || !this.bounds.intersects2DRect(rect)) {
            return [];
         } else if (this.depth === rect.z) {

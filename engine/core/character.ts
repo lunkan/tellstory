@@ -20,38 +20,59 @@ export class Character {
     public readonly id: string;
 
     public name: string;
-    
+
     private _chronicle: ChronicleEvent[] = [];
     private _world: World;
-    private _currentLocation: QuadNode;
-    private _previousLocation: QuadNode;
+    private _currentLocation: QuadNode | undefined;
+    private _previousLocation: QuadNode | undefined;
 
-    constructor(name: string, world: World, point: QuadNodePoint) {
+    constructor(name: string, world: World) { //, point: QuadNodePoint) {
         this.id = name;
         this.name = name;
         this._world = world;
-        this._currentLocation = world.findNodeByPoint(point)!;
-        this._previousLocation = this._currentLocation;
+        //this._currentLocation = world.findNodeByPoint(point)!;
+        //this._previousLocation = this._currentLocation;
+    }
+
+    public setLocation(nextLocation: QuadNode): void {
+        this._previousLocation = this._currentLocation || nextLocation;
+        this._currentLocation = nextLocation;
     }
 
     public getCurrentLocation(): QuadNode {
-        return this._currentLocation;
+        return this._currentLocation!;
     }
 
     public getPreviousLocation(): QuadNode {
-        return this._previousLocation;
+        return this._previousLocation!;
+    }
+
+    public getAdjacentNodes(): QuadNode[] {
+        return this._world.findQuadrantNodes(this.getCurrentLocation().key);
+    }
+
+    public getQuadrantNodes(): QuadNode[] {
+        return this._world.findQuadrantNodes(this.getCurrentLocation().key);
+    }
+
+    public getAdjacentByDelta(deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): QuadNode | undefined {
+        return this._world.findNeighbourNode(this.getCurrentLocation().key, deltaX, deltaY);
+    }
+
+    public getQuadrantByDelta(x: 1 | 0, y: 1 | 0): QuadNode | undefined {
+        return this._world.findQuadrantNode(this.getCurrentLocation().key, x, y);
     }
 
     public getAdjacent3DLocations(): QuadNode[] {
-        const locations: QuadNode[] = [this._currentLocation];
-        const parent = this._world.findParentNode(this._currentLocation.key);
+        const locations: QuadNode[] = [this.getCurrentLocation()];
+        const parent = this._world.findParentNode(this.getCurrentLocation().key);
 
         if (parent) {
             locations.push(parent);
         }
 
-        locations.push(...this._world.findQuadrantNodes(this._currentLocation.key));
-        locations.push(...this._world.findAdjacentNodes(this._currentLocation.key));
+        locations.push(...this._world.findQuadrantNodes(this.getCurrentLocation().key));
+        locations.push(...this._world.findAdjacentNodes(this.getCurrentLocation().key));
         return locations;
     }
 
@@ -59,7 +80,7 @@ export class Character {
         return this.findMemories({ types: [ChronicleEventType.Enter] }).slice(0, lookback);
     }
 
-    public moveToAdjacent(deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): boolean {
+    /*public moveToAdjacent(deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): boolean {
         const nextLocation = this._world.findNeighbourNode(this._currentLocation.key, deltaX, deltaY);
         if (!nextLocation) {
             return false;
@@ -79,22 +100,22 @@ export class Character {
         this._previousLocation = this._currentLocation;
         this._currentLocation = nextLocation;
         return true;
-    }
+    }*/
 
     public moveToParent(): boolean {
-        const parentLocation = this._world.findParentNode(this._currentLocation.key);
+        const parentLocation = this._world.findParentNode(this.getCurrentLocation().key);
         if (!parentLocation) {
             return false;
         }
 
-        this._previousLocation = this._currentLocation;
+        this._previousLocation = this.getCurrentLocation();
         this._currentLocation = parentLocation;
         return true;
     }
 
     public addMemory(event: ChronicleEvent): void {
         this._chronicle.unshift({
-            locationId: this._currentLocation.key.id,
+            locationId: this.getCurrentLocation().key.id,
             ...event,
         });
     }

@@ -11,5 +11,5 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["server", "engine", "storyteller", "constants.ts", "src/Typewriter.ts"]
+  "include": ["server", "engine", "storyteller", "shared/src/direction.ts", "src/Typewriter.ts"]
 }

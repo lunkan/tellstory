@@ -6,7 +6,9 @@ export function TitleScreen() {
     const navigate = useNavigate();
 
     async function handleNewGame() {
-        try {
+        navigate('/menu');
+
+        /*try {
             console.log('handleStart');
             const res = await fetch("/game", {
                 method: "POST",
@@ -20,13 +22,13 @@ export function TitleScreen() {
             }
 
             //setActiveGameId('New');
-            navigate('/game');
+            
 
         } catch (err) {
             //setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
             //setLoading(false);
-        }
+        }*/
     }
 
     return (

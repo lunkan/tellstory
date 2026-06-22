@@ -1,5 +1,5 @@
 import { QuadNodePoint } from "../types";
-import { DIRECTION, DIRECTION_NAME } from "../../constants";
+import { DIRECTION, DIRECTION_NAME } from "../../shared/src/direction";
 
         
 export function getFrequencyPhrase(frequency: number): string {

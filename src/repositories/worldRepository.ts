@@ -1,4 +1,4 @@
-import { WorldData } from "../../../storyteller/types";
+import { WorldData } from "../../storyteller/types";
 
 async function create(name: string): Promise<number> {
     const res = await fetch("/world", {

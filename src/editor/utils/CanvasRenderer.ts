@@ -21,7 +21,7 @@ import { QuadNode } from "../../../engine/world/quad-node";
 import { QUAD_TREE_ROOT_SIZE } from "../../../engine/world/quad-node-bounds";
 import { OverlayRenderer } from "./OverlayRenderer";
 import { TileRenderer } from './TileRenderer';
-import { hydrate } from '../../../engine/world-generator/world-generator';
+import { hydrate } from '../../../engine/world/hydrator';
 import { Marker } from '../../../storyteller/types';
 
 const SIZE: number = QUAD_TREE_ROOT_SIZE;

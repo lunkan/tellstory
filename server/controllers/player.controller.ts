@@ -1,25 +1,25 @@
-import { subscribe } from "../websocket/websocket-service";
+/*import { subscribe } from "../websocket/websocket-service";
 import { DirectionData } from "../../storyteller/types";
 import { DIRECTION } from "../../constants";
-import { gameManager } from "../game/game-manager";
-import { ChronicleEventType } from "../../engine/chronicle/chronicle";
-import { enterScene, spawn } from "./storyteller.controller";
+import { gameManager } from "../game/game-manager";*/
+//import { ChronicleEventType } from "../../engine/chronicle/chronicle";
+//import { enterScene, spawn } from "./storyteller.controller";
 
-console.log('Imported', 'player');
+//console.log('Imported', 'player');
 
-export function spawnPlayer(): void {
-    const gamePod = gameManager.getGamePod();
+/*export function spawnPlayer(): void {
+    const gamePod = gameManager.getGame();
     if (!gamePod) {
         throw Error('No availible game');
     }
 
     const player = gamePod.game.newPlayer('Fantomen', { x: 0, y: 0, z: 2});
     spawn(player);
-}
+}*/
 
-subscribe('move', (data: unknown) => {
+/*subscribe('move', (data: unknown) => {
     const { type, direction } = data as DirectionData;
-    const gamePod = gameManager.getGamePod();
+    const gamePod = gameManager.getGame();
 
     if (!gamePod) {
         throw Error('No availible game');
@@ -82,10 +82,10 @@ subscribe('move', (data: unknown) => {
         throw Error(`No direction type: ${type}`);
     }
 
-    player.addMemory({
+    /*player.addMemory({
         type: ChronicleEventType.Enter,
         timestamp: game.getTime(),
     });
 
-    enterScene(player);
-});
+    enterScene(player);/
+});*/

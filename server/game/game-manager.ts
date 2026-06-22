@@ -1,15 +1,23 @@
+import { Game } from "../../engine/core/game";
+import { World } from "../../engine/world/world";
+import { WorldData } from "../../storyteller/types";
 import { GamePod } from "./game-pod";
 
-class GameManager {
-    private _game: GamePod | undefined;
 
-    public createGame(): void {
-        this._game = new GamePod();
-    }
+let gamePod: GamePod | undefined;
 
-    public getGamePod(): GamePod | undefined {
-        return this._game;
-    }
+function newGame(worldData: WorldData): GamePod {
+    const world = new World(worldData);
+    const game = new Game(world);
+    gamePod = new GamePod(game);
+    return gamePod;
 }
 
-export const gameManager = new GameManager();
+function getGame(): GamePod | undefined {
+    return gamePod;
+}
+
+export const gameManager = {
+  newGame,
+  getGame,
+};

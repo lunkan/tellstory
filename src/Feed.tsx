@@ -1,4 +1,4 @@
-import { Reply } from "../storyteller/types";
+/*import { Reply } from "../storyteller/types";
 import { FeedDetailPanel } from "./FeedDetailPanel";
 import { FeedDirection } from "./FeedDirection";
 import { FeedProfile } from "./FeedProfile";
@@ -60,4 +60,4 @@ export function Feed({ reply, locationManager }: GeneralInfoProps) {
             )}
         </div>
     );
-}
+}*/

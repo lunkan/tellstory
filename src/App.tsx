@@ -1,17 +1,16 @@
 import { useEffect } from "react";
 import { wsService } from "./websocket/websocketService";
-//import { useGameStore } from "./store/gameStore";
-import { TitleScreen } from "./TitleScreen";
-import { GameScreen } from "./GameScreen";
+import { GameScreen } from "./game/GameScreen";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { EditorScreen } from "./editor/EditorScreen";
 import { EditoreMenuScreen } from "./editor/EditorMenuScreen";
 import { EditoreNewWorldScreen } from "./editor/EditorNewWorldScreen";
 import { EditoreLoadWorldScreen } from "./editor/EditorLoadWorldScreen";
+import { NewGameScreenScreen } from "./game-menu/NewGameScreen";
+import { TitleScreen } from "./TitleScreen";
 
 export default function App() {
-    //const activeGameId = useGameStore((state) => state.activeGameId);
-  
+
     useEffect(() => {
         wsService.connect();
     }, []);
@@ -20,6 +19,7 @@ export default function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<TitleScreen />} />
+                <Route path="/menu" element={<NewGameScreenScreen />} />
                 <Route path="/game" element={<GameScreen />} />
                 <Route path="/editor" element={<EditoreMenuScreen />} />
                 <Route path="/editor/new" element={<EditoreNewWorldScreen />} />
@@ -28,14 +28,4 @@ export default function App() {
             </Routes>
         </BrowserRouter>
     );
-
-  /*if (activeGameId) {
-    return (<GameScreen></GameScreen>);
-  } else if (activeEditorId) {
-
-  }
-
-  if (!activeGameId) {
-      return (<TitleScreen></TitleScreen>);
-  }*/
 }

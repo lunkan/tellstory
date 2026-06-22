@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
-import { LocationMessage, WebsocketMessage } from "../../storyteller/types";
+import { Message } from "../../shared/src/message";
+import { WebsocketMessage } from "../../storyteller/types";
 
 type MessageSubscriber = {
   type: string,
@@ -35,11 +36,42 @@ wss.on("connection", (ws: WebSocket) => {
   });
 });
 
-export function subscribe(type: string, callback: (data: unknown) => void): void {
+/*export function subscribe(type: string, callback: (data: unknown) => void): void {
   subscribers.push({ type, callback });
+}*/
+
+/*export function sendEvent(event: GameLocationChangeEvent): void {
+  if (!websocket) {
+    console.log('No websocket!');
+    return;
+  }
+
+  websocket.send(event.serialize());
+}*/
+
+/*export function sendDescription(description: DescriptionMessage): void {
+  if (!websocket) {
+    console.log('No websocket!');
+    return;
+  }
+
+  websocket.send(
+    JSON.stringify(description)
+  );
+}*/
+
+export function sendMessage(message: Message): void {
+  if (!websocket) {
+    console.log('No websocket!');
+    return;
+  }
+
+  websocket.send(
+    JSON.stringify(message)
+  );
 }
 
-export function sendLocationMessage(msg: LocationMessage): void {
+/*export function sendLocationMessage(msg: LocationMessage): void {
   if (!websocket) {
     console.log('No websocket!');
     return;
@@ -48,4 +80,10 @@ export function sendLocationMessage(msg: LocationMessage): void {
   websocket.send(
     JSON.stringify(msg)
   );
-}
+}*/
+
+export const websocketService = {
+  sendMessage,
+  //sendEvent,
+  //sendDescription,
+};

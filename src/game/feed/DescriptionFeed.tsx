@@ -1,8 +1,38 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Typewriter } from "./Typewriter";
-import { useScene, useSceneStore } from "./store/sceneStore";
+import { useSceneStore } from "../../store/sceneStore";
+import { useSnapScrollToBottom } from "../../effects/snapScrollToBottom";
 
-export function NewFeed() {
+export function DescriptionFeed() {
+    const description = useSceneStore((state) => state.description);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const bottomRef = useRef<HTMLDivElement>(null);
+
+    useSnapScrollToBottom(scrollContainerRef, bottomRef)
+
+    function handleAnimationComplete(id: string): void {
+        useSceneStore.getState().consumeDescription(id);
+    }
+
+    console.log('DescriptionFeed', description);
+
+    if (!description) {
+        return;
+    }
+
+    return (
+        <div className="feed" ref={scrollContainerRef}>
+            <div className="feed--shade"></div>
+            <div>
+                <h2 className="feed--heading">{description.type}</h2>
+                <Typewriter id={description.id} text={description.text} onAnimationComplete={handleAnimationComplete}></Typewriter>
+            </div>
+            <div ref={bottomRef}></div>
+        </div>
+    );
+}
+
+/*export function DescriptionFeed() {
     const {
         sceneId,
         leadingText,
@@ -49,7 +79,7 @@ export function NewFeed() {
             setSceneReadyForInteraction(false);
             return;
         }
-        
+
         if (sceneTransitionCompleted) {
             console.log('Introduction complete');
             setSceneIntroductionComplete(true);
@@ -60,10 +90,10 @@ export function NewFeed() {
             setSceneReadyForInteraction(true);
         }
 
-    } , [setSceneReadyForInteraction, sceneId, currentSceneId, sceneTransitionCompleted, quadrantSummaryCompleted, adjacentSummaryCompleted]);
+    }, [setSceneReadyForInteraction, sceneId, currentSceneId, sceneTransitionCompleted, quadrantSummaryCompleted, adjacentSummaryCompleted]);
 
     function handleAnimationComplete(type: string): void {
-        switch(type) {
+        switch (type) {
             case 'sceneTransition':
                 setSceneTransitionCompleted(true);
                 break;
@@ -78,12 +108,12 @@ export function NewFeed() {
 
     function renderLoader() {
         return (
-            <svg fill="#333" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{width: '14px', height: '14px'}}>
+            <svg fill="#333" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ width: '14px', height: '14px' }}>
                 <circle cx="4" cy="12" r="3">
-                    <animate id="spinner_qFRN" begin="0;spinner_OcgL.end+0.25s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33"/>
+                    <animate id="spinner_qFRN" begin="0;spinner_OcgL.end+0.25s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" />
                 </circle>
-                <circle cx="12" cy="12" r="3"><animate begin="spinner_qFRN.begin+0.1s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33"/></circle>
-                <circle cx="20" cy="12" r="3"><animate id="spinner_OcgL" begin="spinner_qFRN.begin+0.2s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33"/></circle>
+                <circle cx="12" cy="12" r="3"><animate begin="spinner_qFRN.begin+0.1s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" /></circle>
+                <circle cx="20" cy="12" r="3"><animate id="spinner_OcgL" begin="spinner_qFRN.begin+0.2s" attributeName="cy" calcMode="spline" dur="0.6s" values="12;6;12" keySplines=".33,.66,.66,1;.33,0,.66,.33" /></circle>
             </svg>
         );
     }
@@ -109,7 +139,7 @@ export function NewFeed() {
     function renderQuadrantSummary() {
         if (!sceneTransitionCompleted) {
             return null;
-        } else if (!quadrantSummary?.text) {    
+        } else if (!quadrantSummary?.text) {
             return renderLoader();
         }
 
@@ -124,7 +154,7 @@ export function NewFeed() {
     function renderAdjacentSummary() {
         if (!sceneTransitionCompleted || !quadrantSummaryCompleted) {
             return null;
-        } else if (!adjacentSummary?.text) {    
+        } else if (!adjacentSummary?.text) {
             return renderLoader();
         }
 
@@ -159,4 +189,4 @@ export function NewFeed() {
             <div ref={bottomRef}></div>
         </div>
     );
-}
+}*/

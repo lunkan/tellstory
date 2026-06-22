@@ -242,6 +242,47 @@ pre {
   background-color: #BE9B7B;
 }
 
+.game-menu-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-menu-screen--menu {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  gap: 16px;
+  border: solid 1px #6F4436;
+  padding: 24px 24px 32px;
+}
+
+.game-menu-screen--list {
+  list-style: none;
+  padding: 0;
+}
+
+.game-menu-screen--list li button {
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.game-menu-screen--form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap:8px;
+}
+
+.game-menu-screen--header {
+  display: flex;
+  justify-content: space-between;
+}
+
+
 .editor-menu-screen {
   width: 100%;
   height: 100vh;

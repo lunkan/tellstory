@@ -1,16 +1,24 @@
-import { QuadNodePoint } from "../../storyteller/types";
+import { IGameObserver, QuadNodePoint, QuadNodes2DPoint } from "../../storyteller/types";
+import { QuadNode } from "../world/quad-node";
 import { World } from "../world/world";
 import { Character } from "./character";
+import { GameEvent } from "./events/game-event.interface";
+import { GameLocationChangeEvent } from "./events/game-location-change-event";
 
 export class Game {
     public readonly world: World;
 
     private _players: Map<string, Character> = new Map();
-
     private _time: number = 0;
+
+    private _subscriber: IGameObserver[] = [];
 
     constructor(world: World) {
         this.world = world;
+    }
+
+    public subscribe(observer: IGameObserver): void {
+        this._subscriber.push(observer);
     }
 
     public newTurn(): void {
@@ -25,18 +33,89 @@ export class Game {
         return this._players.get(name);
     }
 
-    public newPlayer(name: string, point: QuadNodePoint): Character {
-        /*const newPlayer = new Character(name, this, point);
-            this.game.newPlayer('Fantomen', { x: 0, y: 0, z: 2});
-        }*/
+    public spawnPlayer(player: Character): boolean {
+        const playerStart = this.world.findMarkerByType('player-start');
+        if (!playerStart) {
+            throw Error('No player start found');
+        }
 
-        const startingNode = this.world.findNodeByPoint(point);
+        const stratingPoint: QuadNodePoint = {
+            ...playerStart.point,
+            z: 5,
+        };
+
+        const startingNode = this.world.findNodeByPoint(stratingPoint);
         if (!startingNode) {
             throw Error('No starting node for player');
         }
 
-        const newPlayer = new Character(name, this.world, startingNode.getPoint());
-        this._players.set(newPlayer.id, newPlayer);
-        return newPlayer;
+        player.setLocation(startingNode);
+        this._players.set(player.id, player);
+
+        console.log('Game:spawnPlayer', this._subscriber.length);
+
+        this._emitt(new GameLocationChangeEvent({
+            point: startingNode.getPoint(),
+            type: 'characterSpawn',
+            timestamp: this._time,
+            playerId: player.id,
+        }));
+
+        return true;
+    }
+
+    /*public newPlayer(name: string): Character {
+        /*const newPlayer = new Character(name, this, point);
+            this.game.newPlayer('Fantomen', { x: 0, y: 0, z: 2});
+        }/
+
+        const playerStart = this.world.findMarkerByType('player-start');
+        if (!playerStart) {
+            throw Error('No player start found');
+        }
+
+        const stratingPoint: QuadNodePoint = {
+            ...playerStart.point,
+            z: 5,
+        };
+
+        const startingNode = this.world.findNodeByPoint(stratingPoint);
+        if (!startingNode) {
+            throw Error('No starting node for player');
+        }
+
+        const player = new Character(name, this.world, startingNode.getPoint());
+        this._players.set(player.id, player);
+
+        this._emitt(new GameLocationChangeEvent({
+            point: startingNode.getPoint(),
+            type: 'characterSpawn',
+            timestamp: this._time,
+            playerId: player.id,
+        }));
+
+        return player;
+    }*/
+
+    public movePlayer(playerName: string, nextLocation: QuadNode): boolean {
+        const player = this.getPlayer(playerName);
+        if (!player) {
+            return false;
+        }
+
+        player.setLocation(nextLocation);
+
+        this._emitt(new GameLocationChangeEvent({
+            point: nextLocation.getPoint(),
+            type: 'characterEnter',
+            timestamp: this._time,
+            playerId: player.id,
+        }));
+
+        return true;
+    }
+
+    private _emitt(event: GameEvent): void {
+        this._subscriber.forEach((subscriber) => subscriber.onEvent(event));
     }
 }

@@ -1,26 +1,47 @@
-import { QuadNodeDelta, QuadNodePoint } from "../../storyteller/types";
-import { WorldGenerator } from "../world-generator/world-generator";
+import { Marker, QuadNodeDelta, QuadNodePoint, WorldData } from "../../storyteller/types";
+import { hydrate } from "./hydrator";
 import { QuadNode } from "./quad-node";
 import { QuadNodeKey } from "./quad-node-key";
+import { Tile } from "./tile";
 
 export class World {
     private _quadtree: QuadNode;
-    private _worldGen: WorldGenerator;
+    private _markers: Marker[];
 
-    constructor() {
-        //const rootKey = new QuadNodeKey(0n, 0);
-        this._quadtree = new QuadNode();//rootKey);
-        this._worldGen = new WorldGenerator;
+    //private _worldGen: WorldGenerator;
+
+    constructor(worldData: WorldData) {
+        this._quadtree = new QuadNode();
+        this._markers = worldData.markers;
+
+        //this._worldGen = new WorldGenerator;
+
+        for(const tileEntry of worldData.tiles) {
+            const tile = new Tile();
+            tileEntry.terrain.forEach((terrainSetting) => tile.setTerrain(terrainSetting));
+            tileEntry.vectors.forEach((vectorSetting) => tile.setVector(vectorSetting));
+
+            const nodeKey = QuadNodeKey.fromId(tileEntry.nodeId);
+            const node = this._quadtree.findByKey(nodeKey, true);
+    
+            if (node) {
+                node.tile = tile;
+            }
+        }
+    }
+
+    public findMarkerByType(type: string): Marker | undefined {
+        return this._markers.find((marker) => marker.type === type);
     }
 
     public findNodeBykey(key: QuadNodeKey): QuadNode | undefined {
         const node = this._quadtree.findByKey(key);
-        return node ? this._hydrate(node) : undefined;
+        return node ? hydrate(node) : undefined;
     }
 
     public findNodeByPoint(point: QuadNodePoint): QuadNode | undefined {
         const node = this._quadtree.findByPoint(point, true);
-        return node ? this._hydrate(node) : undefined;
+        return node ? hydrate(node) : undefined;
     }
 
     public findNeighbourNode(key: QuadNodeKey, deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): QuadNode | undefined {
@@ -33,7 +54,7 @@ export class World {
         const y = refNode.bounds.y + deltaY * refNode.bounds.size;
 
         const neighbourNode = this._quadtree.findByPoint({ x, y, z: refNode.depth}, true);
-        return this._hydrate(neighbourNode);
+        return hydrate(neighbourNode);
     }
 
     public findAdjacentNodes(key: QuadNodeKey): QuadNode[] {
@@ -49,7 +70,7 @@ export class World {
         return this._quadtree
             .findByRect({x, y, z: node.depth, width: size * 3, height: size * 3 }, true)
             .filter((adjacentNode) => adjacentNode !== node)
-            .map((adjacentNode) => this._hydrate(adjacentNode)!);
+            .map((adjacentNode) => hydrate(adjacentNode)!);
     }
 
     public findQuadrantNodes(key: QuadNodeKey): QuadNode[] {
@@ -59,7 +80,7 @@ export class World {
         }
 
         const quadrantNodes = node.getQuadrants(true);
-        return quadrantNodes.map((quadrantNode) => this._hydrate(quadrantNode)!);
+        return quadrantNodes.map((quadrantNode) => hydrate(quadrantNode)!);
     }
 
     public findQuadrantNode(key: QuadNodeKey, x: 1 | 0, y: 1 | 0): QuadNode | undefined {
@@ -69,23 +90,12 @@ export class World {
         }
 
         const quadrantNode = node.getQuadrantAt(x, y, true);
-        return this._hydrate(quadrantNode);
+        return hydrate(quadrantNode);
     }
 
     public findParentNode(key: QuadNodeKey): QuadNode | undefined {
         const parentKey = key.createParentKey();
         const parentNode = this._quadtree.findByKey(parentKey);
-        return this._hydrate(parentNode);
-    }
-
-    private _hydrate(node: QuadNode | undefined): QuadNode | undefined {
-        if (!node) {
-            return;
-        } else if (node.tile) {
-            return node;
-        }
-
-        node.tile = this._worldGen.generateTile(node.key);
-        return node;
+        return hydrate(parentNode);
     }
 }

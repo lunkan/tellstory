@@ -1,11 +1,11 @@
-import { NavigationControl } from "./NavigationControl";
-import { NewFeed } from "./NewFeed";
+import { NavigationControl } from "./control/NavigationControl";
+import { DescriptionFeed } from "./feed/DescriptionFeed";
 
 export function GameScreen() {
     return (
         <main className="game-screen">
             <div className="game-screen--feed">
-                <NewFeed></NewFeed>
+                <DescriptionFeed></DescriptionFeed>
             </div>
             <div className="game-screen--control">
                 <NavigationControl></NavigationControl>

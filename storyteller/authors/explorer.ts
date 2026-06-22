@@ -236,3 +236,5 @@ export class Explorer {
         return instructionText;
     }
 }
+
+export const explorer = new Explorer();

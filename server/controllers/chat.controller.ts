@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+/*import type { Request, Response } from "express";
 import { createGame } from "../../engine/core/engine.js";
 import { Explorer } from "../../storyteller/authors/explorer.js";
 import { ChronicleEventType } from "../../engine/chronicle/chronicle.js";
@@ -160,7 +160,7 @@ export async function postChat(
         ...player.getMetricsByLocation(metricData.id, currentGame.getTime()),
         ...metricData.metric,
       }
-    });*/
+    });/
 
     console.log('GET LOCATIONS');
 
@@ -183,7 +183,7 @@ export async function postChat(
         type: 'locationDescription',
         descriptionType: 'sceneTransition',
         text: sceneTransition,
-    });*/
+    });/
 
     if (!previousLocation || !currentLocation) {
       res.json({});
@@ -232,7 +232,7 @@ export async function postChat(
         type: 'locationDescription',
         descriptionType: 'adjacentSummary',
         text: adjacentSummary,
-    });*/
+    });/
 
     explorer.getDirectionLocationProfiles(currentNode, quadrantNodes).then((quadrantDirectionProfiles) => {
       quadrantDirectionProfiles.forEach((quadrantDirectionProfile) => {
@@ -289,7 +289,7 @@ export async function postChat(
       },
       /*sceneTransition,
       adjacentSummary,
-      quadrantSummary,*/
+      quadrantSummary,/
       //premises,
       //adjacent,
     };
@@ -300,4 +300,4 @@ export async function postChat(
     const message = err instanceof Error ? err.message : "Unknown error";
     res.status(500).json({ error: message });
   }
-}
+}*/

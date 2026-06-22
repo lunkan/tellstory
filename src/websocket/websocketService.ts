@@ -1,4 +1,4 @@
-import { useLocationStore } from "../store/locationStore";
+import { useSceneStore } from "../store/sceneStore";
 
 class WebSocketService {
   private socket: WebSocket | null = null;
@@ -13,8 +13,15 @@ class WebSocketService {
     this.socket.onmessage = (event) => {
         const msg = JSON.parse(event.data);
         console.log('MSG:', msg.descriptionType);
-        switch (msg.type) {
+
+        useSceneStore.getState().handleMessage(msg);
+
+        /*switch (msg.type) {
             case 'locationDescription':
+              
+
+                
+
                 useLocationStore.getState().addMessage(msg);
                 break;
             /*case 'adjacentSummary':
@@ -22,11 +29,11 @@ class WebSocketService {
                 break;
             case "quadrantSummary":
                 useQuadrantSummaryStore.getState().add(msg);
-                break;*/
+                break;/
             default:
                 console.log('No handled message', msg);
                 break;
-        }
+        }*/
 
         /*
         sceneTransition,

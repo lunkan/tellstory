@@ -1,38 +1,38 @@
-import { QuadNodeDelta, TerrainSetting } from '../../storyteller/types';
+import { QuadNodeDelta } from '../../storyteller/types';
 import tilesJSON from '../config/tiles.json' with { type: 'json' };
 import { getRandFromSeeds } from '../util/number-generator';
-import { QuadNode } from '../world/quad-node';
-import { QuadNodeKey } from '../world/quad-node-key';
+import { QuadNode } from './quad-node';
+//import { QuadNodeKey } from '../world/quad-node-key';
 
-import { Tile } from "../world/tile";
+import { Tile } from "./tile";
 
-type TileConfigSubTile = {
+/*type TileConfigSubTile = {
     name: string;
     threshold: number;
-};
+};*/
 
-type TileConfig = {
+/*type TileConfig = {
     name: string;
     subTiles?: TileConfigSubTile[],
-};
+};*/
 
-export function hydrate(node: QuadNode | undefined): boolean {
+export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     if (!node) {
-        return false; // Can't hydrate undefined
+        return node; // Can't hydrate undefined
     } else if (node.tile) {
-        return true; // Already hydrated
+        return node; // Already hydrated
     } else if (!node.parent) {
-        return false; // Root nodes can't hydrate
+        return node; // Root nodes can't hydrate
     }
 
     if (!node.parent.tile) {
         if(!hydrate(node.parent)) {
-            return false; // No tiles for any parent
+            return node; // No tiles for any parent
         }
     }
 
     hydrateSubTiles(node.parent);
-    return true; // Hydration complete
+    return node; // Hydration complete
 }
 
 function hydrateSubTiles(parent: QuadNode): void {
@@ -146,7 +146,7 @@ function getBalanceSerie(type: number, seed: bigint): number[] {
     return quadValues.map((value) => value - average);
 }
 
-export class WorldGenerator {
+/*export class WorldGenerator {
     public generateTile(key: QuadNodeKey): Tile | undefined {
         let path = key.getPath();
         let currentConfig: TileConfig | undefined = this._getTileConfigByName('continent');
@@ -196,4 +196,4 @@ export class WorldGenerator {
         const tileTypeConfig = tilesJSON.tiles.find((tile) => tile.name === name);
         return tileTypeConfig as TileConfig;
     }
-}
+}*/

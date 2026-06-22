@@ -1,5 +1,5 @@
 import { Character } from "../../engine/core/character";
-import { createGame } from "../../engine/core/engine";
+//import { createGame } from "../../engine/core/engine";
 import { Game } from "../../engine/core/game";
 import { Author } from "../../storyteller/authors/author";
 import { Explorer } from "../../storyteller/authors/explorer";
@@ -14,8 +14,8 @@ export class GamePod {
         return this.game.getPlayer('Fantomen');
     }
 
-    constructor() {
-        this.game = createGame();
+    constructor(game: Game) {
+        this.game = game;
         //this.game.newPlayer('Fantomen', { x: 0, y: 0, z: 2});
         this.explorer = new Explorer();
         this.author = createAuthor(this.game);

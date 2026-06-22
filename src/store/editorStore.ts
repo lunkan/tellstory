@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { QuadNode } from "../../engine/world/quad-node";
 import { QuadNodeKey } from "../../engine/world/quad-node-key";
-import { worldRepository } from "../editor/repositories/worldRepository";
+import { worldRepository } from "../repositories/worldRepository";
 import { Tile } from "../../engine/world/tile";
 import { Marker } from "../../storyteller/types";
 

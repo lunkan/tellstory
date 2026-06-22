@@ -1,7 +1,7 @@
 import { generateReply } from "../services/anthropic.service.js";
 import { ChronicleEventType } from "../../engine/chronicle/chronicle.js";
 import { getFrequencyPhrase, getRecencyPhrase } from "./phraseology.js";
-import { Game } from "../../engine/core/game.js";
+//import { Game } from "../../engine/core/game.js";
 import { Character } from "../../engine/core/character.js";
 import { DirectionSummary, LocationDirectionDescription, LocationProfile } from "../types.js";
 
@@ -91,11 +91,11 @@ Respons should:
 `;
 
 export class Author {
-    private _game: Game;
+    //private _game: Game;
 
-    constructor(game: Game) {
+    /*constructor(game: Game) {
         this._game = game;
-    }
+    }*/
 
     public async describeScene(location: LocationProfile): Promise<string> {
         const instructions = `
@@ -113,7 +113,8 @@ export class Author {
         });
 
         const frequency = memories.length;
-        const recency = frequency > 0 ? this._game.getTime() - memories[0].timestamp : -1;
+        const recency = frequency > 0 ? 0 - memories[0].timestamp : -1;
+        //const recency = frequency > 0 ? this._game.getTime() - memories[0].timestamp : -1;
 
         const instruction = `
             Description of location of interest:
@@ -151,7 +152,8 @@ export class Author {
             currentLocation
 
             const frequency = memories.length;
-            const recency = frequency > 0 ? this._game.getTime() - memories[0].timestamp : -1;
+            const recency = frequency > 0 ? 0 - memories[0].timestamp : -1;
+            //const recency = frequency > 0 ? this._game.getTime() - memories[0].timestamp : -1;
 
             const instruction = `
                 Description of location of interest:
@@ -187,7 +189,8 @@ export class Author {
         });
 
         const frequency = memories.length;
-        const recency = frequency > 0 ? this._game.getTime() - memories[0].timestamp : -1;
+        const recency = frequency > 0 ? 0 - memories[0].timestamp : -1;
+        //const recency = frequency > 0 ? this._game.getTime() - memories[0].timestamp : -1;
 
         const instructions = `
             Description of previous location:
@@ -238,10 +241,13 @@ export class Author {
     }
 
     private _getPersonalInstructions(character: Character, nodeId: string): string {
-        const locationMetric = character.getMetricsByLocation(nodeId, this._game.getTime());
+        //const locationMetric = character.getMetricsByLocation(nodeId, this._game.getTime());
+        const locationMetric = character.getMetricsByLocation(nodeId, 0);
         return [
             `- He has been here ${getFrequencyPhrase(locationMetric.frequency)}`,
             `- He has been here ${getRecencyPhrase(locationMetric.recency)}`,
         ].join('\n');
     }
 }
+
+export const author = new Author();

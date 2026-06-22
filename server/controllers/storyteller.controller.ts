@@ -1,4 +1,4 @@
-import { Character } from "../../engine/core/character";
+/*import { Character } from "../../engine/core/character";
 import { QuadNode } from "../../engine/world/quad-node";
 import { gameManager } from "../game/game-manager";
 import { GamePod } from "../game/game-pod";
@@ -204,4 +204,4 @@ async function _sendProximityDescriptions(eventId: string, player: Character): P
             });
         });
     });
-}
+}*/

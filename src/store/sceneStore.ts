@@ -1,26 +1,120 @@
 import { create } from "zustand";
-import { useLocationStore } from "./locationStore";
-import { DirectionData } from "../../storyteller/types";
+import { isLocationChangeEvent } from "../../engine/core/events/game-event.config";
+import { isDescriptionMessage, Message, LocationMessageDescriptionType } from "../../shared/src/message";
 
-interface SceneStore {
-  sceneIntroductionComplete: boolean,
-  sceneReadyForInteraction: boolean,
-  activeDirection: DirectionData | null;
-  setSceneIntroductionComplete: (isReady: boolean) => void,
-  setSceneReadyForInteraction: (isReady: boolean) => void,
-  setActiveDirecton: (direction: DirectionData | null) => void;
+import { DIRECTION } from "../../shared/src/direction";
+
+export type SceneDescription = {
+    id: string,
+    type: LocationMessageDescriptionType,
+    text: string,
+    //summary: string,
+    attention: number,
+    direction?: DIRECTION,
+    consumed: boolean,
+    lastReadTimestamp: number,
+
 }
 
-export const useSceneStore = create<SceneStore>((set) => ({
-  sceneIntroductionComplete: false,
-  sceneReadyForInteraction: false,
-  activeDirection: null,
-  setSceneIntroductionComplete: (isReady) => set({ sceneIntroductionComplete: isReady }),
-  setSceneReadyForInteraction: (isReady) => set({ sceneReadyForInteraction: isReady }),
-  setActiveDirecton: (direction) => set({ activeDirection: direction }),
+interface SceneStore {
+    eventId: string,
+    ready: boolean,
+    description: SceneDescription | null,
+    //descriptionQueue: SceneDescription[],
+    attentionDirection: DIRECTION | undefined;
+    setAttentionDirection: (direction: DIRECTION | undefined) => void;
+    consumeDescription: (id: string) => void;
+    handleMessage: (message: Message) => void;
+}
+
+let incrementor = 0;
+let descriptionQueue: SceneDescription[] = [];
+
+function getAttentionWeight(description: SceneDescription, attentionDirection?: DIRECTION): number {
+    let weight = description.attention;
+    if (attentionDirection && attentionDirection === description.direction) {
+        weight += 10;
+    }
+
+    if (description.consumed) {
+        weight -= 10;
+    }
+
+    return weight;
+}
+
+/*function descriptionSort(descriptions: SceneDescription[], attentionDirection?: DIRECTION): SceneDescription[] {
+    return descriptions.sort((a, b) => (getAttentionWeight(b, attentionDirection) - getAttentionWeight(a, attentionDirection)));
+}*/
+
+function getDescription(attentionDirection?: DIRECTION): SceneDescription | null {
+    console.log('*getDescription', descriptionQueue);
+    return descriptionQueue.sort((a, b) => (getAttentionWeight(b, attentionDirection) - getAttentionWeight(a, attentionDirection)))[0] || null;
+}
+
+export const useSceneStore = create<SceneStore>((set, get) => ({
+    eventId: '',
+    ready: false,
+    //descriptionQueue: [],
+    description: null,
+    attentionDirection: undefined,
+    setAttentionDirection: (direction) => {
+        //descriptionQueue = descriptionSort(descriptionQueue, direction);
+        //const description = descriptionQueue.find((description) => description.attention > 0);
+
+        set({
+            attentionDirection: direction,
+            description: getDescription(direction),
+        });
+    },
+    consumeDescription: (id: string) => {
+        console.log('useSceneStore:consumeDescription', id);
+        descriptionQueue = descriptionQueue.map((description) => {
+            if (description.id === id) {
+                return {
+                    ...description,
+                    consumed: true,
+                    lastReadTimestamp: Date.now(),
+                };
+            }
+
+            return description;
+        });
+
+        console.log('useSceneStore:consumeDescription', descriptionQueue, getDescription(get().attentionDirection));
+
+        set({
+            description: getDescription(get().attentionDirection),
+        });
+    },
+    handleMessage: (message: Message) => {
+        console.log('useSceneStore:handleMessage', message);
+
+        if (isLocationChangeEvent(message)) {
+            descriptionQueue = [];
+
+            set({
+                eventId: message.id,
+                ready: false,
+            });
+
+        } else if (isDescriptionMessage(message) && message.eventId === get().eventId) {
+            descriptionQueue.push({
+                ...message,
+                id: `${message.eventId}@${++incrementor}`,
+                consumed: false,
+                lastReadTimestamp: -1,
+            });
+
+            set({
+                ready: descriptionQueue.some((description) => description.type === 'sceneTransition'),
+                description: getDescription(get().attentionDirection),
+            });
+        }
+    }
 }));
 
-export const useScene = () => {
+/*export const useScene = () => {
   const messageQueue = useLocationStore((state) => state.messageQueue);
   const activeDirection = useSceneStore((state) => state.activeDirection);
 
@@ -45,4 +139,4 @@ export const useScene = () => {
     adjacentSummary,
     directionAttention
   };
-};
+};*/

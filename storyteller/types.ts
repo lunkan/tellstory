@@ -1,32 +1,33 @@
-import { DIRECTION } from "../constants";
+import { GameEvent } from "../engine/core/events/game-event.interface";
+import { DIRECTION } from "../shared/src/direction";
 
 export type Reply = {
-  player: string;
-  currentPoint: QuadNodePoint;
-  mentalPointOfOrigin: QuadNodePoint;
-  details: {
-    parent?: QuadNodeData,
-    current?: QuadNodeData,
-    previous?: QuadNodeData,
-    adjacent: QuadNodeData[],
-    quadrants: QuadNodeData[],
-  },
-  metrics: {
-    adjacent?: MetricData[],
-    quadrants?: MetricData[],
-  },
-  locationProfiles: {
-    parent?: LocationProfile,
-    current?: LocationProfile,
-    previous?: LocationProfile,
-    adjacent: LocationProfile[],
-    quadrants: LocationProfile[],
-  },
-  sceneTransition?: string;
-  adjacentSummary?: string;
-  quadrantSummary?: string;
-  premises?: LocationDirectionDescription[];
-  adjacent?: LocationDirectionDescription[];
+    player: string;
+    currentPoint: QuadNodePoint;
+    mentalPointOfOrigin: QuadNodePoint;
+    details: {
+        parent?: QuadNodeData,
+        current?: QuadNodeData,
+        previous?: QuadNodeData,
+        adjacent: QuadNodeData[],
+        quadrants: QuadNodeData[],
+    },
+    metrics: {
+        adjacent?: MetricData[],
+        quadrants?: MetricData[],
+    },
+    locationProfiles: {
+        parent?: LocationProfile,
+        current?: LocationProfile,
+        previous?: LocationProfile,
+        adjacent: LocationProfile[],
+        quadrants: LocationProfile[],
+    },
+    sceneTransition?: string;
+    adjacentSummary?: string;
+    quadrantSummary?: string;
+    premises?: LocationDirectionDescription[];
+    adjacent?: LocationDirectionDescription[];
 };
 
 export type QuadNodeData = {
@@ -38,9 +39,9 @@ export type QuadNodeData = {
 }
 
 export type QuadNodeBoundsData = {
-  x: number;
-  y: number;
-  size: number;
+    x: number;
+    y: number;
+    size: number;
 }
 
 export type LocationProfile = {
@@ -86,7 +87,7 @@ export type VectorSetting = {
 
 export type LocationDirectionDescription = {
     key: string;
-    description: string; 
+    description: string;
 }
 
 export type QuadNodeChildIndex = 0 | 1 | 2 | 3;
@@ -119,34 +120,25 @@ export type QuadNodesRect = QuadNodes2DRect & {
     z: number;
 };
 
-export type Metric = {[key: string]: number};
+export type Metric = { [key: string]: number };
 
 export type MetricData = {
     id: string,
     metric: Metric,
 };
 
-export type LocationMessageDescriptionType =
-    'sceneTransition' |
-    'adjacentSummary' |
-    'quadrantSummary' |
-    'adjacentDirection' |
-    'quadrantDirection' |
-    'enter' |
-    'spawn';
-
-export interface LocationMessage {
+/*export interface LocationMessage {
   eventId: string;
   type: 'locationDescription';
   descriptionType: LocationMessageDescriptionType;
   direction?: DIRECTION;
   text?: string;
-}
+}*/
 
-export type DirectionData = {
+/*export type DirectionData = {
     type: 'adjacentDirection' | 'quadrantDirection';
     direction: DIRECTION;
-};
+};*/
 
 export type WebsocketMessage = {
     type: string,
@@ -154,15 +146,15 @@ export type WebsocketMessage = {
 }
 
 export type WorldData = {
-  id: number;
-  name: string;
-  tiles: TileDataEntry[];
-  markers: Marker[];
+    id: number;
+    name: string;
+    tiles: TileDataEntry[];
+    markers: Marker[];
 }
 
 export type WorldDataSummary = {
-  id: number;
-  name: string;
+    id: number;
+    name: string;
 }
 
 // ------
@@ -171,4 +163,8 @@ export type Marker = {
     point: QuadNodes2DPoint;
     type: string;
     id: string;
+}
+
+export interface IGameObserver {
+    onEvent(event: GameEvent): void;
 }
