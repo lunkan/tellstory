@@ -1,45 +1,54 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type TypewriterProps = {
-    id: string;
+    id: string | undefined;
     text: string | undefined;
     onAnimationComplete?: (id: string) => void;
 };
 
 export function Typewriter({ id, text, onAnimationComplete }: TypewriterProps) {
-    const [animatedText, setAnimatedText] = useState('');
+    const [displayedText, setDisplayedText] = useState('');
+    const finishedRef = useRef(false);
+    const indexRef = useRef(0);
 
     useEffect(() => {
-        if (!text || !text.startsWith(animatedText)) {
-            setAnimatedText('');
-            return;
-        } else if (animatedText.length >= text.length) {
+        finishedRef.current = false;
+        indexRef.current = 0;
+        setDisplayedText('');
+    }, [id]);
+
+    useEffect(() => {
+        if (finishedRef.current || !text || !id) {
             return;
         }
 
-        const timeoutId = setTimeout(() => {
-            const nextAnimatedText = animatedText + text[animatedText.length];
-            setAnimatedText(animatedText + text[animatedText.length]);
-            if (nextAnimatedText.length === text.length) {
+        if (indexRef.current >= text.length) {
+            finishedRef.current = true;
+
+            const timeout = setTimeout(() => {
                 onAnimationComplete?.(id);
-            }
+            }, 1000);
+
+            return () => clearTimeout(timeout);
+        }
+
+        const timeout = setTimeout(() => {
+            indexRef.current++;
+            setDisplayedText(text.slice(0, indexRef.current));
         }, 40);
 
-        return () => {
-            clearTimeout(timeoutId);
-        };
+        return () => clearTimeout(timeout);
+    }, [displayedText, text, id, onAnimationComplete]);
 
-    }, [text, id, animatedText]);
-
-    if (!animatedText) {
-        return (<div>No text</div>);
+    if (!displayedText) {
+        return;
     }
 
-    const animatedDot = animatedText.length % 2 === 0 ? '.' : '';
+    const animatedDot = displayedText.length % 2 === 0 ? '.' : '';
 
     return (
         <div>
-            <div>{animatedText}{animatedDot}</div>
+            <div>{displayedText}{animatedDot}</div>
         </div>
     );
 }

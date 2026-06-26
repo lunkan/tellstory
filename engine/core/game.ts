@@ -52,8 +52,6 @@ export class Game {
         player.setLocation(startingNode);
         this._players.set(player.id, player);
 
-        console.log('Game:spawnPlayer', this._subscriber.length);
-
         this._emitt(new GameLocationChangeEvent({
             point: startingNode.getPoint(),
             type: 'characterSpawn',
@@ -63,39 +61,6 @@ export class Game {
 
         return true;
     }
-
-    /*public newPlayer(name: string): Character {
-        /*const newPlayer = new Character(name, this, point);
-            this.game.newPlayer('Fantomen', { x: 0, y: 0, z: 2});
-        }/
-
-        const playerStart = this.world.findMarkerByType('player-start');
-        if (!playerStart) {
-            throw Error('No player start found');
-        }
-
-        const stratingPoint: QuadNodePoint = {
-            ...playerStart.point,
-            z: 5,
-        };
-
-        const startingNode = this.world.findNodeByPoint(stratingPoint);
-        if (!startingNode) {
-            throw Error('No starting node for player');
-        }
-
-        const player = new Character(name, this.world, startingNode.getPoint());
-        this._players.set(player.id, player);
-
-        this._emitt(new GameLocationChangeEvent({
-            point: startingNode.getPoint(),
-            type: 'characterSpawn',
-            timestamp: this._time,
-            playerId: player.id,
-        }));
-
-        return player;
-    }*/
 
     public movePlayer(playerName: string, nextLocation: QuadNode): boolean {
         const player = this.getPlayer(playerName);

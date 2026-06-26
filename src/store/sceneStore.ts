@@ -1,142 +1,139 @@
 import { create } from "zustand";
-import { isLocationChangeEvent } from "../../engine/core/events/game-event.config";
-import { isDescriptionMessage, Message, LocationMessageDescriptionType } from "../../shared/src/message";
+import { isDescriptionMessage, Message, LocationMessageDescriptionType, isPlayerLocationChangeMessage, PlayerLocationDirection } from "../../shared/src/message";
 
-import { DIRECTION } from "../../shared/src/direction";
+import { DIRECTION, DIRECTION_NAME } from "../../shared/src/direction";
+import { gameRepository } from "../repositories/gameRepository";
 
 export type SceneDescription = {
     id: string,
     type: LocationMessageDescriptionType,
+    label: string,
     text: string,
-    //summary: string,
     attention: number,
     direction?: DIRECTION,
+    isIntroDescription: boolean,
     consumed: boolean,
-    lastReadTimestamp: number,
 
 }
 
 interface SceneStore {
     eventId: string,
     ready: boolean,
+    focusMode: boolean,
+    skipIntro: boolean,
+    directions: PlayerLocationDirection[],
     description: SceneDescription | null,
-    //descriptionQueue: SceneDescription[],
-    attentionDirection: DIRECTION | undefined;
+    attentionDirection: PlayerLocationDirection | undefined;
+    moveDirection: DIRECTION | undefined;
+    alertMessage: string | undefined;
+    setFocusMode: (focusMode: boolean) => void;
     setAttentionDirection: (direction: DIRECTION | undefined) => void;
+    movePlayer: (direction: DIRECTION) => void;
     consumeDescription: (id: string) => void;
     handleMessage: (message: Message) => void;
+    sendAlertMessage: (message: string) => void;
 }
 
-let incrementor = 0;
+let idIncrementor = 0;
 let descriptionQueue: SceneDescription[] = [];
-
-function getAttentionWeight(description: SceneDescription, attentionDirection?: DIRECTION): number {
-    let weight = description.attention;
-    if (attentionDirection && attentionDirection === description.direction) {
-        weight += 10;
-    }
-
-    if (description.consumed) {
-        weight -= 10;
-    }
-
-    return weight;
-}
-
-/*function descriptionSort(descriptions: SceneDescription[], attentionDirection?: DIRECTION): SceneDescription[] {
-    return descriptions.sort((a, b) => (getAttentionWeight(b, attentionDirection) - getAttentionWeight(a, attentionDirection)));
-}*/
-
-function getDescription(attentionDirection?: DIRECTION): SceneDescription | null {
-    console.log('*getDescription', descriptionQueue);
-    return descriptionQueue.sort((a, b) => (getAttentionWeight(b, attentionDirection) - getAttentionWeight(a, attentionDirection)))[0] || null;
-}
 
 export const useSceneStore = create<SceneStore>((set, get) => ({
     eventId: '',
     ready: false,
-    //descriptionQueue: [],
+    focusMode: false,
+    skipIntro: false,
+    directions: [],
     description: null,
     attentionDirection: undefined,
+    moveDirection: undefined,
+    alertMessage: undefined,
+    setFocusMode: (focusMode) => {
+        set({
+            focusMode,
+            description: !get().description?.isIntroDescription ? get().description : null,
+            skipIntro: true,
+        });
+    },
     setAttentionDirection: (direction) => {
-        //descriptionQueue = descriptionSort(descriptionQueue, direction);
-        //const description = descriptionQueue.find((description) => description.attention > 0);
+        const description = direction ? descriptionQueue.find((description) => description.direction === direction) : null;
+        const attentionDirection = get().directions.find((playerDirection) => playerDirection.direction === direction);
 
         set({
-            attentionDirection: direction,
-            description: getDescription(direction),
+            attentionDirection,
+            description: description,
         });
+    },
+    movePlayer: async (direction: DIRECTION) => {
+        descriptionQueue = [];
+
+        set({
+            moveDirection: direction,
+            directions: [],
+            attentionDirection: undefined,
+            eventId: '',
+            description: null,
+            focusMode: false,
+            skipIntro: false,
+            ready: false,
+        });
+
+        await gameRepository.move(direction);
     },
     consumeDescription: (id: string) => {
-        console.log('useSceneStore:consumeDescription', id);
-        descriptionQueue = descriptionQueue.map((description) => {
+        descriptionQueue.forEach((description) => {
             if (description.id === id) {
-                return {
-                    ...description,
-                    consumed: true,
-                    lastReadTimestamp: Date.now(),
-                };
+                description.consumed = true;
             }
-
-            return description;
         });
 
-        console.log('useSceneStore:consumeDescription', descriptionQueue, getDescription(get().attentionDirection));
+        if (!get().description?.direction) {
+            const description = descriptionQueue
+                .filter((description) => description.isIntroDescription && !description.consumed)
+                .sort((a, b) => a.attention - b.attention)
+                .pop();
 
-        set({
-            description: getDescription(get().attentionDirection),
-        });
-    },
-    handleMessage: (message: Message) => {
-        console.log('useSceneStore:handleMessage', message);
-
-        if (isLocationChangeEvent(message)) {
-            descriptionQueue = [];
 
             set({
-                eventId: message.id,
-                ready: false,
+                description,
+            });
+        }
+    },
+    handleMessage: (message: Message) => {
+        if (isPlayerLocationChangeMessage(message)) {
+            set({
+                eventId: message.eventId,
+                directions: message.directions,
             });
 
         } else if (isDescriptionMessage(message) && message.eventId === get().eventId) {
-            descriptionQueue.push({
+            const newSceneDescription = {
                 ...message,
-                id: `${message.eventId}@${++incrementor}`,
+                label: message.direction ? DIRECTION_NAME[message.direction] : message.type,
+                id: `${message.eventId}${++idIncrementor}`,
+                isIntroDescription: !message.direction,
                 consumed: false,
-                lastReadTimestamp: -1,
-            });
+            };
+
+            descriptionQueue.push(newSceneDescription);
+            if (!newSceneDescription.isIntroDescription || get().skipIntro || get().description) {
+                return;
+            }
 
             set({
                 ready: descriptionQueue.some((description) => description.type === 'sceneTransition'),
-                description: getDescription(get().attentionDirection),
+                description: newSceneDescription
             });
         }
-    }
+    },
+    sendAlertMessage: (message: string) => {
+        set({
+            alertMessage: message
+        });
+
+        setTimeout(() => {
+            set({
+                alertMessage: undefined
+            });
+        }, 2000);
+    },
 }));
-
-/*export const useScene = () => {
-  const messageQueue = useLocationStore((state) => state.messageQueue);
-  const activeDirection = useSceneStore((state) => state.activeDirection);
-
-  const currentScene = messageQueue.find((message) => message.descriptionType === 'enter' || message.descriptionType === 'spawn');
-  if (!currentScene) {
-        return {};
-  }
-    
-  const sceneId = currentScene.eventId;
-  const leadingText = currentScene.text;
-  const messagesByScene = messageQueue.filter((message) => message.eventId === sceneId);
-  const sceneTransition = messagesByScene.find((message) => message.descriptionType === 'sceneTransition');
-  const quadrantSummary = messagesByScene.find((message) => message.descriptionType === 'quadrantSummary');
-  const adjacentSummary = messagesByScene.find((message) => message.descriptionType === 'adjacentSummary');
-  const directionAttention = messagesByScene.find((message) => message.descriptionType === activeDirection?.type && message.direction === activeDirection?.direction);
-
-  return {
-    sceneId,
-    leadingText,
-    sceneTransition,
-    quadrantSummary,
-    adjacentSummary,
-    directionAttention
-  };
-};*/

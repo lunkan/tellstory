@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import "./controllers/player.controller.js";
 import gameRoutes from "./routes/game.routes.js";
 import editorRoutes from "./routes/world.routes.js";
 

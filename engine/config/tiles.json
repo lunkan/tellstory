@@ -1,91 +1,121 @@
 {
-  "name": "tile",
-  "version": "1.0.0",
-  "tiles": [{
-    "name": "player-start",
-    "category": "marker",
-    "meta": {
-      "color": "#ff0000"
-    }
-  }, {
-    "name": "water",
-    "category": "typography",
-    "attentionValue": 0,
-    "meta": {
-      "color": "#0093dd"
-    },
-    "subTiles": [{
-      "name": "water",
-      "threshold": 1
-    }]
-  }, {
-    "name": "river",
-    "category": "vector",
-    "attentionValue": 1,
-    "meta": {
-      "color": "#0093dd"
-    },
-    "subTiles": [{
-      "name": "river",
-      "threshold": 1
-    }]
-  }, {
-    "name": "elevation",
-    "category": "typography",
-    "attentionValue": 0,
-    "meta": {
-      "color": "#98aeb9"
-    }
-  }, {
-    "name": "forrest",
-    "category": "biome",
-    "attentionValue": 0,
-    "meta": {
-      "color": "#6f7a39"
-    },
-    "subTiles": [{
-      "name": "forrest",
-      "threshold": 1
-    }]
-  }, {
-    "name": "grassland",
-    "category": "biome",
-    "attentionValue": 0,
-    "meta": {
-      "color": "#bfbb8e"
-    },
-    "subTiles": [{
-      "name": "grassland",
-      "threshold": 1
-    }]
-  }, {
-    "name": "urban",
-    "category": "urban",
-    "attentionValue": 1,
-    "meta": {
-      "color": "#ff0000"
-    },
-    "subTiles": [{
-      "name": "house",
-      "threshold": 1
-    }]
-  }, {
-    "name": "house",
-    "category": "urban",
-    "attentionValue": 1,
-    "meta": {
-      "color": "#B04028"
-    }
-  }, {
-    "name": "road",
-    "category": "vector",
-    "attentionValue": 1,
-    "meta": {
-      "color": "#292100"
-    },
-    "subTiles": [{
-      "name": "road",
-      "threshold": 1
-    }]
-  }]
+    "name": "tile",
+    "version": "1.0.0",
+    "tiles": [
+        {
+            "name": "player-start",
+            "category": "marker",
+            "meta": {
+                "color": "#ff0000"
+            }
+        },
+        {
+            "name": "water",
+            "category": "typography",
+            "attentionValue": 0.1,
+            "movementCost": 1,
+            "meta": {
+                "color": "#0093dd"
+            },
+            "subTiles": [
+                {
+                    "name": "water",
+                    "threshold": 0.1
+                }
+            ]
+        },
+        {
+            "name": "river",
+            "category": "vector",
+            "attentionValue": 0.5,
+            "movementCost": 0,
+            "meta": {
+                "color": "#0093dd"
+            },
+            "subTiles": [
+                {
+                    "name": "river",
+                    "threshold": 1
+                }
+            ]
+        },
+        {
+            "name": "elevation",
+            "category": "typography",
+            "attentionValue": 0.1,
+            "movementCost": 0,
+            "meta": {
+                "color": "#98aeb9"
+            }
+        },
+        {
+            "name": "forrest",
+            "category": "biome",
+            "attentionValue": 0.1,
+            "movementCost": 0,
+            "meta": {
+                "color": "#6f7a39"
+            },
+            "subTiles": [
+                {
+                    "name": "forrest",
+                    "threshold": 1
+                }
+            ]
+        },
+        {
+            "name": "grassland",
+            "category": "biome",
+            "attentionValue": 0.1,
+            "movementCost": 0,
+            "meta": {
+                "color": "#bfbb8e"
+            },
+            "subTiles": [
+                {
+                    "name": "grassland",
+                    "threshold": 1
+                }
+            ]
+        },
+        {
+            "name": "urban",
+            "category": "urban",
+            "attentionValue": 1,
+            "movementCost": 0,
+            "meta": {
+                "color": "#ff0000"
+            },
+            "subTiles": [
+                {
+                    "name": "house",
+                    "threshold": 1
+                }
+            ]
+        },
+        {
+            "name": "house",
+            "category": "urban",
+            "attentionValue": 1,
+            "movementCost": 0,
+            "meta": {
+                "color": "#B04028"
+            }
+        },
+        {
+            "name": "road",
+            "category": "vector",
+            "attentionValue": 0.5,
+            "movementCost": 0,
+            "meta": {
+                "color": "#292100"
+            },
+            "subTiles": [
+                {
+                    "name": "road",
+                    "threshold": 1
+                }
+            ]
+        }
+    ]
 }

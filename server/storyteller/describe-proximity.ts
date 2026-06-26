@@ -13,17 +13,19 @@ export async function describeProximity(eventId: string, player: Character): Pro
     if (!currentLocation) {
         return;
     }
-    
-    explorer.getQuadrantSummary(currentNode, quadrantNodes).then((quadrantDirectionsSummary) => {
+
+    console.log('describeProximity', currentNode.getPoint(), adjacentNodes.map((node) => node.getPoint()));
+
+    /*explorer.getQuadrantSummary(currentNode, quadrantNodes).then((quadrantDirectionsSummary) => {
         author.summarizeQuadranDirections(player, quadrantDirectionsSummary).then((quadrantSummary) => {
             websocketService.sendMessage({
                 eventId,
                 type: 'quadrantSummary',
                 text: quadrantSummary,
-                attention: 2,
+                attention: 1,
             } as DescriptionMessage);
         });
-    });
+    });*/
 
     explorer.getAdjacentSummary(currentNode, adjacentNodes).then((adjacentDirectionsSummary) => {
         author.summarizeAdjacentDirections(player, adjacentDirectionsSummary).then((adjacentSummary) => {
@@ -31,36 +33,52 @@ export async function describeProximity(eventId: string, player: Character): Pro
                 eventId,
                 type: 'adjacentSummary',
                 text: adjacentSummary,
-                attention: 2,
+                attention: 1,
             } as DescriptionMessage);
         });
     });
 
     explorer.getDirectionLocationProfiles(currentNode, quadrantNodes).then((quadrantDirectionProfiles) => {
         quadrantDirectionProfiles.forEach((quadrantDirectionProfile) => {
-            author.describeDirection(player, currentLocation, quadrantDirectionProfile.profile).then((description) => {
+            websocketService.sendMessage({
+                eventId,
+                type: 'quadrantDirection',
+                direction: quadrantDirectionProfile.directionKey,
+                text: quadrantDirectionProfile.profile.summary,
+                attention: 0,
+            } as DescriptionMessage);
+
+            /*author.describeDirection(player, currentLocation, quadrantDirectionProfile.profile).then((description) => {
                 websocketService.sendMessage({
                     eventId,
                     type: 'quadrantDirection',
                     direction: quadrantDirectionProfile.directionKey,
                     text: description.description,
-                    attention: 1,
+                    attention: 0,
                 } as DescriptionMessage);
-            });
+            });*/
         });
     });
 
     explorer.getDirectionLocationProfiles(currentNode, adjacentNodes).then((adjacentDirectionProfiles) => {
         adjacentDirectionProfiles.forEach((adjacentDirectionProfile) => {
-            author.describeDirection(player, currentLocation, adjacentDirectionProfile.profile).then((description) => {
+            websocketService.sendMessage({
+                eventId,
+                type: 'adjacentDirection',
+                direction: adjacentDirectionProfile.directionKey,
+                text: adjacentDirectionProfile.profile.description,
+                attention: 0,
+            } as DescriptionMessage);
+
+            /*author.describeDirection(player, currentLocation, adjacentDirectionProfile.profile).then((description) => {
                 websocketService.sendMessage({
                     eventId,
                     type: 'adjacentDirection',
                     direction: adjacentDirectionProfile.directionKey,
                     text: description.description,
-                    attention: 1,
+                    attention: 0,
                 } as DescriptionMessage);
-            });
+            });*/
         });
     });
 }

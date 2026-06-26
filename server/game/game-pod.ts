@@ -16,7 +16,6 @@ export class GamePod {
 
     constructor(game: Game) {
         this.game = game;
-        //this.game.newPlayer('Fantomen', { x: 0, y: 0, z: 2});
         this.explorer = new Explorer();
         this.author = createAuthor(this.game);
     }

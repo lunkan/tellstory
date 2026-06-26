@@ -127,19 +127,6 @@ export type MetricData = {
     metric: Metric,
 };
 
-/*export interface LocationMessage {
-  eventId: string;
-  type: 'locationDescription';
-  descriptionType: LocationMessageDescriptionType;
-  direction?: DIRECTION;
-  text?: string;
-}*/
-
-/*export type DirectionData = {
-    type: 'adjacentDirection' | 'quadrantDirection';
-    direction: DIRECTION;
-};*/
-
 export type WebsocketMessage = {
     type: string,
     data: unknown,

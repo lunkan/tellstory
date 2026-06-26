@@ -26,29 +26,30 @@ export class Character {
     private _currentLocation: QuadNode | undefined;
     private _previousLocation: QuadNode | undefined;
 
-    constructor(name: string, world: World) { //, point: QuadNodePoint) {
+    constructor(name: string, world: World) {
         this.id = name;
         this.name = name;
         this._world = world;
-        //this._currentLocation = world.findNodeByPoint(point)!;
-        //this._previousLocation = this._currentLocation;
     }
 
     public setLocation(nextLocation: QuadNode): void {
         this._previousLocation = this._currentLocation || nextLocation;
         this._currentLocation = nextLocation;
+        console.log('CHARACTER: setLocation', nextLocation.getPoint());
     }
 
     public getCurrentLocation(): QuadNode {
+        console.log('CHARACTER: getCurrentLocation', this._currentLocation?.getPoint());
         return this._currentLocation!;
     }
 
     public getPreviousLocation(): QuadNode {
+        console.log('CHARACTER: getPreviousLocation', this._previousLocation?.getPoint());
         return this._previousLocation!;
     }
 
     public getAdjacentNodes(): QuadNode[] {
-        return this._world.findQuadrantNodes(this.getCurrentLocation().key);
+        return this._world.findAdjacentNodes(this.getCurrentLocation().key);
     }
 
     public getQuadrantNodes(): QuadNode[] {
@@ -65,11 +66,11 @@ export class Character {
 
     public getAdjacent3DLocations(): QuadNode[] {
         const locations: QuadNode[] = [this.getCurrentLocation()];
-        const parent = this._world.findParentNode(this.getCurrentLocation().key);
+        //const parent = this._world.findParentNode(this.getCurrentLocation().key);
 
-        if (parent) {
+        /*if (parent) {
             locations.push(parent);
-        }
+        }*/
 
         locations.push(...this._world.findQuadrantNodes(this.getCurrentLocation().key));
         locations.push(...this._world.findAdjacentNodes(this.getCurrentLocation().key));
@@ -79,28 +80,6 @@ export class Character {
     public getJourney(lookback: number): ChronicleEvent[] {
         return this.findMemories({ types: [ChronicleEventType.Enter] }).slice(0, lookback);
     }
-
-    /*public moveToAdjacent(deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): boolean {
-        const nextLocation = this._world.findNeighbourNode(this._currentLocation.key, deltaX, deltaY);
-        if (!nextLocation) {
-            return false;
-        }
-
-        this._previousLocation = this._currentLocation;
-        this._currentLocation = nextLocation;
-        return true;
-    }
-
-    public moveToQuadrant(x: 1 | 0, y: 1 | 0): boolean {
-        const nextLocation = this._world.findQuadrantNode(this._currentLocation.key, x, y);
-        if (!nextLocation) {
-            return false;
-        }
-
-        this._previousLocation = this._currentLocation;
-        this._currentLocation = nextLocation;
-        return true;
-    }*/
 
     public moveToParent(): boolean {
         const parentLocation = this._world.findParentNode(this.getCurrentLocation().key);

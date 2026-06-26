@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import { gameRepository } from "../repositories/gameRepository";
-import { DIRECTION } from "../../shared/src/direction";
+import { isLocationChangeEvent } from "../../engine/core/events/game-event.config";
+import { Message } from "../../shared/src/message";
 
 interface GameStore {
     worldId: number;
     loading: boolean;
     newGame: (worldId: number) => void;
-    movePlayer: (direction: DIRECTION) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -21,13 +21,12 @@ export const useGameStore = create<GameStore>((set) => ({
             loading: false,
         }));
     },
-    movePlayer: async (direction: DIRECTION) => {
-        set({ loading: true });
-
-        await gameRepository.move(direction);
-
-        set(() => ({
-            loading: false,
-        }));
-    },
+    handleMessage: (message: Message) => {
+        if (isLocationChangeEvent(message)) {
+            console.log('useGameStore:isLocationChangeEvent');
+            /*set({
+                eventId: message.id,
+            });*/
+        }
+    }
 }));

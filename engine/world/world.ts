@@ -8,22 +8,20 @@ export class World {
     private _quadtree: QuadNode;
     private _markers: Marker[];
 
-    //private _worldGen: WorldGenerator;
-
     constructor(worldData: WorldData) {
         this._quadtree = new QuadNode();
         this._markers = worldData.markers;
 
-        //this._worldGen = new WorldGenerator;
-
-        for(const tileEntry of worldData.tiles) {
+        console.log('World', worldData.tiles.length);
+        for (const tileEntry of worldData.tiles) {
             const tile = new Tile();
             tileEntry.terrain.forEach((terrainSetting) => tile.setTerrain(terrainSetting));
             tileEntry.vectors.forEach((vectorSetting) => tile.setVector(vectorSetting));
 
             const nodeKey = QuadNodeKey.fromId(tileEntry.nodeId);
             const node = this._quadtree.findByKey(nodeKey, true);
-    
+
+            console.log('init:node', node?.getPoint());
             if (node) {
                 node.tile = tile;
             }
@@ -53,7 +51,7 @@ export class World {
         const x = refNode.bounds.x + deltaX * refNode.bounds.size;
         const y = refNode.bounds.y + deltaY * refNode.bounds.size;
 
-        const neighbourNode = this._quadtree.findByPoint({ x, y, z: refNode.depth}, true);
+        const neighbourNode = this._quadtree.findByPoint({ x, y, z: refNode.depth }, true);
         return hydrate(neighbourNode);
     }
 
@@ -68,7 +66,7 @@ export class World {
         const y = node.bounds.y - size;
 
         return this._quadtree
-            .findByRect({x, y, z: node.depth, width: size * 3, height: size * 3 }, true)
+            .findByRect({ x, y, z: node.depth, width: size * 3, height: size * 3 }, true)
             .filter((adjacentNode) => adjacentNode !== node)
             .map((adjacentNode) => hydrate(adjacentNode)!);
     }

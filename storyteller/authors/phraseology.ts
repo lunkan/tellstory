@@ -1,7 +1,7 @@
 import { QuadNodePoint } from "../types";
 import { DIRECTION, DIRECTION_NAME } from "../../shared/src/direction";
 
-        
+
 export function getFrequencyPhrase(frequency: number): string {
     if (frequency > 10) {
         return 'routinely';
@@ -35,35 +35,58 @@ export function getRecencyPhrase(elapsedTime: number): string {
 }
 
 export function getDirectionKey(delta: QuadNodePoint): number {
+    console.log('getDirectionKey', delta.z, ' : ', delta.x, ', ', delta.y);
+
+
     if (delta.z < 0) {
         return DIRECTION.UP;
-    }
-
-    if (delta.x > 0) {
-        if (delta.y > 0) {
-            return DIRECTION.NORTH_WEST;
-        } else if (delta.y < 0) {
-            return DIRECTION.SOUTH_WEST;
+    } else if (delta.z === 0) {
+        // Adjacent
+        if (delta.x > 0) {
+            if (delta.y > 0) {
+                return DIRECTION.NORTH_WEST;
+            } else if (delta.y < 0) {
+                return DIRECTION.SOUTH_WEST;
+            } else {
+                return DIRECTION.WEST;
+            }
+        } else if (delta.x < 0) {
+            if (delta.y > 0) {
+                return DIRECTION.NORTH_EAST;
+            } else if (delta.y < 0) {
+                return DIRECTION.SOUTH_EAST;
+            } else {
+                return DIRECTION.EAST;
+            }
         } else {
-            return DIRECTION.WEST;
+            if (delta.y > 0) {
+                return DIRECTION.NORTH;
+            } else if (delta.y < 0) {
+                return DIRECTION.SOUTH;
+            } else {
+                return DIRECTION.NONE;
+            }
         }
-    } else if (delta.x < 0) {
-        if (delta.y > 0) {
-            return DIRECTION.NORTH_EAST;
-        } else if (delta.y < 0) {
-            return DIRECTION.SOUTH_EAST;
-        } else {
-            return DIRECTION.EAST;
+    } else if (delta.z === 1) {
+        // Quadrant
+        if (delta.x > 0) {
+            if (delta.y > 0) {
+                return DIRECTION.CLOSE_NORTH_WEST;
+            } else if (delta.y < 0) {
+                return DIRECTION.CLOSE_SOUTH_WEST;
+            }
+        } else if (delta.x < 0) {
+            if (delta.y > 0) {
+                return DIRECTION.CLOSE_NORTH_EAST;
+            } else if (delta.y < 0) {
+                return DIRECTION.CLOSE_SOUTH_EAST;
+            }
         }
     } else {
-        if (delta.y > 0) {
-            return DIRECTION.NORTH;
-        } else if (delta.y < 0) {
-            return DIRECTION.SOUTH;
-        } else {
-            return DIRECTION.NONE;
-        }
+        throw Error(`Not up, adjacent or quadrant ${delta.z}`);
     }
+
+    return -1;
 }
 
 export function getDirectionName(delta: QuadNodePoint): string {

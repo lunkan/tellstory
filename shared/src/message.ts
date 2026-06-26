@@ -1,3 +1,4 @@
+import { QuadNodes2DPoint } from "../../storyteller/types";
 import { DIRECTION } from "./direction";
 
 export interface Message {
@@ -12,12 +13,31 @@ export type LocationMessageDescriptionType =
     'adjacentDirection' |
     'quadrantDirection';
 
+export type PlayerLocationDirection = {
+    direction: DIRECTION;
+    movementCost: number;
+    impassible: boolean;
+}
+
+export interface PlayerLocationChangeMessage {
+    eventId: string;
+    type: 'playerLocationChange';
+    point: QuadNodes2DPoint;
+    timestamp: number;
+    playerId: string;
+    directions: PlayerLocationDirection[];
+}
+
 export interface DescriptionMessage {
     eventId: string;
     type: LocationMessageDescriptionType;
     text: string;
     attention: number;
     direction?: DIRECTION;
+}
+
+export function isPlayerLocationChangeMessage(message: Message): message is PlayerLocationChangeMessage {
+    return message.type === 'playerLocationChange';
 }
 
 export function isDescriptionMessage(message: Message): message is DescriptionMessage {

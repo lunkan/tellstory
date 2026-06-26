@@ -15,7 +15,7 @@ export function getSquashedMetric(metrics: Metric[]): Metric {
     const metric: Metric = {};
     for (const value of metrics) {
         Object.keys(value).forEach((key) => {
-            metric[key] = (metric[key] || 0) + value[key] / metrics.length; 
+            metric[key] = (metric[key] || 0) + value[key] / metrics.length;
         });
     }
 
@@ -27,10 +27,8 @@ export function compareMetric(metricA: Metric, metricB: Metric): Metric {
         ...metricB
     };
 
-    //console.log('#', JSON.stringify(metric, null, 4));
     Object.keys(metricA).forEach((key) => {
         metric[key] = metricB[key] ? Math.abs(metricB[key] - metricA[key]) : metricA[key];
-        //console.log('##', metricB[key], ' - ', metricA[key], ' : ', metricB[key] ? Math.abs(metricB[key] - metricA[key]) : metricA[key], ' -- ', metric[key]);
     });
 
     return metric;
