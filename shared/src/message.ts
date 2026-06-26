@@ -1,4 +1,4 @@
-import { QuadNodes2DPoint } from "../../storyteller/types";
+import { QuadNodePoint } from "../../storyteller/types";
 import { DIRECTION } from "./direction";
 
 export interface Message {
@@ -22,7 +22,7 @@ export type PlayerLocationDirection = {
 export interface PlayerLocationChangeMessage {
     eventId: string;
     type: 'playerLocationChange';
-    point: QuadNodes2DPoint;
+    point: QuadNodePoint;
     timestamp: number;
     playerId: string;
     directions: PlayerLocationDirection[];

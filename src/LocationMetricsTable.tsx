@@ -1,4 +1,4 @@
-import { Metric } from "../storyteller/types";
+/*import { Metric } from "../storyteller/types";
 
 type LocationMetricsTableProps = {
     title: string;
@@ -25,4 +25,4 @@ export function LocationMetricsTable({ title, metric }: LocationMetricsTableProp
             </table>
         </>
     );
-}
+}*/

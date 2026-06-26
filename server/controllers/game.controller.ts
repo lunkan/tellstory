@@ -9,26 +9,21 @@ import { Character } from "../../engine/core/character.js";
 
 type NewGameRequest = { worldId: number };
 type MovePlayerRequest = { direction: DIRECTION };
+type ZoomPlayerRequest = { delta: 1 | -1 };
 
 export async function newGame(
     req: Request<unknown, unknown, NewGameRequest>,
     res: Response,
 ) {
-
-    console.log('NEW GAME');
     try {
         const { worldId } = req.body;
         const worldData: WorldData = await WorldRepository.getWorld(worldId);
         const gamePod = gameManager.newGame(worldData);
 
-        const player = new Character('Fantomen', gamePod.game.world); //, startingNode.getPoint());
+        const player = new Character('Fantomen', gamePod.game.world);
         const playerObserver = new PlayerObserver(player);
         gameManager.getGame()?.game.subscribe(playerObserver);
         gamePod.game.spawnPlayer(player);
-
-        //const player = 
-
-
 
         res.json({ success: true });
     } catch (err) {
@@ -62,6 +57,40 @@ export async function movePlayer(
 
         if (node) {
             game.movePlayer('Fantomen', node);
+            res.json({ success: true });
+        } else {
+            res.json({ success: false });
+        }
+    } catch (err) {
+        console.error(err);
+        const message = err instanceof Error ? err.message : "Unknown error";
+        res.status(500).json({ error: message });
+    }
+}
+
+export async function zoomPlayer(
+    req: Request<unknown, unknown, ZoomPlayerRequest>,
+    res: Response,
+) {
+    try {
+        const { delta } = req.body;
+
+        const game = gameManager.getGame()?.game;
+        const player = game?.getPlayer('Fantomen');
+        if (!game || !player) {
+            throw Error('NO PLAYER OR GAME');
+        }
+
+        let node: QuadNode | undefined;
+        if (delta === -1) {
+            node = player.getParentNode();
+        } else {
+            console.log('ERROR delta', delta);
+            throw Error('USE QUDRANT NAV FOR NOW');
+        }
+
+        if (node) {
+            game.movePlayer('Fantomen', node); // Only move in minde not fysically
             res.json({ success: true });
         } else {
             res.json({ success: false });

@@ -1,4 +1,4 @@
-import { LocationProfile } from "../storyteller/types";
+/*import { LocationProfile } from "../storyteller/types";
 
 type FeedProfileProps = {
     title: string;
@@ -18,4 +18,4 @@ export function FeedProfile({ title, profile }: FeedProfileProps) {
             </div>
         </>
     );
-}
+}*/

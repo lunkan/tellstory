@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useSceneStore } from "../../store/sceneStore";
 import { DIRECTION, DIRECTION_NAME } from "../../../shared/src/direction";
+import { useThrottle } from "../../effects/throttle";
 
 export function NavigationControl() {
     const directions = useSceneStore((state) => state.directions);
@@ -8,6 +9,7 @@ export function NavigationControl() {
     const setAttentionDirection = useSceneStore((state) => state.setAttentionDirection);
     const setFocusMode = useSceneStore((state) => state.setFocusMode);
     const movePlayer = useSceneStore((state) => state.movePlayer);
+    const zoomPlayer = useSceneStore((state) => state.zoomPlayer);
     const sendAlertMessage = useSceneStore((state) => state.sendAlertMessage);
     const [screenDownPoint, setScreenDownPoint] = useState<DOMPoint | null>(null);
     const timerRef = useRef<number | null>(null);
@@ -47,6 +49,26 @@ export function NavigationControl() {
         }
     }
 
+    function handleThrottledZoom(deltaY: number) {
+        if (deltaY > 0) {
+            console.log('No support for zoom in - use quadrant');
+            //zoomPlayer(1);
+        } else if (deltaY < 0) {
+            const hasDirectionUp = directions.some((direction) => direction.direction === DIRECTION.UP);
+            if (hasDirectionUp) {
+                zoomPlayer(-1);
+            } else {
+                sendAlertMessage(`Not possible to zoom to greater level. Yoy reached max`);
+            }
+        }
+    };
+
+
+    const throttledWheelHandler = useThrottle(handleThrottledZoom, 1000);
+    function handleZoom(e: React.WheelEvent<HTMLDivElement>): void {
+        throttledWheelHandler(e.deltaY);
+    }
+
     const wrapperClasses = ['navigation-ctrl-wrapper'];
     wrapperClasses.push('navigation-ctrl-wrapper--interruptible');
 
@@ -54,7 +76,7 @@ export function NavigationControl() {
         wrapperClasses.push('navigation-ctrl-wrapper--active .nav-sector--center');
     }
 
-    function renderSegment(direction: DIRECTION, color: string, rotation: string) {
+    function renderAjacentSegment(direction: DIRECTION, color: string, rotation: string) {
         const playerDirection = directions.find((playerDirection) => playerDirection.direction === direction);
 
         return (
@@ -71,11 +93,33 @@ export function NavigationControl() {
         );
     }
 
+    function renderQuadrantSegment(direction: DIRECTION, color: string, rotation: string) {
+        const playerDirection = directions.find((playerDirection) => playerDirection.direction === direction);
+
+        if (!playerDirection) {
+            return;
+        }
+
+        return (
+            <>
+                <use
+                    href="#inner-seg"
+                    className={`nav-sector ${playerDirection?.impassible ? 'nav-sector-impassable' : ''}`}
+                    fill={color}
+                    transform={`rotate(${rotation}, 100, 100)`}
+                    onPointerEnter={() => handleEnter(direction)}
+                    onPointerLeave={() => handleLeave()}
+                />
+            </>
+        );
+    }
+
     return (
         <div
             className={wrapperClasses.join(' ')}
             onPointerDown={(e) => handleScreenPointerDown(e)}
             onPointerUp={() => handleScreenPointerUp()}
+            onWheel={(e) => handleZoom(e)}
         >
             <svg
                 className="navigation-ctrl-wrapper--nav"
@@ -92,47 +136,19 @@ export function NavigationControl() {
 
                 <circle className="nav-sector nav-sector--center" cx="100" cy="100" r="33" fill="#3C2F2F" />
 
-                {renderSegment(DIRECTION.SOUTH_WEST, '#6F4436', '22.5')}
-                {renderSegment(DIRECTION.SOUTH, '#3C2F2F', '67.5')}
-                {renderSegment(DIRECTION.SOUTH_EAST, '#6F4436', '112.5')}
-                {renderSegment(DIRECTION.SOUTH_EAST, '#3C2F2F', '157.5')}
-                {renderSegment(DIRECTION.NORTH_EAST, '#6F4436', '202.5')}
-                {renderSegment(DIRECTION.NORTH, '#3C2F2F', '247.5')}
-                {renderSegment(DIRECTION.NORTH_WEST, '#6F4436', '292.5')}
-                {renderSegment(DIRECTION.WEST, '#3C2F2F', '337.5')}
+                {renderAjacentSegment(DIRECTION.SOUTH_WEST, '#6F4436', '22.5')}
+                {renderAjacentSegment(DIRECTION.SOUTH, '#3C2F2F', '67.5')}
+                {renderAjacentSegment(DIRECTION.SOUTH_EAST, '#6F4436', '112.5')}
+                {renderAjacentSegment(DIRECTION.SOUTH_EAST, '#3C2F2F', '157.5')}
+                {renderAjacentSegment(DIRECTION.NORTH_EAST, '#6F4436', '202.5')}
+                {renderAjacentSegment(DIRECTION.NORTH, '#3C2F2F', '247.5')}
+                {renderAjacentSegment(DIRECTION.NORTH_WEST, '#6F4436', '292.5')}
+                {renderAjacentSegment(DIRECTION.WEST, '#3C2F2F', '337.5')}
 
-                <use
-                    href="#inner-seg"
-                    className="nav-sector"
-                    fill="#DFCCAF"
-                    transform="rotate(0, 100, 100)"
-                    onPointerEnter={() => handleEnter(DIRECTION.CLOSE_SOUTH_WEST)}
-                    onPointerLeave={() => handleLeave()}
-                />
-                <use
-                    href="#inner-seg"
-                    className="nav-sector"
-                    fill="#BE9B7B"
-                    transform="rotate(90, 100, 100)"
-                    onPointerEnter={() => handleEnter(DIRECTION.CLOSE_SOUTH_EAST)}
-                    onPointerLeave={() => handleLeave()}
-                />
-                <use
-                    href="#inner-seg"
-                    className="nav-sector"
-                    fill="#DFCCAF"
-                    transform="rotate(180, 100, 100)"
-                    onPointerEnter={() => handleEnter(DIRECTION.CLOSE_NORTH_EAST)}
-                    onPointerLeave={() => handleLeave()}
-                />
-                <use
-                    href="#inner-seg"
-                    className="nav-sector"
-                    fill="#BE9B7B"
-                    transform="rotate(270, 100, 100)"
-                    onPointerEnter={() => handleEnter(DIRECTION.CLOSE_NORTH_WEST)}
-                    onPointerLeave={() => handleLeave()}
-                />
+                {renderQuadrantSegment(DIRECTION.CLOSE_SOUTH_WEST, '#DFCCAF', '0')}
+                {renderQuadrantSegment(DIRECTION.CLOSE_SOUTH_EAST, '#BE9B7B', '90')}
+                {renderQuadrantSegment(DIRECTION.CLOSE_NORTH_EAST, '#DFCCAF', '180')}
+                {renderQuadrantSegment(DIRECTION.CLOSE_NORTH_WEST, '#BE9B7B', '270')}
             </svg>
         </div>
     );

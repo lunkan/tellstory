@@ -120,6 +120,32 @@ pre {
     text-transform: uppercase;
 }
 
+.debug-bar {
+    position: absolute;
+    right: 24px;
+    top: 24px;
+    display: flex;
+    padding: 4px;
+    border-radius: 5px;
+    gap: 8px;
+    box-shadow: 5px 5px lightblue;
+    border: solid 1px;
+}
+
+.debug-bar--position-label {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+}
+
+.debug-btn {
+    border: 0;
+    padding: 6px 10px;
+    border-radius: 5px;
+    display: flex;
+}
+
+/*
 .debug-panel {
     position: fixed;
     top: 0;
@@ -141,7 +167,7 @@ pre {
     position: absolute;
     right: 24px;
     top: 24px;
-}
+}*/
 
 .game-screen {
     display: flex;
@@ -189,28 +215,7 @@ pre {
     top: 0;
     width: 100vw;
     height: 100vh;
-    /*visibility: hidden;*/
-
-    /*display: flex;
-    justify-content: center;*/
-    /*width: 100%;
-    margin: 24px 0;*
-    /*opacity: 0;
-  transition: opacity 1s ease-in-out;*/
 }
-
-/*
-.navigation-ctrl-wrapper--nav-wrapper {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    max-width: 80vw;
-    aspect-ratio: 1 / 1;
-    background-color: #ff0000;
-}*/
-
-/*.navigation-ctrl-wrapper--ready {
-  opacity: 1;
-}*/
 
 .nav-sector {
     opacity: 0;
@@ -225,10 +230,6 @@ pre {
 .nav-sector-impassable {
     fill: #ff0000;
 }
-
-/*.nav-sector--center {
-    transition-delay: 250ms;
-}*/
 
 .navigation-ctrl-wrapper--active .nav-sector--center {
     opacity: 0.25;
@@ -251,35 +252,13 @@ pre {
     opacity: 0.25;
 }
 
-/*.navigation-ctrl-wrapper--interruptible .nav-sector--center {
-    opacity: 0.5;
-}
-
-.navigation-ctrl-wrapper--interruptible .nav-sector--center:hover {
-    opacity: 1;
-}
-
-.navigation-ctrl-wrapper--ready .nav-sector {
-    opacity: 0.5;
-}
-
-.navigation-ctrl-wrapper--ready .nav-sector:hover {
-    opacity: 1;
-}*/
-
-/*.nav-sector:hover {
-  opacity: 1;
-}
-
-.nav-sector--center {
-  opacity: 1;
-}*/
-
 .title-screen {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    gap: 32px;
 }
 
 .title-screen--btn {

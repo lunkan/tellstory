@@ -5,6 +5,9 @@ import { QuadNodeKey } from "./quad-node-key";
 import { Tile } from "./tile";
 
 export class World {
+    public static readonly MAX_ZOOM_DEPTH: number = 7;
+    public static readonly MIN_ZOOM_DEPTH: number = 5;
+
     private _quadtree: QuadNode;
     private _markers: Marker[];
 
@@ -12,7 +15,6 @@ export class World {
         this._quadtree = new QuadNode();
         this._markers = worldData.markers;
 
-        console.log('World', worldData.tiles.length);
         for (const tileEntry of worldData.tiles) {
             const tile = new Tile();
             tileEntry.terrain.forEach((terrainSetting) => tile.setTerrain(terrainSetting));
@@ -21,7 +23,6 @@ export class World {
             const nodeKey = QuadNodeKey.fromId(tileEntry.nodeId);
             const node = this._quadtree.findByKey(nodeKey, true);
 
-            console.log('init:node', node?.getPoint());
             if (node) {
                 node.tile = tile;
             }

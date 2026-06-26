@@ -1,4 +1,4 @@
-import { useState } from "react";
+/*import { useState } from "react";
 import { LocationDirectionDescription, QuadNodePoint } from "../storyteller/types";
 import { LocationManager } from "./LocationManager";
 import { LocationSummaryTable } from "./LocationSummaryTable";
@@ -60,4 +60,4 @@ export function FeedDirection({ directionDescription, locationManager }: FeedDir
             </div>
         </div>
     );
-}
+}*/

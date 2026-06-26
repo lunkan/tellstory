@@ -1,4 +1,4 @@
-//import { Reply } from "./types";
+/*import { Reply } from "./types";
 
 import { Reply } from "../storyteller/types";
 
@@ -26,11 +26,11 @@ export function Debug({ reply }: DebugProps) {
             <pre>{reply.debug.details.instructions}</pre>
             <pre>{JSON.stringify(reply.debug.details.response, null, 4)}</pre>
         </div>
-    );*/
+    );/
     return (
         <div>
             <h3>Nonsens</h3>
             <pre>{reply.player}</pre>
         </div>
     );
-}
+}*/

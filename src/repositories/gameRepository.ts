@@ -28,7 +28,21 @@ async function move(direction: DIRECTION): Promise<void> {
     }
 }
 
+async function zoom(delta: number): Promise<void> {
+    const res = await fetch("/game/zoom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delta }),
+    });
+
+    const data: any = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error ?? 'New game Request failed');
+    }
+}
+
 export const gameRepository = {
     create,
-    move
+    move,
+    zoom,
 };

@@ -1,4 +1,5 @@
 import { NavigationControl } from "./control/NavigationControl";
+import { DebugBar } from "./debug/DebugBar";
 import { DescriptionFeed } from "./feed/DescriptionFeed";
 
 export function GameScreen() {
@@ -10,6 +11,7 @@ export function GameScreen() {
             <div className="game-screen--control">
                 <NavigationControl></NavigationControl>
             </div>
+            <DebugBar></DebugBar>
         </main>
     );
 }

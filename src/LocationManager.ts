@@ -1,4 +1,4 @@
-import { LocationProfile, Metric, MetricData, QuadNodeData, QuadNodePoint } from "../storyteller/types";
+/*import { LocationProfile, Metric, MetricData, QuadNodeData, QuadNodePoint } from "../storyteller/types";
 
 enum DIRECTION {
     NORTH_EAST = 0,
@@ -179,4 +179,4 @@ export class LocationManager {
             z: point.point.z,
         }
     }
-}
+}*/

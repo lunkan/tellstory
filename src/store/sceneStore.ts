@@ -3,6 +3,7 @@ import { isDescriptionMessage, Message, LocationMessageDescriptionType, isPlayer
 
 import { DIRECTION, DIRECTION_NAME } from "../../shared/src/direction";
 import { gameRepository } from "../repositories/gameRepository";
+import { QuadNodePoint } from "../../storyteller/types";
 
 export type SceneDescription = {
     id: string,
@@ -21,6 +22,7 @@ interface SceneStore {
     ready: boolean,
     focusMode: boolean,
     skipIntro: boolean,
+    currentPosition: QuadNodePoint | undefined;
     directions: PlayerLocationDirection[],
     description: SceneDescription | null,
     attentionDirection: PlayerLocationDirection | undefined;
@@ -29,6 +31,7 @@ interface SceneStore {
     setFocusMode: (focusMode: boolean) => void;
     setAttentionDirection: (direction: DIRECTION | undefined) => void;
     movePlayer: (direction: DIRECTION) => void;
+    zoomPlayer: (zoomDelta: 1 | -1) => void;
     consumeDescription: (id: string) => void;
     handleMessage: (message: Message) => void;
     sendAlertMessage: (message: string) => void;
@@ -42,6 +45,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
     ready: false,
     focusMode: false,
     skipIntro: false,
+    currentPosition: undefined,
     directions: [],
     description: null,
     attentionDirection: undefined,
@@ -70,6 +74,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
             moveDirection: direction,
             directions: [],
             attentionDirection: undefined,
+            currentPosition: undefined,
             eventId: '',
             description: null,
             focusMode: false,
@@ -78,6 +83,27 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
         });
 
         await gameRepository.move(direction);
+    },
+    zoomPlayer: async (delta: 1 | -1) => {
+        if (delta === 1) {
+            return; // Use quadrants as of now instead.
+        }
+
+        descriptionQueue = [];
+
+        set({
+            moveDirection: DIRECTION.UP,
+            directions: [],
+            attentionDirection: undefined,
+            currentPosition: undefined,
+            eventId: '',
+            description: null,
+            focusMode: false,
+            skipIntro: false,
+            ready: false,
+        });
+
+        await gameRepository.zoom(delta);
     },
     consumeDescription: (id: string) => {
         descriptionQueue.forEach((description) => {
@@ -102,6 +128,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
         if (isPlayerLocationChangeMessage(message)) {
             set({
                 eventId: message.eventId,
+                currentPosition: message.point,
                 directions: message.directions,
             });
 

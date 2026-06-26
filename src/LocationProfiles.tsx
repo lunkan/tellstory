@@ -1,4 +1,4 @@
-import { LocationProfile, Reply } from "../storyteller/types";
+/*import { LocationProfile, Reply } from "../storyteller/types";
 import { LocationManager } from "./LocationManager";
 import { capitalized } from "./utils";
 
@@ -40,4 +40,4 @@ export function LocationProfiles({ reply, locationManager }: LocationProfilesPro
             {reply.locationProfiles.quadrants ? renderLocationProfile('Quadrants', reply.locationProfiles.quadrants) : ' - '}
         </div>
     );
-}
+}*/

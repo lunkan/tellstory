@@ -1,4 +1,4 @@
-import React from "react";
+/*import React from "react";
 import { QuadNodeData } from "../storyteller/types";
 
 type LocationSummaryTableProps = {
@@ -71,4 +71,4 @@ export function LocationSummaryTable({ title, locations }: LocationSummaryTableP
             </table>
         </>
     );
-}
+}*/

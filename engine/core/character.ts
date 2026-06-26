@@ -53,7 +53,19 @@ export class Character {
     }
 
     public getQuadrantNodes(): QuadNode[] {
-        return this._world.findQuadrantNodes(this.getCurrentLocation().key);
+        if (this._currentLocation && this._currentLocation.getPoint().z < World.MAX_ZOOM_DEPTH) {
+            return this._world.findQuadrantNodes(this.getCurrentLocation().key);
+        }
+
+        return [];
+    }
+
+    public getParentNode(): QuadNode | undefined {
+        if (this._currentLocation && this._currentLocation.getPoint().z > World.MIN_ZOOM_DEPTH) {
+            return this.getCurrentLocation().parent;
+        }
+
+        return;
     }
 
     public getAdjacentByDelta(deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): QuadNode | undefined {

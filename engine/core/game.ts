@@ -41,7 +41,7 @@ export class Game {
 
         const stratingPoint: QuadNodePoint = {
             ...playerStart.point,
-            z: 5,
+            z: World.MIN_ZOOM_DEPTH,
         };
 
         const startingNode = this.world.findNodeByPoint(stratingPoint);

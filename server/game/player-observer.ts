@@ -3,12 +3,13 @@ import { Character } from "../../engine/core/character";
 import { isLocationChangeEvent } from "../../engine/core/events/game-event.config";
 import { GameEvent } from "../../engine/core/events/game-event.interface";
 import { GameLocationChangeEvent } from "../../engine/core/events/game-location-change-event";
-import { getDirectionFromAdjacentVector, getDirectionFromQuadrantVector } from "../../shared/src/direction";
-import { DescriptionMessage, PlayerLocationChangeMessage } from "../../shared/src/message";
+import { DIRECTION, getDirectionFromAdjacentVector, getDirectionFromQuadrantVector } from "../../shared/src/direction";
+import { DescriptionMessage, PlayerLocationChangeMessage, PlayerLocationDirection } from "../../shared/src/message";
 import { IGameObserver } from "../../storyteller/types";
 import { storyteller } from "../storyteller/storyteller";
 import { websocketService } from "../websocket/websocket-service";
 import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
+import { World } from "../../engine/world/world";
 
 export class PlayerObserver implements IGameObserver {
     private _player: Character;
@@ -24,8 +25,6 @@ export class PlayerObserver implements IGameObserver {
             if (event.playerId === this._player.id) {
 
                 this._playerLocationChange(event);
-                //this._player.getQuadrantNodes
-                //websocketService.sendMessage(event);
 
                 switch (event.type) {
                     case 'characterSpawn':
@@ -46,6 +45,16 @@ export class PlayerObserver implements IGameObserver {
 
     private _playerLocationChange(event: GameLocationChangeEvent): void {
         const currentNode = this._player.getCurrentLocation();
+
+        const directions: PlayerLocationDirection[] = [];
+        const parentNode = this._player.getParentNode();
+        if (parentNode) {
+            directions.push({
+                direction: DIRECTION.UP,
+                movementCost: 0,
+                impassible: false,
+            });
+        }
 
         const quadrantDirections = this._player.getQuadrantNodes().map((node) => {
             const directionVector = currentNode.getNormalizedRelativePosition(node);
@@ -83,7 +92,7 @@ export class PlayerObserver implements IGameObserver {
         websocketService.sendMessage({
             eventId: event.id,
             type: 'playerLocationChange',
-            directions: [...quadrantDirections, ...adjacentDirections],
+            directions: [...directions, ...quadrantDirections, ...adjacentDirections],
             timestamp,
             playerId,
             point,
