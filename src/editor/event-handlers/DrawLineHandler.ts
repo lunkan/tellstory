@@ -1,6 +1,6 @@
-import tilesJSON from '../../../engine/config/tiles.json' with { type: 'json' };
 import { QuadNode } from "../../../engine/world/quad-node";
 import { Tile } from "../../../engine/world/tile";
+import { SelectedEntity } from '../../store/editorStore';
 import { CanvasRenderer } from "../utils/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
 
@@ -11,13 +11,11 @@ export class DrawLineHandler extends CanvasEventHandler {
     private _value: number;
     private _lineColor: string;
 
-    constructor (type: string, value: number, renderer: CanvasRenderer, point: DOMPoint, rightClick: boolean = false) {
+    constructor(entity: SelectedEntity, value: number, renderer: CanvasRenderer, point: DOMPoint, rightClick: boolean = false) {
         super(renderer);
-        this._type = type;
+        this._type = entity.name;
         this._value = value;
-
-        const tileConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === this._type);
-        this._lineColor = tileConfig?.meta?.color || '#000000';
+        this._lineColor = entity.meta.color;
 
         this.renderer.setActiveTile(null);
 
@@ -83,7 +81,7 @@ export class DrawLineHandler extends CanvasEventHandler {
         return previousNode.isAdjacent(node);
     }
 
-    private _setLineSegment(node: QuadNode, targetNode: QuadNode) : boolean {
+    private _setLineSegment(node: QuadNode, targetNode: QuadNode): boolean {
         const vector = node.getNormalizedRelativePosition(targetNode);
         if (!vector) {
             return false;

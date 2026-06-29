@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { MessageCreateParamsNonStreaming, TextBlockParam } from "@anthropic-ai/sdk/resources";
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+    apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 /*
@@ -101,76 +101,77 @@ ttl: "1h"
 */
 
 export type PromtOptions = {
-  model?: string;
-  maxTokens?: number;
-  sharedPromt?: string
+    model?: string;
+    maxTokens?: number;
+    sharedPromt?: string
 };
 
 const defaultPromtOptions = {
-  model: "claude-sonnet-4-6", //"claude-sonnet-4-20250514",
-  max_tokens: 4096, //2048, //1024,
+    model: "claude-sonnet-4-6", //"claude-sonnet-4-20250514",
+    max_tokens: 4096, //2048, //1024,
 }
 
 const defaultCacheOptions: TextBlockParam = {
-  type: "text",
-  text: '',
-  cache_control: {
-    type: "ephemeral",
-    ttl: "1h"
-  }
+    type: "text",
+    text: '',
+    cache_control: {
+        type: "ephemeral",
+        ttl: "1h"
+    }
 }
 
 export async function generateReply(message: string, options?: PromtOptions): Promise<string> {
-  const promptArgs: MessageCreateParamsNonStreaming = {
-    model: options?.model || "claude-sonnet-4-6", //"claude-sonnet-4-20250514",
-    max_tokens: options?.maxTokens || 4096, //2048, //1024,
-    messages: [{ role: "user", content: message }],
-  };
+    const promptArgs: MessageCreateParamsNonStreaming = {
+        model: options?.model || "claude-sonnet-4-6", //"claude-sonnet-4-20250514",
+        max_tokens: options?.maxTokens || 4096, //2048, //1024,
+        messages: [{ role: "user", content: message }],
+    };
 
-  if (options?.sharedPromt) {
-    promptArgs.system = [{
-      ...defaultCacheOptions,
-      text: options.sharedPromt,
-    }];
-  }
+    if (options?.sharedPromt) {
+        promptArgs.system = [{
+            ...defaultCacheOptions,
+            text: options.sharedPromt,
+        }];
+    }
 
-  const response = await anthropic.messages.create(promptArgs);
+    const response = await anthropic.messages.create(promptArgs);
 
 
-  /*const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6", //"claude-sonnet-4-20250514",
-    max_tokens: 4096, //2048, //1024,
-    system: [{
-      type: "text",
-      text: sharedPromt,
-      cache_control: {
-        type: "ephemeral",
-        ttl: "1h"
-      }
-    }],
-    messages: [{ role: "user", content: message }],
-  });*/
+    /*const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6", //"claude-sonnet-4-20250514",
+      max_tokens: 4096, //2048, //1024,
+      system: [{
+        type: "text",
+        text: sharedPromt,
+        cache_control: {
+          type: "ephemeral",
+          ttl: "1h"
+        }
+      }],
+      messages: [{ role: "user", content: message }],
+    });*/
 
-  const first = response.content[0];
-  return first.type === "text" ? first.text : "";
+    const first = response.content[0];
+    return first.type === "text" ? first.text : "";
 }
 
 export async function generateJSONReply(message: string, options?: PromtOptions): Promise<object> {
-  const response = await generateReply(message, options);
-  const sanitizedResponse = sanitizeJsonResponse(response);
-  try {
-    return JSON.parse(sanitizedResponse) as object;
-  } catch (e) {
-    console.log('ERROR:1', sanitizedResponse);
-    console.log('ERROR:2', response);
-    return {};
-  }
+    const response = await generateReply(message, options);
+    const sanitizedResponse = sanitizeJsonResponse(response);
+    try {
+        return JSON.parse(sanitizedResponse) as object;
+    } catch (e) {
+        console.log('ERROR:1', sanitizedResponse);
+        console.log('ERROR:2', response);
+        return {};
+    }
 }
 
 function sanitizeJsonResponse(text: string): string {
-  return text
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/\s*```$/, "")
-    .trim();
+    // Make sure last object doesn't have comma
+    return text
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/, "")
+        .trim();
 }

@@ -1,22 +1,29 @@
 import { Character } from "../../engine/core/character";
-//import { createGame } from "../../engine/core/engine";
 import { Game } from "../../engine/core/game";
-import { Author } from "../../storyteller/authors/author";
-import { Explorer } from "../../storyteller/authors/explorer";
-import { createAuthor } from "../../storyteller/storyteller";
+import { Storyteller } from "../../storyteller/storyteller";
+import { ProfileGeneratorFactory } from "./profile-generator";
+import { PlayerObserver } from "./player-observer";
 
 export class GamePod {
     public readonly game: Game;
-    public readonly explorer: Explorer;
-    public readonly author: Author;
 
-    public get player(): Character | undefined {
-        return this.game.getPlayer('Fantomen');
+    public readonly storyteller: Storyteller;
+
+    constructor(game: Game, storyteller: Storyteller) {
+        this.game = game;
+        this.storyteller = storyteller;
     }
 
-    constructor(game: Game) {
-        this.game = game;
-        this.explorer = new Explorer();
-        this.author = createAuthor(this.game);
+    public addPlayer(name: string): void {
+        const player = new Character(name, this.game.world);
+
+        const profileGeneratorFactory = new ProfileGeneratorFactory(this.game.world, player);
+        const playerObserver = new PlayerObserver(player, this.storyteller, profileGeneratorFactory);
+        this.game.subscribe(playerObserver);
+        this.game.spawnPlayer(player);
+    }
+
+    public getPlayer(): Character | undefined {
+        return this.game.getPlayer('Fantomen');
     }
 }

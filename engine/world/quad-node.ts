@@ -1,7 +1,7 @@
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
-import { QuadNodeData as QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileDataEntry } from "../../storyteller/types";
+import { QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileDataEntry } from "../types";
 
 export class QuadNode {
     public readonly key: QuadNodeKey;
@@ -17,7 +17,6 @@ export class QuadNode {
     private _quadrants: QuadNode[] = [];
     private _detached: boolean = false;
 
-    //constructor(key: QuadNodeKey, parent: QuadNode) {
     constructor(parent?: QuadNode, index?: any) {
         if (!parent) {
             this.key = new QuadNodeKey(0n, 0);
@@ -26,7 +25,6 @@ export class QuadNode {
             this.key = parent.key.createChildKey(index);
         }
 
-        //this.key = key;
         this.bounds = QuadNodeBounds.fromKey(this.key);
     }
 
@@ -69,7 +67,7 @@ export class QuadNode {
         }
 
         for (let i = 0; i < 4; i++) {
-           // const quadrantKey = this.key.createChildKey(i as any);
+            // const quadrantKey = this.key.createChildKey(i as any);
             const quadrant = new QuadNode(this, i); //new QuadNode(quadrantKey, this);
             this._quadrants.push(quadrant);
         }
@@ -120,11 +118,11 @@ export class QuadNode {
                 return node;
             }
         }
-    }    
+    }
 
     public findByRect(rect: QuadNodesRect, createIfMissing: boolean = false): QuadNode[] {
         if (this.depth > rect.z || !this.bounds.intersects2DRect(rect)) {
-           return [];
+            return [];
         } else if (this.depth === rect.z) {
             return [this];
         }
@@ -133,7 +131,7 @@ export class QuadNode {
         for (const quadrant of this.getQuadrants(createIfMissing)) {
             nodes.push(...quadrant.findByRect(rect, createIfMissing));
         }
-        
+
         return nodes;
     }
 

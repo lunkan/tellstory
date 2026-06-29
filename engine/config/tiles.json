@@ -3,19 +3,33 @@
     "version": "1.0.0",
     "tiles": [
         {
-            "name": "player-start",
-            "category": "marker",
-            "meta": {
-                "color": "#ff0000"
-            }
-        },
-        {
-            "name": "water",
+            "name": "ocean",
             "category": "typography",
+            "tags": [
+                "water"
+            ],
             "attentionValue": 0.1,
             "movementCost": 1,
             "meta": {
                 "color": "#0093dd"
+            },
+            "subTiles": [
+                {
+                    "name": "water",
+                    "threshold": 0.1
+                }
+            ]
+        },
+        {
+            "name": "lake",
+            "category": "typography",
+            "tags": [
+                "water"
+            ],
+            "attentionValue": 0.1,
+            "movementCost": 1,
+            "meta": {
+                "color": "#00679c"
             },
             "subTiles": [
                 {

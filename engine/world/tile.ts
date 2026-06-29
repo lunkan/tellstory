@@ -1,4 +1,5 @@
 import { Metric, TerrainSetting, TileData, VectorSetting } from "../../storyteller/types";
+import tilesJSON from '../config/tiles.json' with { type: 'json' };
 
 export class Tile {
     public get terrain() {
@@ -34,10 +35,20 @@ export class Tile {
         this._vectors.push(vector);
     }
 
+    public hasTag(tag: string): boolean {
+        return this._terrain.some((terrain) => {
+            const tileConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrain.type);
+            if (tileConfig && Array.isArray(tileConfig.tags)) {
+                return tileConfig.tags.includes(tag);
+            }
+
+            return false;
+        });
+    }
+
     public getVectorsByType(type: string): VectorSetting[] {
         return this._vectors.filter((v) => v.type === type);
     }
-
 
     public hasTerrain(name: string): boolean {
         return this._terrain.some((terrain) => terrain.type === name);

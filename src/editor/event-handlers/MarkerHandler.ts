@@ -1,11 +1,12 @@
 import { Tile } from "../../../engine/world/tile";
+import { SelectedEntity } from "../../store/editorStore";
 import { CanvasRenderer } from "../utils/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
 
-var markerIncrementor: number = 0; 
+var markerIncrementor: number = 0;
 
 export class MarkerHandler extends CanvasEventHandler {
-    constructor (type: string, renderer: CanvasRenderer, point: DOMPoint, rightClick: boolean = false) {
+    constructor(entity: SelectedEntity, renderer: CanvasRenderer, point: DOMPoint, rightClick: boolean = false) {
         super(renderer);
         this.renderer.setActiveTile(null);
 
@@ -17,9 +18,10 @@ export class MarkerHandler extends CanvasEventHandler {
         }
 
         markerIncrementor++;
-        this.renderer.markers.push({
+        //this.renderer.markers.push({
+        this.renderer.world.markers.addMarker({
             point: gridPoint,
-            type: type,
+            type: entity.name,
             id: `marker@${markerIncrementor}`,
         });
 
@@ -30,5 +32,5 @@ export class MarkerHandler extends CanvasEventHandler {
 
     public pointerUp(_point: DOMPoint): void {
         this.finish()
-     }
+    }
 }

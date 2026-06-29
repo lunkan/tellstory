@@ -1,0 +1,143 @@
+{
+    "name": "marker",
+    "version": "1.0.0",
+    "markers": [
+        {
+            "name": "player-start",
+            "tags": [],
+            "zMin": 5
+        },
+        {
+            "name": "Waterfall",
+            "tags": [
+                "river"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Pond",
+            "tags": [
+                "forrest",
+                "grassland"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Spring",
+            "tags": [
+                "elevation",
+                "forrest",
+                "grassland"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Boulder field",
+            "tags": [
+                "elevation",
+                "forrest",
+                "grassland"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Rock outcrop",
+            "tags": [
+                "elevation",
+                "forrest",
+                "grassland"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Cliff",
+            "tags": [
+                "elevation"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Cave",
+            "tags": [
+                "elevation",
+                "forrest"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Ravine",
+            "tags": [
+                "elevation",
+                "forrest"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Gorge",
+            "tags": [
+                "elevation"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Hill",
+            "tags": [
+                "forrest",
+                "grassland"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Ridge",
+            "tags": [
+                "forrest",
+                "grassland"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Valley",
+            "tags": [
+                "elevation"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Meadow",
+            "tags": [
+                "forrest"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Wetland",
+            "tags": [
+                "forrest",
+                "grassland"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Marsh",
+            "tags": [
+                "forrest",
+                "grassland"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Ancient or giant tree",
+            "tags": [
+                "forrest"
+            ],
+            "zMin": 5
+        },
+        {
+            "name": "Fallen log or log bridge",
+            "tags": [
+                "river"
+            ],
+            "zMin": 5
+        }
+    ]
+}

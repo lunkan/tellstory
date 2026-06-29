@@ -22,7 +22,8 @@ import { QUAD_TREE_ROOT_SIZE } from "../../../engine/world/quad-node-bounds";
 import { OverlayRenderer } from "./OverlayRenderer";
 import { TileRenderer } from './TileRenderer';
 import { hydrate } from '../../../engine/world/hydrator';
-import { Marker } from '../../../storyteller/types';
+//import { Marker } from '../../../engine/world/markers';
+import { World } from '../../../engine/world/world';
 
 const SIZE: number = QUAD_TREE_ROOT_SIZE;
 
@@ -53,16 +54,12 @@ export type TileRect = {
     ySize: number;
 }
 
-/*export type Marker = {
-    point: GridPoint;
-    type: string;
-    id: string;
-}*/
-
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
     public readonly overlay: OverlayRenderer;
-    public readonly markers: Marker[];
+    //public readonly markers: Marker[];
+
+    public readonly world: World;
 
     private _level: number = 5; // Based on scale
     private _scale: number = 0.5; // 100 x 10 = 1000px
@@ -72,7 +69,15 @@ export class CanvasRenderer {
     private _activeTile?: TileCoordinate | null;
     private _refreshRequest: number | undefined;
 
-    private _quadTreeRoot: QuadNode;
+    //private _quadTreeRoot: QuadNode;
+
+    /*private get _quadTreeRoot(): QuadNode {
+        return this.world.quadtree;
+    }
+
+    private get _quadTreeRoot(): QuadNode {
+        return this.world.quadtree;
+    }*/
 
     private get numTiles(): number {
         return this._level === 0 ? 1 : Math.pow(2, this._level);
@@ -122,9 +127,11 @@ export class CanvasRenderer {
         return this.canvas.height;
     }
 
-    constructor(quadTreeRoot: QuadNode, markers: Marker[], canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
-        this._quadTreeRoot = quadTreeRoot;
-        this.markers = markers;
+    //constructor(quadTreeRoot: QuadNode, markers: Marker[], canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
+    constructor(world: World, canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
+        this.world = world;
+        //this._quadTreeRoot = quadTreeRoot;
+        //this.markers = markers;
         this.canvas = canvas;
         this.overlay = new OverlayRenderer(overlay);
     }
@@ -152,12 +159,12 @@ export class CanvasRenderer {
         } else {
             const tile = this.getTileFromPoint(viewportPoint);
             if (tile !== this._activeTile) {
-                 this._activeTile = tile;
+                this._activeTile = tile;
             } else {
                 return;
             }
         }
-        
+
         this._invalidatTransform();
         //this.refresh();
     }
@@ -180,8 +187,9 @@ export class CanvasRenderer {
         if (!this._gridPointInBounds(gridPoint)) {
             return null;
         }
-        
-        return this._quadTreeRoot.findByPoint({
+
+        //return this._quadTreeRoot.findByPoint({
+        return this.world.quadtree.findByPoint({
             x: gridPoint.x,
             y: gridPoint.y,
             z: this._level,
@@ -196,7 +204,7 @@ export class CanvasRenderer {
 
         const tileX = Math.floor(gridPoint.x / this.tileSize);
         const tileY = Math.floor(gridPoint.y / this.tileSize);
-        
+
         return {
             z: this._level,
             x: tileX,
@@ -303,7 +311,8 @@ export class CanvasRenderer {
 
         for (let x = visibleTiles.x; x < visibleTiles.x + visibleTiles.xSize; x++) {
             for (let y = visibleTiles.y; y < visibleTiles.y + visibleTiles.ySize; y++) {
-                const node = this._quadTreeRoot.findByPoint({
+                //const node = this._quadTreeRoot.findByPoint({
+                const node = this.world.quadtree.findByPoint({
                     x: x * this.tileSize,
                     y: y * this.tileSize,
                     z: this._level,
@@ -320,8 +329,8 @@ export class CanvasRenderer {
     }
 
     private _drawMarkers(): void {
-        this.markers.forEach((marker) => {
-            const color = tilesJSON.tiles.find((tileConfig) => tileConfig.name === marker.type)?.meta?.color || '#000000';
+        this.world.markers.getAll().forEach((marker) => {
+            const color = marker.type === 'player-start' ? '#ff0000' : '#000000'
             this._ctx.beginPath();
             this._ctx.arc(marker.point.x, marker.point.y, 5, 0, Math.PI * 2);
             this._ctx.fillStyle = color;

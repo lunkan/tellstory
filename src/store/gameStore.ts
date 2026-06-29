@@ -1,8 +1,5 @@
 import { create } from "zustand";
 import { gameRepository } from "../repositories/gameRepository";
-import { isLocationChangeEvent } from "../../engine/core/events/game-event.config";
-import { Message } from "../../shared/src/message";
-
 interface GameStore {
     worldId: number;
     loading: boolean;
@@ -21,12 +18,4 @@ export const useGameStore = create<GameStore>((set) => ({
             loading: false,
         }));
     },
-    handleMessage: (message: Message) => {
-        if (isLocationChangeEvent(message)) {
-            console.log('useGameStore:isLocationChangeEvent');
-            /*set({
-                eventId: message.id,
-            });*/
-        }
-    }
 }));

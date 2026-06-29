@@ -44,10 +44,10 @@ function hydrateSubTiles(parent: QuadNode): void {
     });
 
     // Water - is water :)
-    if (parent.tile.hasTerrain('water')) {
+    if (parent.tile.hasTerrain('ocean')) {
         quadrants.forEach((quadrant) => {
             quadrant.tile!.addTerrain({
-                type: 'water',
+                type: 'ocean',
                 value: 1,
             });
         });

@@ -1,9 +1,9 @@
-import { IGameObserver, QuadNodePoint, QuadNodes2DPoint } from "../../storyteller/types";
 import { QuadNode } from "../world/quad-node";
 import { World } from "../world/world";
 import { Character } from "./character";
 import { GameEvent } from "./events/game-event.interface";
 import { GameLocationChangeEvent } from "./events/game-location-change-event";
+import { IGameObserver, QuadNodePoint } from "../types";
 
 export class Game {
     public readonly world: World;
@@ -34,7 +34,7 @@ export class Game {
     }
 
     public spawnPlayer(player: Character): boolean {
-        const playerStart = this.world.findMarkerByType('player-start');
+        const playerStart = this.world.getStartingLocations()[0];
         if (!playerStart) {
             throw Error('No player start found');
         }

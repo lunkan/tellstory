@@ -1,8 +1,5 @@
-import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
 import { useEffect, useRef, useState } from "react";
 import { CanvasRenderer } from "./utils/CanvasRenderer";
-//import { QuadNodeKey } from  "../../engine/world/quad-node-key";
-import { QuadNode } from  "../../engine/world/quad-node";
 import { useEditorStore } from "../store/editorStore";
 import { DrawHandler } from "./event-handlers/DrawHandler";
 import { MoveHandler } from "./event-handlers/MoveHandler";
@@ -12,27 +9,30 @@ import { DrawLineHandler } from './event-handlers/DrawLineHandler';
 import { MarkerHandler } from './event-handlers/MarkerHandler';
 import { EditorMapZoomLevel } from './EditorMapZoomLevel';
 
-//const rootKey = new QuadNodeKey(0n, 0);
-//const quadtree = new QuadNode();//rootKey);
-
 export function EditorMap() {
-    const quadtree = useEditorStore((state) => state.quadtree);
-    const markers = useEditorStore((state) => state.markers);
+    //const quadtree = useEditorStore((state) => state.quadtree);
+    //const markers = useEditorStore((state) => state.markers);
+    const world = useEditorStore((state) => state.world);
     const editState = useEditorStore((state) => state.editState);
     const paintValue = useEditorStore((state) => state.paintValue);
     const selectedTerrain = useEditorStore((state) => state.selectedTerrain);
-    const viewportRef = useRef<HTMLDivElement>(null); 
-    const viewportSizeObserver = useRef<ResizeObserver | null>(null); 
-    const canvasRef = useRef<HTMLCanvasElement>(null); 
+    const viewportRef = useRef<HTMLDivElement>(null);
+    const viewportSizeObserver = useRef<ResizeObserver | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const overlayRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<CanvasRenderer | null>(null);
     const [depth, setDepth] = useState<number>(5);
 
     useEffect(() => {
-        if (markers && quadtree && canvasRef.current && overlayRef.current && !rendererRef.current) {
-            rendererRef.current = new CanvasRenderer(quadtree, markers, canvasRef.current, overlayRef.current);
+        if (world && canvasRef.current && overlayRef.current && !rendererRef.current) {
+            rendererRef.current = new CanvasRenderer(world, canvasRef.current, overlayRef.current);
             rendererRef.current.clear();
         }
+
+        /*if (markers && quadtree && canvasRef.current && overlayRef.current && !rendererRef.current) {
+            rendererRef.current = new CanvasRenderer(quadtree, markers, canvasRef.current, overlayRef.current);
+            rendererRef.current.clear();
+        }*/
     }, []);
 
     useEffect(() => {
@@ -66,10 +66,11 @@ export function EditorMap() {
                 new MoveHandler(rendererRef.current, point);
                 break;
             case 'draw':
-                const terrainConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === selectedTerrain);
-                if (terrainConfig?.category === 'marker') {
+                if (!selectedTerrain) {
+                    return;
+                } else if (selectedTerrain.category === 'marker') {
                     new MarkerHandler(selectedTerrain, rendererRef.current, point, e.button === 2);
-                } else if (terrainConfig?.category === 'vector') {
+                } else if (selectedTerrain.category === 'vector') {
                     new DrawLineHandler(selectedTerrain, paintValue, rendererRef.current, point, e.button === 2);
                 } else {
                     new DrawHandler(selectedTerrain, paintValue, rendererRef.current, point);
@@ -81,7 +82,7 @@ export function EditorMap() {
         if (rendererRef.current) {
             const wheelDelta = (e.nativeEvent as any).wheelDelta;
             new ZoomHandler(rendererRef.current).onWheel(wheelDelta, new DOMPoint(e.clientX, e.clientY));
-            
+
             const depth = Math.floor(Math.sqrt(rendererRef.current.scale)) + 5;
             rendererRef.current.setDepth(depth);
             setDepth(rendererRef.current.getDepth());
@@ -89,7 +90,7 @@ export function EditorMap() {
     }
 
     return (
-        <div className="editor-map" style={{position: 'relative' }} ref={viewportRef} onPointerDown={(e) => handlePointerDown(e)} onWheel={(e) => handleWheel(e)}>
+        <div className="editor-map" style={{ position: 'relative' }} ref={viewportRef} onPointerDown={(e) => handlePointerDown(e)} onWheel={(e) => handleWheel(e)}>
             <canvas width="1000" height="1000" ref={canvasRef}></canvas>
             <canvas style={{ position: 'absolute', top: 0, left: 0 }} width="1000" height="1000" ref={overlayRef}></canvas>
             <EditorMapZoomLevel depth={depth}></EditorMapZoomLevel>

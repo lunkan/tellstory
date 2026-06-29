@@ -1,5 +1,5 @@
-import { Metric, QuadNodeDelta, QuadNodePoint } from "../../storyteller/types";
 import { ChronicleEventType } from "../chronicle/chronicle";
+import { QuadNodeDelta } from "../types";
 import { QuadNode } from "../world/quad-node";
 import { World } from "../world/world";
 
@@ -18,43 +18,48 @@ type MemoryFilter = {
 
 export class Character {
     public readonly id: string;
-
-    public name: string;
+    public readonly name: string;
+    public readonly world: World;
 
     private _chronicle: ChronicleEvent[] = [];
-    private _world: World;
     private _currentLocation: QuadNode | undefined;
     private _previousLocation: QuadNode | undefined;
 
     constructor(name: string, world: World) {
         this.id = name;
         this.name = name;
-        this._world = world;
+        this.world = world;
     }
 
     public setLocation(nextLocation: QuadNode): void {
         this._previousLocation = this._currentLocation || nextLocation;
         this._currentLocation = nextLocation;
-        console.log('CHARACTER: setLocation', nextLocation.getPoint());
     }
 
     public getCurrentLocation(): QuadNode {
-        console.log('CHARACTER: getCurrentLocation', this._currentLocation?.getPoint());
         return this._currentLocation!;
     }
 
     public getPreviousLocation(): QuadNode {
-        console.log('CHARACTER: getPreviousLocation', this._previousLocation?.getPoint());
         return this._previousLocation!;
     }
 
+    /*public getNearbyLandmarks(): Marker[] {
+        if (!this._currentLocation) {
+            return [];
+        }
+
+        const { x, y, size } = this._currentLocation.bounds;
+        return this.world.markers.getMarkers(x, y, this._currentLocation.depth, size);
+    }*/
+
     public getAdjacentNodes(): QuadNode[] {
-        return this._world.findAdjacentNodes(this.getCurrentLocation().key);
+        return this.world.findAdjacentNodes(this.getCurrentLocation().key);
     }
 
     public getQuadrantNodes(): QuadNode[] {
         if (this._currentLocation && this._currentLocation.getPoint().z < World.MAX_ZOOM_DEPTH) {
-            return this._world.findQuadrantNodes(this.getCurrentLocation().key);
+            return this.world.findQuadrantNodes(this.getCurrentLocation().key);
         }
 
         return [];
@@ -69,11 +74,11 @@ export class Character {
     }
 
     public getAdjacentByDelta(deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): QuadNode | undefined {
-        return this._world.findNeighbourNode(this.getCurrentLocation().key, deltaX, deltaY);
+        return this.world.findNeighbourNode(this.getCurrentLocation().key, deltaX, deltaY);
     }
 
     public getQuadrantByDelta(x: 1 | 0, y: 1 | 0): QuadNode | undefined {
-        return this._world.findQuadrantNode(this.getCurrentLocation().key, x, y);
+        return this.world.findQuadrantNode(this.getCurrentLocation().key, x, y);
     }
 
     public getAdjacent3DLocations(): QuadNode[] {
@@ -84,8 +89,8 @@ export class Character {
             locations.push(parent);
         }*/
 
-        locations.push(...this._world.findQuadrantNodes(this.getCurrentLocation().key));
-        locations.push(...this._world.findAdjacentNodes(this.getCurrentLocation().key));
+        locations.push(...this.world.findQuadrantNodes(this.getCurrentLocation().key));
+        locations.push(...this.world.findAdjacentNodes(this.getCurrentLocation().key));
         return locations;
     }
 
@@ -94,7 +99,7 @@ export class Character {
     }
 
     public moveToParent(): boolean {
-        const parentLocation = this._world.findParentNode(this.getCurrentLocation().key);
+        const parentLocation = this.world.findParentNode(this.getCurrentLocation().key);
         if (!parentLocation) {
             return false;
         }
@@ -125,20 +130,5 @@ export class Character {
 
             return true;
         });
-    }
-
-    public getMetricsByLocation(locationId: string, currentTime: number): Metric {
-        const memories = this.findMemories({
-            types: [ChronicleEventType.Enter],
-            locationId: locationId,
-        });
-
-        const frequency = memories.length; // sigmoid
-        const recency = memories[0] ? currentTime - memories[0].timestamp : -1; // sigmoid
-
-        return {
-            frequency,
-            recency,
-        };
     }
 }

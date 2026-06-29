@@ -1,4 +1,4 @@
-import { JSON_INSTRUCTION_RULES } from "./json-instruction-rules";
+
 
 /**
  * SCHEMA
@@ -10,9 +10,15 @@ import { JSON_INSTRUCTION_RULES } from "./json-instruction-rules";
     _hint_location_spatial_markers: [{
         type: string, // Terrain type
         value: number, // Amount value  0 - 1 
+    }},
+    _hint_location_landmarks: [{
+        type: string, // Landmark type
     }}
 }
 */
+
+import { JSON_INSTRUCTION_RULES } from "../../shared-promts/json-rules";
+
 
 export const EXPLORER_TILE_DESCRIPTION_PROMT: string =
     `You are an scientific explorer.
@@ -24,10 +30,9 @@ ${JSON_INSTRUCTION_RULES}
 - Replace ONLY "__GENERATE_DESCRIPTION__", "__GENERATE_SUMMARY__" & "__GENERATE_REMINISCENCE__" values.
 
 Property "description" should:
-- Use "_hint_location_spatial_markers" to replace "__GENERATE_DESCRIPTION__" with a generated description of the location.
+- Use "_hint_location_spatial_markers" and "_hint_location_landmarks rules" to replace "__GENERATE_DESCRIPTION__" with a generated description of the location.
 - Not contain more than 80 words.
-- Only include details from spatial markers.
-- Contain 1-3 prominent natural features inferred from the spatial markers.
+- Only include details from spatial markers and landmarks.
 - Translate respons into Swedish.
 
 Property "summary" should:
@@ -56,4 +61,7 @@ _hint_location_spatial_markers rules:
 - property "attention" describes how much attention the description should pay to the terrain or infrustructure.
     Features with higher attention values should receive proportionally more detail and prominence in the description.
     Features with attention below 0.2 may be mentioned briefly or omitted if more important features exist.
+
+_hint_location_landmarks rules:
+- property "type" describes a landmark in the area, and should always be mentioned in description.
 `;

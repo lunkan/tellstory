@@ -1,5 +1,6 @@
 import { QuadNode } from "../../../engine/world/quad-node";
 import { Tile } from "../../../engine/world/tile";
+import { SelectedEntity } from "../../store/editorStore";
 import { CanvasRenderer } from "../utils/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
 
@@ -8,9 +9,9 @@ export class DrawHandler extends CanvasEventHandler {
     private _value: number;
     private _currentNode: QuadNode | null = null;
 
-    constructor (type: string, value: number, renderer: CanvasRenderer, point: DOMPoint) {
+    constructor(entity: SelectedEntity, value: number, renderer: CanvasRenderer, point: DOMPoint) {
         super(renderer);
-        this._type = type;
+        this._type = entity.name;
         this._value = value;
 
         this.renderer.setActiveTile(null);

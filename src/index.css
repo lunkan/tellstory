@@ -1,3 +1,29 @@
+/* 1. För Edge, Chrome och Safari (Chromium) */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 6px;
+    border: 3px solid #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #616161;
+}
+
+/* 2. För Firefox (Modern standard) */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #424242 #1e1e1e;
+}
+
 body {
     font-family: system-ui, sans-serif;
     margin: 0;
@@ -51,8 +77,6 @@ pre {
 .column {
     flex: 1 1 50%;
 }
-
-/* ******** */
 
 .feed--section-heading {
     margin: 36px 0 24px;
@@ -144,30 +168,6 @@ pre {
     border-radius: 5px;
     display: flex;
 }
-
-/*
-.debug-panel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100vh;
-    width: 600px;
-    background-color: #fff;
-    padding: 24px;
-    box-sizing: border-box;
-    box-shadow: 1px 1px 10px 3px rgba(0, 0, 0, 0.25);
-    overflow: auto;
-}
-
-.debug-panel--open-btn,
-.debug-panel--close-btn {
-    border: 0;
-    padding: 6px 10px;
-    border-radius: 5px;
-    position: absolute;
-    right: 24px;
-    top: 24px;
-}*/
 
 .game-screen {
     display: flex;
@@ -355,8 +355,6 @@ pre {
 .editor-screen {
     width: 100%;
     height: 100vh;
-    /*display: flex; flex;*/
-    /*flex-direction: column;*/
 
     display: grid;
     grid-template-areas:
@@ -423,37 +421,40 @@ pre {
     font-size: 11px;
 }
 
-.editor-palett {
+.sidebar {
+    overflow: hidden;
     color: #ffffff;
     grid-area: palett;
     background-color: #212121;
     padding: 16px;
+    max-height: calc(100vh - 40px);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    gap: 24px;
 }
 
-.editor-palett-controls {
-    margin: 24px 0;
-}
-
-.editor-palett-controls--range {
+.sidebar-controls--range {
     width: 100%;
     box-sizing: border-box;
     margin: 8px 0;
 }
 
-.editor-palett-controls--range::-webkit-slider-runnable-track {
+.sidebar-controls--range::-webkit-slider-runnable-track {
     -webkit-appearance: none;
     background: #9a905d;
     height: 2px;
 }
 
-.editor-palett-controls--range::-webkit-slider-thumb {
+.sidebar-controls--range::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     background: #ff0000;
     margin: -7px 0;
 }
 
-.editor-palett-controls--label {
+.sidebar-controls--label {
     display: flex;
     width: 100%;
     justify-content: space-between;
@@ -461,13 +462,36 @@ pre {
     color: #ffffff;
 }
 
-.editor-palett--terrain-options {
+.sidebar-tab-container {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    overflow: hidden;
 }
 
-.editor-palett--terrain-options-heading {
+.sidebar-tab-bar {
+    display: flex;
+    width: 100%;
+    gap: 1px;
+}
+
+.sidebar-tab {
+    flex: 1;
+    font-size: 11px;
+    color: #ffffff;
+    background-color: #323232;
+    border: 0;
+}
+
+.tab-panel {
+    overflow-y: auto;
+}
+
+.editor-palett--options {
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-palett--options-heading {
     margin: 24px 0 8px;
     text-transform: uppercase;
     font-size: 10px;
@@ -475,18 +499,18 @@ pre {
     color: #ffffff;
 }
 
-.editor-palett--terrain-options-list {
+.editor-palett--options-list {
     border-top: solid 1px #666;
     margin: 0;
     list-style: none;
     padding: 0;
 }
 
-.editor-palett--terrain-options-list li {
+.editor-palett--options-list li {
     border-bottom: solid 1px #666;
 }
 
-.editor-palett--terrain-option {
+.editor-palett--option {
     display: block;
     font-size: 12px;
     padding: 4px 8px;
@@ -499,17 +523,18 @@ pre {
     gap: 8px;
 }
 
-.editor-palett--terrain-option:hover {
+.editor-palett--option:hover {
     background-color: #323232;
 }
 
-.editor-palett--terrain-option-color {
+.editor-palett--option-color {
     display: block;
     width: 16px;
     height: 16px;
     background-color: #ff0000;
 }
 
-.editor-palett--terrain-option--selected {
-    outline: solid 2px #fff;
+.editor-palett--option--selected {
+    outline: solid 1px #fff;
+    outline-offset: -1px;
 }

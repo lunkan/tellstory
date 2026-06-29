@@ -1,6 +1,6 @@
 import { EditorMap } from "./EditorMap";
 import { EditorTopbar } from "./EditorTopbar";
-import { EditorPalett } from "./EditorPalett";
+import { Sidebar } from "./sidebar/Sidebar";
 import { useEditorStore } from "../store/editorStore";
 
 export function EditorScreen() {
@@ -18,7 +18,7 @@ export function EditorScreen() {
         <main className="editor-screen">
             <EditorTopbar></EditorTopbar>
             <EditorMap></EditorMap>
-            <EditorPalett></EditorPalett>
+            <Sidebar></Sidebar>
         </main>
     );
 }

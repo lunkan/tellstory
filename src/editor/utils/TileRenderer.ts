@@ -34,10 +34,11 @@ export class TileRenderer {
             return;
         }
 
-        const waterConfig = tile.getTerrain('water');
+        //const waterConfig = tile.getTerrain('ocean') || tile.getTerrain('lake');
         const elevationConfig = tile.getTerrain('elevation');
 
-        if (waterConfig) {
+        //if (waterConfig) {
+        if (tile.hasTag('water')) {
             this._drawWater(gridRect);
         } else if (elevationConfig) {
             this._drawTypography(elevationConfig.value || 0, gridRect);
@@ -153,7 +154,7 @@ export class TileRenderer {
         const totalWeight = Object.values(terrainSettings)
             .reduce((sum, terrainSetting) => sum + terrainSetting.value, 0);
 
-        const allocations = terrainSettings.map(({type, value}) => {
+        const allocations = terrainSettings.map(({ type, value }) => {
             const exact = value / totalWeight * NUM_TERRAIN_SLOTS;
 
             return {
