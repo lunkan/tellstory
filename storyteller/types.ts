@@ -13,12 +13,14 @@ export type Landmark = {
 
 export type LocationProfile = {
     key: string;
+    size: number;
     spatialMarkers: SpacialMarker[];
     landmarks: Landmark[];
 }
 
 export type LocationProfileContext = {
     key: string;
+    size: number;
     frequency: number;
     recency: number;
     direction?: DIRECTION;

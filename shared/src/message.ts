@@ -1,4 +1,4 @@
-import { QuadNodePoint } from "../../storyteller/types";
+import { QuadNodePoint } from "../../engine/types";
 import { DIRECTION } from "./direction";
 
 export interface Message {
@@ -7,9 +7,10 @@ export interface Message {
 
 export type LocationMessageDescriptionType =
     'intro' |
+    'scene' |
     'sceneTransition' |
-    'adjacentSummary' |
-    'quadrantSummary' |
+    'immediacy' |
+    'proximity' |
     'adjacentDirection' |
     'quadrantDirection';
 
@@ -33,7 +34,10 @@ export interface DescriptionMessage {
     type: LocationMessageDescriptionType;
     text: string;
     attention: number;
-    direction?: DIRECTION;
+}
+
+export interface DirectionDescriptionMessage extends DescriptionMessage {
+    direction: DIRECTION;
 }
 
 export function isPlayerLocationChangeMessage(message: Message): message is PlayerLocationChangeMessage {
@@ -42,9 +46,29 @@ export function isPlayerLocationChangeMessage(message: Message): message is Play
 
 export function isDescriptionMessage(message: Message): message is DescriptionMessage {
     return message.type === 'intro'
+        || message.type === 'scene'
         || message.type === 'sceneTransition'
-        || message.type === 'adjacentSummary'
-        || message.type === 'quadrantSummary'
+        || message.type === 'immediacy'
+        || message.type === 'proximity'
         || message.type === 'adjacentDirection'
         || message.type === 'quadrantDirection';
+}
+
+export function isSceneDescriptionMessage(message: Message): message is DescriptionMessage {
+    return message.type === 'intro'
+        || message.type === 'scene'
+        || message.type === 'sceneTransition'
+        || message.type === 'immediacy'
+}
+
+export function isPrimaryDescriptionMessage(message: Message): message is DescriptionMessage {
+    return message.type === 'intro' || message.type === 'scene' || message.type === 'sceneTransition';
+}
+
+export function isSecondaryDescriptionMessage(message: Message): message is DescriptionMessage {
+    return message.type === 'immediacy';
+}
+
+export function isDirectionDescriptionMessage(message: Message): message is DirectionDescriptionMessage {
+    return message.type === 'adjacentDirection' || message.type === 'quadrantDirection' || message.type === 'proximity'
 }

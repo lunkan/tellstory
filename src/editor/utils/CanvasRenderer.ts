@@ -16,13 +16,11 @@
 2^12 = 4096x4096
 */
 
-import tilesJSON from '../../../engine/config/tiles.json' with { type: 'json' };
 import { QuadNode } from "../../../engine/world/quad-node";
 import { QUAD_TREE_ROOT_SIZE } from "../../../engine/world/quad-node-bounds";
 import { OverlayRenderer } from "./OverlayRenderer";
 import { TileRenderer } from './TileRenderer';
-import { hydrate } from '../../../engine/world/hydrator';
-//import { Marker } from '../../../engine/world/markers';
+import { Hydrator } from '../../../engine/world/hydrator';
 import { World } from '../../../engine/world/world';
 
 const SIZE: number = QUAD_TREE_ROOT_SIZE;
@@ -57,10 +55,9 @@ export type TileRect = {
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
     public readonly overlay: OverlayRenderer;
-    //public readonly markers: Marker[];
-
     public readonly world: World;
 
+    private _hydrator: Hydrator;
     private _level: number = 5; // Based on scale
     private _scale: number = 0.5; // 100 x 10 = 1000px
     private _x: number = 0;
@@ -68,16 +65,6 @@ export class CanvasRenderer {
 
     private _activeTile?: TileCoordinate | null;
     private _refreshRequest: number | undefined;
-
-    //private _quadTreeRoot: QuadNode;
-
-    /*private get _quadTreeRoot(): QuadNode {
-        return this.world.quadtree;
-    }
-
-    private get _quadTreeRoot(): QuadNode {
-        return this.world.quadtree;
-    }*/
 
     private get numTiles(): number {
         return this._level === 0 ? 1 : Math.pow(2, this._level);
@@ -127,13 +114,11 @@ export class CanvasRenderer {
         return this.canvas.height;
     }
 
-    //constructor(quadTreeRoot: QuadNode, markers: Marker[], canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
     constructor(world: World, canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
         this.world = world;
-        //this._quadTreeRoot = quadTreeRoot;
-        //this.markers = markers;
         this.canvas = canvas;
         this.overlay = new OverlayRenderer(overlay);
+        this._hydrator = new Hydrator();
     }
 
     public getDepth(): number {
@@ -318,7 +303,7 @@ export class CanvasRenderer {
                     z: this._level,
                 }, true);
 
-                hydrate(node);
+                this._hydrator.hydrate(node);
 
                 if (node && node.tile) {
                     const gridRect = this._getGridRectFromNode(node);
@@ -398,7 +383,6 @@ export class CanvasRenderer {
 
     private _invalidatTransform(): void {
         this.clear();
-        //this.overlay.setTransformMtx(this._transformMtx);
 
         if (this._refreshRequest) {
             cancelAnimationFrame(this._refreshRequest);

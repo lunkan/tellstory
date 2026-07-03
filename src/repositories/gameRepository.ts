@@ -15,7 +15,7 @@ async function create(worldId: number): Promise<void> {
 }
 
 async function move(direction: DIRECTION): Promise<void> {
-    console.log('handleMove');
+    console.log('handleMove', direction);
     const res = await fetch("/game/move", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -28,11 +28,12 @@ async function move(direction: DIRECTION): Promise<void> {
     }
 }
 
-async function zoom(delta: number): Promise<void> {
+async function zoom(depth: number): Promise<void> {
+    console.log('HandleZoom', depth);
     const res = await fetch("/game/zoom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ delta }),
+        body: JSON.stringify({ depth }),
     });
 
     const data: any = await res.json();

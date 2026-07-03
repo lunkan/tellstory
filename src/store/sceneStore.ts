@@ -1,128 +1,101 @@
 import { create } from "zustand";
-import { isDescriptionMessage, Message, LocationMessageDescriptionType, isPlayerLocationChangeMessage, PlayerLocationDirection } from "../../shared/src/message";
+import {
+    isDescriptionMessage,
+    Message,
+    LocationMessageDescriptionType,
+    isPlayerLocationChangeMessage,
+    PlayerLocationDirection,
+    isPrimaryDescriptionMessage,
+    isDirectionDescriptionMessage,
+    isSecondaryDescriptionMessage
+} from "../../shared/src/message";
 
 import { DIRECTION, DIRECTION_NAME } from "../../shared/src/direction";
 import { gameRepository } from "../repositories/gameRepository";
-import { QuadNodePoint } from "../../storyteller/types";
+import { QuadNodePoint } from "../../engine/types";
+import { getDepthName } from "../../shared/src/phraseology";
+
+export interface SceneMessage {
+    id: string,
+    type: string,
+    label: string,
+    text: string,
+    consumed?: boolean,
+}
+
+export type DirectionDescription = {
+    id: string,
+    label: string,
+    text: string,
+    direction: DIRECTION,
+}
 
 export type SceneDescription = {
     id: string,
     type: LocationMessageDescriptionType,
     label: string,
     text: string,
-    attention: number,
-    direction?: DIRECTION,
-    isIntroDescription: boolean,
-    consumed: boolean,
+    consumed?: boolean,
+}
 
+export type AlertMessage = {
+    id: string,
+    label: string,
+    text: string,
+    consumed?: boolean,
+}
+
+type Attention = {
+    type: 'direction' | 'zoom';
+    value: number | DIRECTION | undefined;
 }
 
 interface SceneStore {
-    eventId: string,
-    ready: boolean,
-    focusMode: boolean,
-    skipIntro: boolean,
-    currentPosition: QuadNodePoint | undefined;
-    directions: PlayerLocationDirection[],
-    description: SceneDescription | null,
-    attentionDirection: PlayerLocationDirection | undefined;
-    moveDirection: DIRECTION | undefined;
-    alertMessage: string | undefined;
-    setFocusMode: (focusMode: boolean) => void;
-    setAttentionDirection: (direction: DIRECTION | undefined) => void;
+    title: string; // - if no other title
+    eventId: string | undefined;
+    currentPosition: QuadNodePoint | undefined; // Can be fetched on post
+    directions: PlayerLocationDirection[]; // from event
+    messages: SceneMessage[],
+    attention: Attention | null;
+    setAttention: (attention: Attention | null) => void;
     movePlayer: (direction: DIRECTION) => void;
-    zoomPlayer: (zoomDelta: 1 | -1) => void;
-    consumeDescription: (id: string) => void;
+    zoomPlayer: (zoomDelta: number) => void;
     handleMessage: (message: Message) => void;
-    sendAlertMessage: (message: string) => void;
+    consumeDescription: (id: string) => void;
+    sendAlertMessage: (message: AlertMessage) => void;
 }
 
 let idIncrementor = 0;
-let descriptionQueue: SceneDescription[] = [];
 
-export const useSceneStore = create<SceneStore>((set, get) => ({
-    eventId: '',
-    ready: false,
-    focusMode: false,
-    skipIntro: false,
+const cleanState = {
+    title: 'Unknown',
+    eventId: undefined,
     currentPosition: undefined,
     directions: [],
-    description: null,
-    attentionDirection: undefined,
-    moveDirection: undefined,
-    alertMessage: undefined,
-    setFocusMode: (focusMode) => {
-        set({
-            focusMode,
-            description: !get().description?.isIntroDescription ? get().description : null,
-            skipIntro: true,
-        });
-    },
-    setAttentionDirection: (direction) => {
-        const description = direction ? descriptionQueue.find((description) => description.direction === direction) : null;
-        const attentionDirection = get().directions.find((playerDirection) => playerDirection.direction === direction);
+    messages: [],
+    attention: null,
+}
 
-        set({
-            attentionDirection,
-            description: description,
-        });
+export const useSceneStore = create<SceneStore>((set, get) => ({
+    ...cleanState,
+    setAttention: (attention) => {
+        set({ attention });
     },
     movePlayer: async (direction: DIRECTION) => {
-        descriptionQueue = [];
-
         set({
-            moveDirection: direction,
-            directions: [],
-            attentionDirection: undefined,
-            currentPosition: undefined,
-            eventId: '',
-            description: null,
-            focusMode: false,
-            skipIntro: false,
-            ready: false,
+            ...cleanState,
+            title: `Moving ${DIRECTION_NAME[direction]}`,
         });
 
         await gameRepository.move(direction);
     },
-    zoomPlayer: async (delta: 1 | -1) => {
-        if (delta === 1) {
-            return; // Use quadrants as of now instead.
-        }
-
-        descriptionQueue = [];
-
+    zoomPlayer: async (zoom: number) => {
         set({
-            moveDirection: DIRECTION.UP,
-            directions: [],
-            attentionDirection: undefined,
-            currentPosition: undefined,
-            eventId: '',
-            description: null,
-            focusMode: false,
-            skipIntro: false,
-            ready: false,
+            ...cleanState,
+            title: `Scanning the ${getDepthName(zoom)}`,
         });
 
-        await gameRepository.zoom(delta);
-    },
-    consumeDescription: (id: string) => {
-        descriptionQueue.forEach((description) => {
-            if (description.id === id) {
-                description.consumed = true;
-            }
-        });
-
-        if (!get().description?.direction) {
-            const description = descriptionQueue
-                .filter((description) => description.isIntroDescription && !description.consumed)
-                .sort((a, b) => a.attention - b.attention)
-                .pop();
-
-
-            set({
-                description,
-            });
-        }
+        await gameRepository.zoom(zoom);
     },
     handleMessage: (message: Message) => {
         if (isPlayerLocationChangeMessage(message)) {
@@ -132,35 +105,78 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
                 directions: message.directions,
             });
 
-        } else if (isDescriptionMessage(message) && message.eventId === get().eventId) {
-            const newSceneDescription = {
-                ...message,
-                label: message.direction ? DIRECTION_NAME[message.direction] : message.type,
-                id: `${message.eventId}${++idIncrementor}`,
-                isIntroDescription: !message.direction,
-                consumed: false,
-            };
+            return;
+        }
 
-            descriptionQueue.push(newSceneDescription);
-            if (!newSceneDescription.isIntroDescription || get().skipIntro || get().description) {
-                return;
+        if (isDescriptionMessage(message)) {
+            if (message.eventId !== get().eventId) {
+                return; // Not relevant any longer, hero probably moved on...
             }
 
+            const label = isDirectionDescriptionMessage(message)
+                ? DIRECTION_NAME[message.direction]
+                : message.type;
+
             set({
-                ready: descriptionQueue.some((description) => description.type === 'sceneTransition'),
-                description: newSceneDescription
+                messages: [
+                    ...get().messages,
+                    {
+                        ...message,
+                        id: `${message.eventId}${++idIncrementor}`,
+                        label,
+                    }
+                ],
             });
         }
     },
-    sendAlertMessage: (message: string) => {
+    consumeDescription: (id: string) => {
         set({
-            alertMessage: message
-        });
+            messages: get().messages.map((description) => {
+                if (description.id !== id) {
+                    return description;
+                }
 
-        setTimeout(() => {
-            set({
-                alertMessage: undefined
-            });
-        }, 2000);
+                return {
+                    ...description,
+                    consumed: true,
+                };
+            }),
+        });
+    },
+    sendAlertMessage: (message: AlertMessage) => {
+        set({
+            messages: [
+                ...get().messages,
+                {
+                    ...message,
+                    type: 'alert',
+                    id: `alert${++idIncrementor}`,
+                }
+            ],
+        });
     },
 }));
+
+export function selectSceneReady(state: SceneStore): boolean {
+    return state.messages.some((message) => isPrimaryDescriptionMessage(message));
+}
+
+export function selectAlertMessage(state: SceneStore): AlertMessage | undefined {
+    return state.messages.find((message) => message.type === 'alert' && !message.consumed);
+}
+
+export function selectPrimaryDescription(state: SceneStore): SceneDescription | undefined {
+    return state.messages.find((message) => isPrimaryDescriptionMessage(message) && !message.consumed) as SceneDescription | undefined;
+}
+
+export function selectSecondaryDescription(state: SceneStore): SceneDescription | undefined {
+    return state.messages.find((message) => isSecondaryDescriptionMessage(message) && !message.consumed) as SceneDescription | undefined;
+}
+
+export function selectDirectionDescription(state: SceneStore): DirectionDescription | undefined {
+    if (!state.attention || state.attention.type !== 'direction') {
+        return;
+    }
+
+    return state.messages.find((message) => isDirectionDescriptionMessage(message) && message.direction === state.attention!.value) as DirectionDescription | undefined;
+}

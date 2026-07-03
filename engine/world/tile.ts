@@ -1,5 +1,5 @@
-import { Metric, TerrainSetting, TileData, VectorSetting } from "../../storyteller/types";
 import tilesJSON from '../config/tiles.json' with { type: 'json' };
+import { TerrainSetting, TileData, VectorSetting } from '../types';
 
 export class Tile {
     public get terrain() {
@@ -70,10 +70,10 @@ export class Tile {
         }
     }
 
-    public getTerrainMetrics(): Metric {
+    /*public getTerrainMetrics(): Metric {
         const entries = this._terrain.map(({ type, value }) => [type, value]) || [];
         return Object.fromEntries(entries);
-    }
+    }*/
 
     public toString(): string {
         return JSON.stringify({

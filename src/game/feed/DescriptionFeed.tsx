@@ -1,46 +1,64 @@
 import { Typewriter } from "./Typewriter";
-import { useSceneStore } from "../../store/sceneStore";
-import { DIRECTION_NAME } from "../../../shared/src/direction";
+import { AlertMessage, DirectionDescription, SceneDescription, selectSceneReady, selectAlertMessage, selectDirectionDescription, selectPrimaryDescription, selectSecondaryDescription, useSceneStore } from "../../store/sceneStore";
+import { getDepthName } from "../../../shared/src/phraseology";
 import { DescriptionFeedText } from "./DescriptionFeedText";
+import { useRef } from "react";
 
 export function DescriptionFeed() {
-    const description = useSceneStore((state) => state.description);
-    const focusMode = useSceneStore((state) => state.focusMode);
-    const attentionDirection = useSceneStore((state) => state.attentionDirection);
-    const moveDirection = useSceneStore((state) => state.moveDirection);
-    const alertMessage = useSceneStore((state) => state.alertMessage);
-    const ready = useSceneStore((state) => state.ready);
+    const title = useSceneStore((state) => state.title);
+    const attention = useSceneStore((state) => state.attention);
+    const sceneReady = useSceneStore(selectSceneReady);
+    const primaryDescription = useSceneStore(selectPrimaryDescription);
+    const secondaryDescription = useSceneStore(selectSecondaryDescription);
+    const alertMessage = useSceneStore(selectAlertMessage);
+    const directionDescription = useSceneStore(selectDirectionDescription);
+    const currentDescriptionRef = useRef<string | undefined>();
 
     function handleAnimationComplete(id: string): void {
+        currentDescriptionRef.current = undefined;
         useSceneStore.getState().consumeDescription(id);
     }
 
-    if (alertMessage) {
+    function renderDescription(description: SceneDescription | DirectionDescription | AlertMessage) {
+        currentDescriptionRef.current = description!.id;
+
         return (
-            <DescriptionFeedText label="">
-                <div>{alertMessage}</div>
+            <DescriptionFeedText label={description.label}>
+                <Typewriter id={description.id} text={description!.text} onAnimationComplete={handleAnimationComplete}></Typewriter>
             </DescriptionFeedText>
         );
-    } else if (!ready && moveDirection) {
-        return (<DescriptionFeedText label={`Moving ${DIRECTION_NAME[moveDirection]}`}></DescriptionFeedText>);
-    } else if (!description && focusMode) {
-        return (<DescriptionFeedText></DescriptionFeedText>);
-    } else if (!description) {
-        return (<DescriptionFeedText label="What do you want to do?"></DescriptionFeedText>);
     }
 
-    const label = [
-        description!.label,
-        attentionDirection && attentionDirection.impassible ? ' (Impassible)' : ''
-    ].join();
+    if (!sceneReady) {
+        // No messages  arrived yet
+        return (<DescriptionFeedText label={title}></DescriptionFeedText>);
+    }
 
-    return (
-        <DescriptionFeedText label={label}>
-            <Typewriter id={description!.id} text={description!.text} onAnimationComplete={handleAnimationComplete}></Typewriter>
-        </DescriptionFeedText>
-    );
+    if (alertMessage) {
+        return renderDescription(alertMessage);
+    }
+
+    if (attention?.type === 'zoom') {
+        return (<DescriptionFeedText label={`Overview ${getDepthName(attention.value || 0)}`}></DescriptionFeedText>);
+    }
+
+    if (attention?.type === 'direction') {
+        if (directionDescription) {
+            return renderDescription(directionDescription);
+        }
+
+        // Focus mode without direction or pending description...
+        return (<DescriptionFeedText></DescriptionFeedText>);
+    }
+
+    if (primaryDescription) {
+        return renderDescription(primaryDescription);
+    }
+
+    if (secondaryDescription) {
+        return renderDescription(secondaryDescription);
+    }
+
+    // Idle
+    return (<DescriptionFeedText label="What do you want to do?"></DescriptionFeedText>);
 }
-
-/*
-
-*/

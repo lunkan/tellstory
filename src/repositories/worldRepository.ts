@@ -1,4 +1,4 @@
-import { WorldData } from "../../storyteller/types";
+import { WorldData } from "../../engine/types";
 
 async function create(name: string): Promise<number> {
     const res = await fetch("/world", {
@@ -6,7 +6,7 @@ async function create(name: string): Promise<number> {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, tiles: [] }),
     });
-            
+
     const data: any = await res.json();
     if (!res.ok) {
         throw new Error(data.error ?? 'New game Request failed');
@@ -27,7 +27,7 @@ async function save(world: WorldData): Promise<boolean> {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(world),
     });
-            
+
     const data: any = await res.json();
     if (!res.ok) {
         throw new Error(data.error ?? 'New game Request failed');

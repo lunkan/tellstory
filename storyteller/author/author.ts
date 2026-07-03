@@ -1,30 +1,52 @@
-import { ExplorerLocationProfile } from "../explorer/explorer";
 import { generateReply } from "../services/anthropic.service";
 import { LocationProfileContext } from "../types";
 import { getFrequencyPhrase, getRecencyPhrase } from "./phraseology";
 import { SHARED_ADJACENT_DIRECTION_PROMT } from "./promts/adjacent-direction";
 import { SHARED_ENTER_WORLD_DESCRIPTION_PROMT } from "./promts/enter-world";
+import { SHARED_IMMEDIANCY_DESCRIPTION_PROMT } from "./promts/immediacy";
+import { SHARED_OVERVIEW_DESCRIPTION_PROMT } from "./promts/overview";
 import { PROXIMITY_SHARED_PROMT } from "./promts/proximity";
 import { SHARED_QUADRANT_DIRECTION_PROMT } from "./promts/quadrant-direction";
 import { SHARED_SCENE_TRANSITION_PROMT } from "./promts/scene-transition";
 
 export class Author {
-    public describeEnterWorld(current: ExplorerLocationProfile): Promise<string> {
+    public describeEnterWorld(current: string): Promise<string> {
         const instructions = `
             Description of location:
-            - ${current.description}
+            ${current}
         `;
 
         return generateReply(instructions, { sharedPromt: SHARED_ENTER_WORLD_DESCRIPTION_PROMT });
     }
 
-    public describeSceneTransition(from: ExplorerLocationProfile, to: ExplorerLocationProfile, toContext: LocationProfileContext): Promise<string> {
+    public describeImmediacy(immediacy: string, context: LocationProfileContext): Promise<string> {
+        const instructions = `
+            Description of current location:
+            ${immediacy}
+        `;
+
+        return generateReply(instructions, { sharedPromt: SHARED_IMMEDIANCY_DESCRIPTION_PROMT });
+    }
+
+    public describeOverview(overview: string, context: LocationProfileContext): Promise<string> {
+        const instructions = `
+            Description of current location:
+            ${overview}
+
+            Visibility:
+            The player can currently see up to approximately ${Math.round(context.size / 2)} km.
+        `;
+
+        return generateReply(instructions, { sharedPromt: SHARED_OVERVIEW_DESCRIPTION_PROMT });
+    }
+
+    public describeSceneTransition(from: string, to: string, toContext: LocationProfileContext): Promise<string> {
         const instructions = `
             Description of previous location:
-            - ${from.description}
+            ${from}
 
             Description of current location:
-            - ${to.description}
+            ${to}
 
             Details about our character:
             - He has just arrived to the new location.
@@ -35,15 +57,14 @@ export class Author {
         return generateReply(instructions, { sharedPromt: SHARED_SCENE_TRANSITION_PROMT });
     }
 
-    public describeProximity(proximityProfile: ExplorerLocationProfile, contexts: LocationProfileContext[]): Promise<string> {
+    public describeProximity(proximity: string, contexts: LocationProfileContext[]): Promise<string> {
         const personalInstructions = contexts.map((context) => {
             return [context.directionName, this._getPersonalInstructions(context)].join('\n\n');
         });
 
         const instructions = `
             Surrounding summary:
-            - ${proximityProfile.description
-            }
+            ${proximity}
 
             Personal memories:
             ${personalInstructions}
@@ -52,13 +73,13 @@ export class Author {
         return generateReply(instructions, { sharedPromt: PROXIMITY_SHARED_PROMT });
     }
 
-    public describeAdjacentDirection(current: ExplorerLocationProfile, adjacent: ExplorerLocationProfile, context: LocationProfileContext): Promise<string> {
+    public describeAdjacentDirection(current: string, adjacent: string, context: LocationProfileContext): Promise<string> {
         const instruction = `
             Description of location of interest:
-            - ${adjacent.description}
+            ${adjacent}
 
             Description of current location:
-            - ${current.description}
+            ${current}
 
             Details about our character:
             - He has just arrived to the new location.
@@ -69,13 +90,13 @@ export class Author {
         return generateReply(instruction, { sharedPromt: SHARED_ADJACENT_DIRECTION_PROMT });
     }
 
-    public describeQuadrantDirection(current: ExplorerLocationProfile, quadrant: ExplorerLocationProfile, context: LocationProfileContext): Promise<string> {
+    public describeQuadrantDirection(current: string, quadrant: string, context: LocationProfileContext): Promise<string> {
         const instruction = `
             Description of location of interest:
-            - ${quadrant.description}
+            ${quadrant}
 
             Description of current location:
-            - ${current.description}
+            ${current}
 
             Details about our character:
             - He has just arrived to the new location.

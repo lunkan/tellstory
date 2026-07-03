@@ -1,1 +1,1 @@
-export type GameEventType = 'characterEnter' | 'characterSpawn';
+export type GameEventType = 'characterEnter' | 'characterSpawn' | 'characterDepthChange';

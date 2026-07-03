@@ -4,7 +4,7 @@ import { isLocationChangeEvent } from "../../engine/core/events/game-event.confi
 import { GameEvent } from "../../engine/core/events/game-event.interface";
 import { GameLocationChangeEvent } from "../../engine/core/events/game-location-change-event";
 import { DIRECTION, getDirectionFromAdjacentVector, getDirectionFromQuadrantVector } from "../../shared/src/direction";
-import { DescriptionMessage, PlayerLocationChangeMessage, PlayerLocationDirection } from "../../shared/src/message";
+import { DescriptionMessage, DirectionDescriptionMessage, PlayerLocationChangeMessage, PlayerLocationDirection } from "../../shared/src/message";
 import { EnvironmentalContext, ProfileGeneratorFactory } from "./profile-generator";
 import { websocketService } from "../websocket/websocket-service";
 import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
@@ -27,7 +27,6 @@ export class PlayerObserver implements IGameObserver {
 
         if (isLocationChangeEvent(event)) {
             if (event.playerId === this._player.id) {
-
                 // spacialSnapshot
                 const environment = this._profileGenerator.create(event.id);
 
@@ -35,6 +34,7 @@ export class PlayerObserver implements IGameObserver {
 
                 switch (event.type) {
                     case 'characterSpawn':
+                        console.log('SPAWN', environment.depth, environment.hasOverview);
                         this._describeIntro(event.id);
                         this._describeEnterWorld(environment);
                         this._describeProxmity(environment);
@@ -42,7 +42,23 @@ export class PlayerObserver implements IGameObserver {
                         this._describeQuadrantNodes(environment);
                         break;
                     case 'characterEnter':
+                        console.log('ENTER', environment.depth, environment.hasOverview);
                         this._describeSceneTransition(environment);
+
+                        // No need to describe immediacy if same as transition
+                        // (True if max zoom)
+                        if (environment.hasOverview) {
+                            console.log('_describeImmediacy');
+                            this._describeImmediacy(environment);
+                        }
+
+                        this._describeProxmity(environment);
+                        this._describeAdjacentNodes(environment);
+                        this._describeQuadrantNodes(environment);
+                        break;
+                    case 'characterDepthChange':
+                        console.log('DEPTH CHANGE', environment.depth);
+                        this._describeOverview(environment);
                         this._describeProxmity(environment);
                         this._describeAdjacentNodes(environment);
                         this._describeQuadrantNodes(environment);
@@ -122,12 +138,9 @@ export class PlayerObserver implements IGameObserver {
         } as DescriptionMessage);
     }
 
-    private _describeSceneTransition(environment: EnvironmentalContext): void {
-        const from = environment.previous;
-        const to = environment.current;
-        const toContext = environment.getContext(to);
-
-        this._storyteller.describeSceneTransition(from, to, toContext).then((description) => {
+    private _describeEnterWorld(environment: EnvironmentalContext): void {
+        const current = environment.current;
+        this._storyteller.describeEnterWorld(current).then((description) => {
             websocketService.sendMessage({
                 eventId: environment.eventId,
                 type: 'sceneTransition',
@@ -137,9 +150,26 @@ export class PlayerObserver implements IGameObserver {
         });
     }
 
-    private _describeEnterWorld(environment: EnvironmentalContext): void {
+    private _describeOverview(environment: EnvironmentalContext): void {
         const current = environment.current;
-        this._storyteller.describeEnterWorld(current).then((description) => {
+        const context = environment.getContext(current);
+
+        this._storyteller.describeOverview(current, context).then((description) => {
+            websocketService.sendMessage({
+                eventId: environment.eventId,
+                type: 'scene',
+                text: description,
+                attention: 5,
+            } as DescriptionMessage);
+        });
+    }
+
+    private _describeSceneTransition(environment: EnvironmentalContext): void {
+        const from = environment.previous;
+        const to = environment.current;
+        const toContext = environment.getContext(to);
+
+        this._storyteller.describeSceneTransition(from, to, toContext).then((description) => {
             websocketService.sendMessage({
                 eventId: environment.eventId,
                 type: 'sceneTransition',
@@ -157,7 +187,22 @@ export class PlayerObserver implements IGameObserver {
         this._storyteller.describeProximity(current, proximity, contexts).then((description) => {
             websocketService.sendMessage({
                 eventId: environment.eventId,
-                type: 'adjacentSummary', //proximitySummary
+                type: 'proximity',
+                text: description,
+                direction: DIRECTION.NONE,
+                attention: 5,
+            } as DirectionDescriptionMessage);
+        });
+    }
+
+    private _describeImmediacy(environment: EnvironmentalContext): void {
+        const current = environment.current;
+        const context = environment.getContext(current);
+
+        this._storyteller.describeImmediacy(current, context).then((description) => {
+            websocketService.sendMessage({
+                eventId: environment.eventId,
+                type: 'immediacy',
                 text: description,
                 attention: 5,
             } as DescriptionMessage);
@@ -174,7 +219,7 @@ export class PlayerObserver implements IGameObserver {
                     direction: context.direction,
                     text: description,
                     attention: 0,
-                } as DescriptionMessage);
+                } as DirectionDescriptionMessage);
             });
         });
     }
@@ -190,7 +235,7 @@ export class PlayerObserver implements IGameObserver {
                     direction: context.direction,
                     text: description,
                     attention: 0,
-                } as DescriptionMessage);
+                } as DirectionDescriptionMessage);
             });
         });
     }

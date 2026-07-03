@@ -5,6 +5,7 @@ import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
 import { Character } from "../../engine/core/character";
 import { ChronicleEventType } from "../../engine/chronicle/chronicle";
 import { LocationProfile, LocationProfileContext } from "../../storyteller/types";
+import { kMaxLength } from "buffer";
 
 export class EnvironmentalContext {
     public readonly eventId: String;
@@ -18,6 +19,14 @@ export class EnvironmentalContext {
     private _quadrants: LocationProfile[] | undefined;
 
     private _contexts: Map<string, LocationProfileContext> = new Map();
+
+    public get depth(): number {
+        return this._player.getCurrentLocation().depth;
+    }
+
+    public get hasOverview(): boolean {
+        return this.depth < World.MAX_ZOOM_DEPTH;
+    }
 
     public get current(): LocationProfile {
         if (!this._current) {
@@ -92,8 +101,12 @@ export class EnvironmentalContext {
             throw Error(`!Missing tile. Node not hybernated: ${node.key.id} `);
         }
 
-        const landmarks = this._world.getMarkersFromNode(node).map((marker) => ({ type: marker.type }));
+        const landmarks = this._world.getMarkersFromNode(node)
+            .filter((marker) => marker.type !== 'player-start')
+            .map((marker) => ({ type: marker.type }));
+
         const terrainMarkers = node.tile.terrain.map((spacialMarker) => ({ type: spacialMarker.type, value: spacialMarker.value }));
+
         const vectorMarkers = node.tile.vectors.map((spacialVector) => {
             const direction = getDirectionFromAdjacentVector(spacialVector.direction.x, spacialVector.direction.y);
             const tileConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === spacialVector.type);
@@ -106,8 +119,11 @@ export class EnvironmentalContext {
             };
         });
 
+
+
         return {
             key: node.key.id,
+            size: this._getSize(node),
             spatialMarkers: [...terrainMarkers, ...vectorMarkers],
             landmarks,
         };
@@ -127,6 +143,7 @@ export class EnvironmentalContext {
             recency: memories.length > 0 ? 0 - memories[0].timestamp : -1,
             direction: direction,
             directionName: direction ? DIRECTION_NAME[direction] : '',
+            size: this._getSize(node),
         }
     }
 
@@ -144,9 +161,12 @@ export class EnvironmentalContext {
             return DIRECTION.UP;
         }
 
-        console.log('***', currentLocation.depth, node.depth);
-
         throw Error('Location Profile context must be adjacent or quadrant node');
+    }
+
+    private _getSize(node: QuadNode): number {
+        // Size in km. 320 = max
+        return 320 / Math.pow(2, node.depth);
     }
 }
 

@@ -1,4 +1,5 @@
-import { QuadNodeChildIndex } from "../../storyteller/types";
+
+type QuadNodeChildIndex = 0 | 1 | 2 | 3;
 
 export class QuadNodeKey {
     public static readonly QUADRANT_BIT_Length: number = 2;
@@ -51,12 +52,12 @@ export class QuadNodeKey {
         return result;
     }
 
-    public createParentKey(): QuadNodeKey  {
+    public createParentKey(): QuadNodeKey {
         const parentHash = this.hash >> 2n;
         return new QuadNodeKey(parentHash, this.depth - 1);
     }
 
-    public createChildKey(quadrant: QuadNodeChildIndex): QuadNodeKey  {
+    public createChildKey(quadrant: QuadNodeChildIndex): QuadNodeKey {
         const childHash = (this.hash << 2n) | BigInt(quadrant);
         return new QuadNodeKey(childHash, this.depth + 1);
     }
@@ -65,11 +66,11 @@ export class QuadNodeKey {
         return key.depth === this.depth && this.hash === key.hash;
     }
 
-    public isDescendant(key: QuadNodeKey): boolean  {
+    public isDescendant(key: QuadNodeKey): boolean {
         if (key.depth < this.depth) {
             return false;
         }
-        
+
         const shift = BigInt((key.depth - this.depth) * QuadNodeKey.QUADRANT_BIT_Length);
         const normChildHash = key.hash >> shift;
         return normChildHash === this.hash;

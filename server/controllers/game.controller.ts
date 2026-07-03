@@ -1,17 +1,13 @@
 import type { Request, Response } from "express";
 import { WorldRepository } from "../../world-repository.js";
 import { gameManager } from "../game/game-manager.js";
-import { PlayerObserver } from "../game/player-observer.js";
 import { ADJACENT_DIRECTION_DELATA_VALUES, DIRECTION, isAdjacentDirection, isQuadrantDirection, QUADRANT_DIRECTION_DELTA_VALUES } from "../../shared/src/direction.js";
 import { QuadNode } from "../../engine/world/quad-node.js";
-import { Character } from "../../engine/core/character.js";
-import { ProfileGeneratorFactory } from "../game/profile-generator.js";
-import { Storyteller } from "../../storyteller/storyteller.js";
 import { WorldData } from "../../engine/types.js";
 
 type NewGameRequest = { worldId: number };
 type MovePlayerRequest = { direction: DIRECTION };
-type ZoomPlayerRequest = { delta: 1 | -1 };
+type ZoomPlayerRequest = { depth: number };
 
 export async function newGame(
     req: Request<unknown, unknown, NewGameRequest>,
@@ -20,19 +16,8 @@ export async function newGame(
     try {
         const { worldId } = req.body;
         const worldData: WorldData = await WorldRepository.getWorld(worldId);
-
         const gamePod = gameManager.newGame(worldData);
         gamePod.addPlayer('Fantomen');
-        //const storyteller = new Storyteller(worldData.id);
-
-        /*const player = new Character('Fantomen', gamePod.game.world);
-
-
-
-        const profileGeneratorFactory = new ProfileGeneratorFactory(gamePod.game.world, player);
-        const playerObserver = new PlayerObserver(player, storyteller, profileGeneratorFactory);
-        gameManager.getGame()?.game.subscribe(playerObserver);
-        gamePod.game.spawnPlayer(player);*/
 
         res.json({ success: true });
     } catch (err) {
@@ -49,10 +34,11 @@ export async function movePlayer(
     try {
         const { direction } = req.body;
 
+        console.log('movePlayer', direction);
         const game = gameManager.getGame()?.game;
         const player = game?.getPlayer('Fantomen');
         if (!game || !player) {
-            throw Error('NO PLAYER OR GAME');
+            throw Error('movePlayer: NO PLAYER OR GAME');
         }
 
         let node: QuadNode | undefined;
@@ -62,6 +48,9 @@ export async function movePlayer(
         } else if (isAdjacentDirection(direction)) {
             const [x, y] = ADJACENT_DIRECTION_DELATA_VALUES[direction]!;
             node = player.getAdjacentByDelta(x, y);
+        } else if (direction === DIRECTION.UP) {
+            console.log('UP');
+            node = player.getParentNode();
         }
 
         if (node) {
@@ -82,7 +71,7 @@ export async function zoomPlayer(
     res: Response,
 ) {
     try {
-        const { delta } = req.body;
+        const { depth } = req.body;
 
         const game = gameManager.getGame()?.game;
         const player = game?.getPlayer('Fantomen');
@@ -90,12 +79,9 @@ export async function zoomPlayer(
             throw Error('NO PLAYER OR GAME');
         }
 
-        let node: QuadNode | undefined;
-        if (delta === -1) {
-            node = player.getParentNode();
-        } else {
-            console.log('ERROR delta', delta);
-            throw Error('USE QUDRANT NAV FOR NOW');
+        let node = player.getImmediatLocation();
+        while (node.depth > depth && !!node.parent) {
+            node = node.parent;
         }
 
         if (node) {

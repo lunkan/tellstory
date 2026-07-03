@@ -16,7 +16,14 @@ export class Storyteller {
         const currentRequest = this._explorer.getLocationDescription(current);
         return currentRequest.then((description) => {
             return this._author.describeEnterWorld(description);
-        })
+        });
+    }
+
+    public async describeOverview(current: LocationProfile, context: LocationProfileContext): Promise<string> {
+        const currentRequest = this._explorer.getLocationDescription(current);
+        return currentRequest.then((description) => {
+            return this._author.describeOverview(description, context);
+        });
     }
 
     public async describeSceneTransition(from: LocationProfile, to: LocationProfile, toContext: LocationProfileContext): Promise<string> {
@@ -24,6 +31,13 @@ export class Storyteller {
         const toRequest = this._explorer.getLocationDescription(to);
         const [fromDescription, toDescription] = await Promise.all([fromRequest, toRequest]);
         return this._author.describeSceneTransition(fromDescription, toDescription, toContext);
+    }
+
+    public async describeImmediacy(immediacy: LocationProfile, context: LocationProfileContext): Promise<string> {
+        const immediacyRequest = this._explorer.getLocationDescription(immediacy);
+        return immediacyRequest.then((description) => {
+            return this._author.describeImmediacy(description, context);
+        });
     }
 
     public async describeProximity(current: LocationProfile, proximity: LocationProfile[], contexts: LocationProfileContext[]): Promise<string> {

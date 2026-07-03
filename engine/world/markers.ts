@@ -4,14 +4,20 @@ import type { QuadTree as QuadTreeType } from 'js-quadtree';
 // export under Node/tsx. Normalize across both interop shapes.
 const QT = ((QTns as any).default ?? QTns) as typeof QTns;
 const { QuadTree, Box, Point } = QT;
-import { QuadNodes2DPoint } from '../../storyteller/types';
 import markersJSON from '../config/markers.json' with { type: 'json' };
+import { QuadNodes2DPoint } from '../types';
 
 export type Marker = {
     point: QuadNodes2DPoint;
     type: string;
     id: string;
-}
+};
+
+export type MarkerConfigEntry = {
+    name: string;
+    tags: string[];
+    zMin: number;
+};
 
 export class Markers {
     private _quadTree: QuadTreeType;

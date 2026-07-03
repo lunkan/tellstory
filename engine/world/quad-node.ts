@@ -1,3 +1,17 @@
+// 0 -  320km   -
+// 1 -  160km   -
+// 2 -  80km    -
+// 3 -  40km    -
+// 4 -  20km    -
+// 5* - 10km    # Horizon
+// 6 -  5km     # Region
+// 7 -  2.5km   # District
+// 8 -  1.25km  # Neighborhood
+// 9 -  675m    # Local area
+// 10 - 336m    # Nearby area
+// 11 - 177m    # Immediate surroundings
+// 12 - 89m     -
+
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
@@ -41,6 +55,22 @@ export class QuadNode {
 
     public isDetached(): boolean {
         return this._detached;
+    }
+
+    public isDescendant(quadNode: QuadNode | undefined): boolean {
+        if (!quadNode) {
+            return false;
+        }
+
+        return this.key.isDescendant(quadNode.key);
+    }
+
+    public isRelative(quadNode: QuadNode | undefined): boolean {
+        if (!quadNode) {
+            return false;
+        }
+
+        return this.isDescendant(quadNode) || quadNode.isDescendant(this);
     }
 
     public getPoint(): QuadNodePoint {

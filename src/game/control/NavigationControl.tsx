@@ -1,72 +1,95 @@
 import { useRef, useState } from "react";
 import { useSceneStore } from "../../store/sceneStore";
 import { DIRECTION, DIRECTION_NAME } from "../../../shared/src/direction";
-import { useThrottle } from "../../effects/throttle";
+import { World } from "../../../engine/world/world";
 
 export function NavigationControl() {
+    const currentPosition = useSceneStore((state) => state.currentPosition);
     const directions = useSceneStore((state) => state.directions);
-    const attentionDirection = useSceneStore((state) => state.attentionDirection);
-    const setAttentionDirection = useSceneStore((state) => state.setAttentionDirection);
-    const setFocusMode = useSceneStore((state) => state.setFocusMode);
+    const attention = useSceneStore((state) => state.attention);
+    const setAttention = useSceneStore((state) => state.setAttention);
     const movePlayer = useSceneStore((state) => state.movePlayer);
     const zoomPlayer = useSceneStore((state) => state.zoomPlayer);
     const sendAlertMessage = useSceneStore((state) => state.sendAlertMessage);
     const [screenDownPoint, setScreenDownPoint] = useState<DOMPoint | null>(null);
-    const timerRef = useRef<number | null>(null);
+    const zoom = useRef<number>(0);
+    const zoomTimerRef = useRef<number | undefined>(undefined);
+    const proximityTimerRef = useRef<number | undefined>(undefined);
+    const active = useRef<boolean>(false);
 
     function handleScreenPointerDown(e: React.PointerEvent<HTMLDivElement>): void {
-        setFocusMode(true);
+        e.currentTarget.setPointerCapture(e.pointerId);
+        active.current = true;
+        setAttention({ type: 'direction', value: undefined });
         setScreenDownPoint(new DOMPoint(e.clientX, e.clientY));
+
+        proximityTimerRef.current = setTimeout(() => {
+            setAttention({ type: 'direction', value: DIRECTION.NONE });
+        }, 2000);
     }
 
-    function handleScreenPointerUp(): void {
+    function handleScreenPointerUp(e: React.PointerEvent<HTMLDivElement>): void {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+        active.current = false;
+        clearTimeout(proximityTimerRef.current);
         setScreenDownPoint(null);
-        setFocusMode(false);
+        setAttention(null);
 
-        if (!attentionDirection) {
+        if (!attention || attention.type !== 'direction') {
             return;
         }
 
-        if (attentionDirection.impassible) {
-            const directionName = DIRECTION_NAME[attentionDirection.direction];
-            sendAlertMessage(`Not possible to move ${directionName}`);
-        } else {
-            movePlayer(attentionDirection.direction);
+        const directionConfig = directions.find((direction) => attention.value === direction.direction)
+        if (directionConfig && directionConfig.impassible) {
+            const directionName = DIRECTION_NAME[directionConfig.direction];
+            sendAlertMessage({
+                id: '',
+                label: 'Alert',
+                text: `Not possible to move ${directionName}`
+            });
+
+            //`Not possible to move ${directionName}`);
+            return;
+        } else if (attention.value && attention.value !== DIRECTION.NONE) {
+            movePlayer(attention.value);
         }
     }
 
-    function handleEnter(direction: DIRECTION): void {
-        timerRef.current = setTimeout(() => {
-            setAttentionDirection(direction);
-        }, 200);
-    }
+    function handleScreenPointerMove(e: React.PointerEvent<HTMLDivElement>): void {
+        if (!screenDownPoint) {
+            return; // Not dragging
+        }
 
-    function handleLeave(): void {
-        setAttentionDirection(undefined);
-        if (timerRef.current) {
-            clearTimeout(timerRef.current);
-            timerRef.current = null;
+        if (Math.max(Math.abs(screenDownPoint.x - e.clientX), Math.abs(screenDownPoint.x - e.clientX)) > 40) {
+            clearTimeout(proximityTimerRef.current);
+        }
+
+        const element = document.elementFromPoint(e.clientX, e.clientY);
+        const direction = element ? Number((element as any).dataset.direction) || undefined : undefined;
+
+        if (direction !== attention?.value) {
+            setAttention({ type: 'direction', value: direction });
         }
     }
 
-    function handleThrottledZoom(deltaY: number) {
-        if (deltaY > 0) {
-            console.log('No support for zoom in - use quadrant');
-            //zoomPlayer(1);
-        } else if (deltaY < 0) {
-            const hasDirectionUp = directions.some((direction) => direction.direction === DIRECTION.UP);
-            if (hasDirectionUp) {
-                zoomPlayer(-1);
-            } else {
-                sendAlertMessage(`Not possible to zoom to greater level. Yoy reached max`);
-            }
-        }
-    };
-
-
-    const throttledWheelHandler = useThrottle(handleThrottledZoom, 1000);
     function handleZoom(e: React.WheelEvent<HTMLDivElement>): void {
-        throttledWheelHandler(e.deltaY);
+        if (!currentPosition) {
+            return;
+        }
+
+        zoom.current = e.deltaY > 0
+            ? Math.min(zoom.current + 1, World.MAX_ZOOM_DEPTH - currentPosition.z)
+            : Math.max(zoom.current - 1, World.MIN_ZOOM_DEPTH - currentPosition.z);
+
+        const normDepth = Math.max(World.MIN_ZOOM_DEPTH, Math.min(World.MAX_ZOOM_DEPTH, currentPosition.z + zoom.current));
+        setAttention({ type: 'zoom', value: normDepth });
+        clearTimeout(zoomTimerRef.current);
+
+        zoomTimerRef.current = setTimeout(() => {
+            if (normDepth !== currentPosition.z) {
+                zoomPlayer(normDepth);
+            }
+        }, 2000);
     }
 
     const wrapperClasses = ['navigation-ctrl-wrapper'];
@@ -78,16 +101,24 @@ export function NavigationControl() {
 
     function renderAjacentSegment(direction: DIRECTION, color: string, rotation: string) {
         const playerDirection = directions.find((playerDirection) => playerDirection.direction === direction);
+        const classes = ['nav-sector'];
+
+        if (playerDirection?.impassible) {
+            classes.push('nav-sector-impassable');
+        }
+
+        if (direction === attention?.value) {
+            classes.push('navigation-ctrl-segment--active');
+        }
 
         return (
             <>
                 <use
                     href="#segment"
-                    className={`nav-sector ${playerDirection?.impassible ? 'nav-sector-impassable' : ''}`}
+                    className={classes.join(' ')}
                     fill={color}
                     transform={`rotate(${rotation}, 100, 100)`}
-                    onPointerEnter={() => handleEnter(direction)}
-                    onPointerLeave={() => handleLeave()}
+                    data-direction={direction}
                 />
             </>
         );
@@ -95,20 +126,28 @@ export function NavigationControl() {
 
     function renderQuadrantSegment(direction: DIRECTION, color: string, rotation: string) {
         const playerDirection = directions.find((playerDirection) => playerDirection.direction === direction);
+        const classes = ['nav-sector'];
 
         if (!playerDirection) {
             return;
+        }
+
+        if (playerDirection?.impassible) {
+            classes.push('nav-sector-impassable');
+        }
+
+        if (direction === attention?.value) {
+            classes.push('navigation-ctrl-segment--active');
         }
 
         return (
             <>
                 <use
                     href="#inner-seg"
-                    className={`nav-sector ${playerDirection?.impassible ? 'nav-sector-impassable' : ''}`}
+                    className={classes.join(' ')}
                     fill={color}
                     transform={`rotate(${rotation}, 100, 100)`}
-                    onPointerEnter={() => handleEnter(direction)}
-                    onPointerLeave={() => handleLeave()}
+                    data-direction={direction}
                 />
             </>
         );
@@ -118,8 +157,12 @@ export function NavigationControl() {
         <div
             className={wrapperClasses.join(' ')}
             onPointerDown={(e) => handleScreenPointerDown(e)}
-            onPointerUp={() => handleScreenPointerUp()}
+            onPointerMove={(e) => handleScreenPointerMove(e)}
+            onPointerUp={(e) => handleScreenPointerUp(e)}
+            onPointerCancel={(e) => console.log("cancel", e.pointerType, e)}
+            onLostPointerCapture={() => console.log("lost capture")}
             onWheel={(e) => handleZoom(e)}
+            style={{ touchAction: 'none' }}
         >
             <svg
                 className="navigation-ctrl-wrapper--nav"
@@ -139,7 +182,7 @@ export function NavigationControl() {
                 {renderAjacentSegment(DIRECTION.SOUTH_WEST, '#6F4436', '22.5')}
                 {renderAjacentSegment(DIRECTION.SOUTH, '#3C2F2F', '67.5')}
                 {renderAjacentSegment(DIRECTION.SOUTH_EAST, '#6F4436', '112.5')}
-                {renderAjacentSegment(DIRECTION.SOUTH_EAST, '#3C2F2F', '157.5')}
+                {renderAjacentSegment(DIRECTION.EAST, '#3C2F2F', '157.5')}
                 {renderAjacentSegment(DIRECTION.NORTH_EAST, '#6F4436', '202.5')}
                 {renderAjacentSegment(DIRECTION.NORTH, '#3C2F2F', '247.5')}
                 {renderAjacentSegment(DIRECTION.NORTH_WEST, '#6F4436', '292.5')}
@@ -150,6 +193,7 @@ export function NavigationControl() {
                 {renderQuadrantSegment(DIRECTION.CLOSE_NORTH_EAST, '#DFCCAF', '180')}
                 {renderQuadrantSegment(DIRECTION.CLOSE_NORTH_WEST, '#BE9B7B', '270')}
             </svg>
+
         </div>
     );
 }

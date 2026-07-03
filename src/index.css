@@ -27,6 +27,17 @@
 body {
     font-family: system-ui, sans-serif;
     margin: 0;
+
+    -webkit-user-select: none;
+    /* Safari */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* IE/Edge */
+    user-select: none;
+    /* Standard */
+    -webkit-touch-callout: none;
+    /* Prevent iOS popup on long-press */
 }
 
 form {
@@ -149,6 +160,8 @@ pre {
     right: 24px;
     top: 24px;
     display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
     padding: 4px;
     border-radius: 5px;
     gap: 8px;
@@ -169,6 +182,24 @@ pre {
     display: flex;
 }
 
+.debug-messages {
+    width: 100%;
+    padding: 4px 8px 8px;
+}
+
+.debug-message {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+}
+
+.debug-message-bullet {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+}
+
 .game-screen {
     display: flex;
     flex-direction: column;
@@ -183,6 +214,7 @@ pre {
     justify-content: start;
     align-items: center;
     overflow: hidden;
+    margin: 32px;
 }
 
 .game-screen--control {
@@ -248,7 +280,8 @@ pre {
     /* Tvingar lådan att vara kvadratisk */
 }
 
-.navigation-ctrl-wrapper--active .nav-sector:hover {
+.navigation-ctrl-wrapper--active .nav-sector:hover,
+.navigation-ctrl-segment--active {
     opacity: 0.25;
 }
 

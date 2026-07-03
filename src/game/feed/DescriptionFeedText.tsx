@@ -23,7 +23,6 @@ export function DescriptionFeedText({ label, children }: DescriptionFeedTextProp
     const bottomRef = useRef<HTMLDivElement>(null);
 
     useSnapScrollToBottom(scrollContainerRef, bottomRef);
-
     return (
         <div className="feed" ref={scrollContainerRef}>
             <div className="feed--shade"></div>

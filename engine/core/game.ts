@@ -3,7 +3,7 @@ import { World } from "../world/world";
 import { Character } from "./character";
 import { GameEvent } from "./events/game-event.interface";
 import { GameLocationChangeEvent } from "./events/game-location-change-event";
-import { IGameObserver, QuadNodePoint } from "../types";
+import { IGameObserver } from "../types";
 
 export class Game {
     public readonly world: World;
@@ -39,12 +39,11 @@ export class Game {
             throw Error('No player start found');
         }
 
-        const stratingPoint: QuadNodePoint = {
+        const startingNode = this.world.findNodeByPoint({
             ...playerStart.point,
-            z: World.MIN_ZOOM_DEPTH,
-        };
+            z: World.MAX_ZOOM_DEPTH,
+        });
 
-        const startingNode = this.world.findNodeByPoint(stratingPoint);
         if (!startingNode) {
             throw Error('No starting node for player');
         }
@@ -68,16 +67,38 @@ export class Game {
             return false;
         }
 
+        const immediatLocation = player.getImmediatLocation();
+        const currentLocation = player.getCurrentLocation();
+
         player.setLocation(nextLocation);
 
-        this._emitt(new GameLocationChangeEvent({
-            point: nextLocation.getPoint(),
-            type: 'characterEnter',
-            timestamp: this._time,
-            playerId: player.id,
-        }));
+        console.log('GAME:MOVE', nextLocation.getPoint(), ' : ', immediatLocation.getPoint(), player.getImmediatLocation().getPoint(), '---', player.getCurrentLocation().getPoint(), currentLocation.getPoint())
 
-        return true;
+        if (player.getImmediatLocation() !== immediatLocation) {
+            console.log('characterEnter!!!');
+            this._emitt(new GameLocationChangeEvent({
+                point: nextLocation.getPoint(),
+                type: 'characterEnter',
+                timestamp: this._time,
+                playerId: player.id,
+            }));
+
+            return true;
+
+        } else if (player.getCurrentLocation() !== currentLocation) {
+            console.log('characterDepthChange!!!');
+            this._emitt(new GameLocationChangeEvent({
+                point: nextLocation.getPoint(),
+                type: 'characterDepthChange',
+                timestamp: this._time,
+                playerId: player.id,
+            }));
+
+            return true;
+        }
+
+        console.log('GAME: SAME LOCATION - NO UPDATE');
+        return false;
     }
 
     private _emitt(event: GameEvent): void {

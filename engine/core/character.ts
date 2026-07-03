@@ -22,6 +22,7 @@ export class Character {
     public readonly world: World;
 
     private _chronicle: ChronicleEvent[] = [];
+    private _immediatLocation: QuadNode | undefined;
     private _currentLocation: QuadNode | undefined;
     private _previousLocation: QuadNode | undefined;
 
@@ -32,8 +33,16 @@ export class Character {
     }
 
     public setLocation(nextLocation: QuadNode): void {
+        if (!this._currentLocation || !nextLocation.isRelative(this._currentLocation)) {
+            this._immediatLocation = this._findImmediatLocation(nextLocation);
+        }
+
         this._previousLocation = this._currentLocation || nextLocation;
         this._currentLocation = nextLocation;
+    }
+
+    public getImmediatLocation(): QuadNode {
+        return this._immediatLocation!;
     }
 
     public getCurrentLocation(): QuadNode {
@@ -43,15 +52,6 @@ export class Character {
     public getPreviousLocation(): QuadNode {
         return this._previousLocation!;
     }
-
-    /*public getNearbyLandmarks(): Marker[] {
-        if (!this._currentLocation) {
-            return [];
-        }
-
-        const { x, y, size } = this._currentLocation.bounds;
-        return this.world.markers.getMarkers(x, y, this._currentLocation.depth, size);
-    }*/
 
     public getAdjacentNodes(): QuadNode[] {
         return this.world.findAdjacentNodes(this.getCurrentLocation().key);
@@ -79,19 +79,6 @@ export class Character {
 
     public getQuadrantByDelta(x: 1 | 0, y: 1 | 0): QuadNode | undefined {
         return this.world.findQuadrantNode(this.getCurrentLocation().key, x, y);
-    }
-
-    public getAdjacent3DLocations(): QuadNode[] {
-        const locations: QuadNode[] = [this.getCurrentLocation()];
-        //const parent = this._world.findParentNode(this.getCurrentLocation().key);
-
-        /*if (parent) {
-            locations.push(parent);
-        }*/
-
-        locations.push(...this.world.findQuadrantNodes(this.getCurrentLocation().key));
-        locations.push(...this.world.findAdjacentNodes(this.getCurrentLocation().key));
-        return locations;
     }
 
     public getJourney(lookback: number): ChronicleEvent[] {
@@ -130,5 +117,19 @@ export class Character {
 
             return true;
         });
+    }
+
+    private _findImmediatLocation(node: QuadNode): QuadNode {
+        let immediatLocation = node;
+        while (immediatLocation.depth < World.MAX_ZOOM_DEPTH) {
+            const quadrantNode = immediatLocation.getQuadrantAt(0, 0, true); // Pick best (close to road landmark ...)
+            if (!quadrantNode) {
+                break;
+            }
+
+            immediatLocation = quadrantNode;
+        }
+
+        return immediatLocation;
     }
 }

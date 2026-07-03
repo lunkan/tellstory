@@ -1,4 +1,4 @@
-import { QuadNodes2DPoint } from "../../../storyteller/types";
+import { QuadNodes2DPoint } from "../../types";
 import { GameEventType } from "./game-event.types";
 
 export interface GameEvent {
