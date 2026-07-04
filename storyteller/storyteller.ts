@@ -1,6 +1,7 @@
 import { Author } from "./author/author";
 import { Explorer } from "./explorer/explorer";
 import { LocationProfile, LocationProfileContext } from "./types";
+import { getKey } from "./narrator/narrator";
 
 export class Storyteller {
     private _explorer: Explorer;
@@ -10,6 +11,8 @@ export class Storyteller {
         this._author = new Author();
         this._explorer = new Explorer();
         this._explorer.load(worldId);
+
+        console.log('VOICE LOADED', getKey());
     }
 
     public async describeEnterWorld(current: LocationProfile): Promise<string> {

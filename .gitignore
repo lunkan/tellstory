@@ -3,3 +3,6 @@ node_modules/
 
 # SQLite database files
 *.sqlite
+
+# Private data
+.env

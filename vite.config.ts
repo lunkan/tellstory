@@ -25,6 +25,7 @@ export default defineConfig({
             "/chat": "http://localhost:3000",
             "/game": "http://localhost:3000",
             "/world": "http://localhost:3000",
+            "/sound": "http://localhost:3000",
         },
         hmr: {
             protocol: "ws",

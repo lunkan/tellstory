@@ -13,6 +13,7 @@
     },
     "dependencies": {
         "@anthropic-ai/sdk": "^0.96.0",
+        "@elevenlabs/elevenlabs-js": "^2.56.0",
         "cors": "^2.8.6",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",

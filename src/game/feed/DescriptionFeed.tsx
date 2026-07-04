@@ -3,6 +3,13 @@ import { AlertMessage, DirectionDescription, SceneDescription, selectSceneReady,
 import { getDepthName } from "../../../shared/src/phraseology";
 import { DescriptionFeedText } from "./DescriptionFeedText";
 import { useRef } from "react";
+import { audioManager } from "../../audio/AudioManager";
+
+type CurrentDescriptionRef = {
+    id: string;
+    textCompleted: boolean;
+    narratorCompleted: boolean;
+}
 
 export function DescriptionFeed() {
     const title = useSceneStore((state) => state.title);
@@ -12,19 +19,54 @@ export function DescriptionFeed() {
     const secondaryDescription = useSceneStore(selectSecondaryDescription);
     const alertMessage = useSceneStore(selectAlertMessage);
     const directionDescription = useSceneStore(selectDirectionDescription);
-    const currentDescriptionRef = useRef<string | undefined>();
+    const currentDescriptionRef = useRef<CurrentDescriptionRef | undefined>();
 
-    function handleAnimationComplete(id: string): void {
-        currentDescriptionRef.current = undefined;
-        useSceneStore.getState().consumeDescription(id);
+    function handleTextAnimationComplete(id: string): void {
+        if (!currentDescriptionRef.current || currentDescriptionRef.current.id !== id) {
+            return;
+        }
+
+        currentDescriptionRef.current.textCompleted = true;
+        if (currentDescriptionRef.current.textCompleted && currentDescriptionRef.current.narratorCompleted) {
+            useSceneStore.getState().consumeDescription(id);
+        }
+    }
+
+    function handleNarratorSpeakComplete(id: string): void {
+        if (!currentDescriptionRef.current || currentDescriptionRef.current.id !== id) {
+            return;
+        }
+
+        currentDescriptionRef.current.narratorCompleted = true;
+        if (currentDescriptionRef.current.textCompleted && currentDescriptionRef.current.narratorCompleted) {
+            useSceneStore.getState().consumeDescription(id);
+        }
+    }
+
+    function updateState(description: SceneDescription | DirectionDescription | AlertMessage): void {
+        if (currentDescriptionRef.current && currentDescriptionRef.current.id === description.id) {
+            return;
+        }
+
+        if (currentDescriptionRef.current) {
+            audioManager.stop();
+        }
+
+        currentDescriptionRef.current = {
+            id: description.id,
+            textCompleted: false,
+            narratorCompleted: false,
+        };
+
+        audioManager.play(description.text).then(() => handleNarratorSpeakComplete(description.id));
     }
 
     function renderDescription(description: SceneDescription | DirectionDescription | AlertMessage) {
-        currentDescriptionRef.current = description!.id;
+        updateState(description);
 
         return (
             <DescriptionFeedText label={description.label}>
-                <Typewriter id={description.id} text={description!.text} onAnimationComplete={handleAnimationComplete}></Typewriter>
+                <Typewriter id={description.id} text={description!.text} onAnimationComplete={handleTextAnimationComplete}></Typewriter>
             </DescriptionFeedText>
         );
     }
