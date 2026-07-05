@@ -4,6 +4,7 @@
     "description": "",
     "type": "module",
     "scripts": {
+        "db:setup": "tsx server/db/setup.ts",
         "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
         "dev:client": "vite --host",
         "dev:server": "tsx watch server/index.ts",

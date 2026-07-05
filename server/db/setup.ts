@@ -10,11 +10,11 @@ db.run(`
     markers TEXT NOT NULL
   )
 `, (err) => {
-  if (err) {
-    console.error(err.message);
-  } else {
-    console.log("World table ready");
-  }
+    if (err) {
+        console.error(err.message);
+    } else {
+        console.log("World table ready");
+    }
 });
 
 db.run(`
@@ -26,9 +26,22 @@ db.run(`
     summary TEXT NOT NULL
   )
 `, (err) => {
-  if (err) {
-    console.error(err.message);
-  } else {
-    console.log("Location profiles table ready");
-  }
+    if (err) {
+        console.error(err.message);
+    } else {
+        console.log("Location profiles table ready");
+    }
+});
+
+db.run(`
+  CREATE TABLE IF NOT EXISTS settings (
+    id INTEGER PRIMARY KEY,
+    data TEXT NOT NULL
+  )
+`, (err) => {
+    if (err) {
+        console.error(err.message);
+    } else {
+        console.log("Settings table ready");
+    }
 });

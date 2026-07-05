@@ -1,4 +1,4 @@
-import { getLocationProfiles } from "../../location-profile-repository";
+import { locationProfileRepository } from "../../server/db/repositories/location-profile-repository";
 import { generateReply } from "../services/anthropic.service";
 import { LocationProfile, LocationProfileContext } from "../types";
 import { PROXIMITY_DESCRIPTION_SHARED_PROMT } from "./promts/proximity-description";
@@ -10,9 +10,9 @@ export class Explorer {
     public load(worldId: number): void {
         console.log('load', worldId);
 
-        getLocationProfiles().then((result) => {
+        locationProfileRepository.getLocationProfiles().then((result) => {
             result.forEach((profile) => {
-                this._explorationAtlas.set(profile.key, profile);
+                this._explorationAtlas.set(profile.key, Promise.resolve(profile.description));
             });
 
             console.log('Location profiles loaded', this._explorationAtlas.size);

@@ -19,7 +19,7 @@ function getGame(): GamePod | undefined {
     return gamePod;
 }
 
-export const gameManager = {
+export const gameService = {
     newGame,
     getGame,
 };

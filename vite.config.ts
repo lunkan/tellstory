@@ -26,6 +26,8 @@ export default defineConfig({
             "/game": "http://localhost:3000",
             "/world": "http://localhost:3000",
             "/sound": "http://localhost:3000",
+            "/admin": "http://localhost:3000",
+            "/settings": "http://localhost:3000",
         },
         hmr: {
             protocol: "ws",
@@ -33,6 +35,9 @@ export default defineConfig({
             clientPort: 5173,
         },
     },
+    css: {
+        modules: { localsConvention: 'camelCaseOnly' } // or 'camelCase'
+    }
 });
 
 //clientPort: 5173,

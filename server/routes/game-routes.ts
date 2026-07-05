@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { movePlayer, zoomPlayer, newGame } from "../controllers/game.controller.js";
+import { movePlayer, zoomPlayer, newGame } from "../controllers/game-controller.js";
 
 const router = Router();
 

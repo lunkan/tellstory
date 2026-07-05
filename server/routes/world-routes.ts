@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createNewWorld, getWorld, updateWorld, deleteWorld, getWorlds } from "../controllers/world.controller.js";
+import { createNewWorld, getWorld, updateWorld, deleteWorld, getWorlds } from "../controllers/world-controller.js";
 
 const router = Router();
 

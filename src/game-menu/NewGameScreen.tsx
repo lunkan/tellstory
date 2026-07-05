@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { WorldDataSummary } from "../../storyteller/types";
 import { useGameStore } from "../store/gameStore";
+import { WorldDataSummary } from "../../server/types";
 
 
 export function NewGameScreenScreen() {

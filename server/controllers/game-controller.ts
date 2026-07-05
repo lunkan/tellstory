@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { WorldRepository } from "../../world-repository.js";
-import { gameManager } from "../game/game-manager.js";
+import { worldRepository } from "../db/repositories/world-repository.js";
+import { gameService } from "../game/game-service.js";
 import { ADJACENT_DIRECTION_DELATA_VALUES, DIRECTION, isAdjacentDirection, isQuadrantDirection, QUADRANT_DIRECTION_DELTA_VALUES } from "../../shared/src/direction.js";
 import { QuadNode } from "../../engine/world/quad-node.js";
 import { WorldData } from "../../engine/types.js";
@@ -15,8 +15,8 @@ export async function newGame(
 ) {
     try {
         const { worldId } = req.body;
-        const worldData: WorldData = await WorldRepository.getWorld(worldId);
-        const gamePod = gameManager.newGame(worldData);
+        const worldData: WorldData = await worldRepository.getWorld(worldId);
+        const gamePod = gameService.newGame(worldData);
         gamePod.addPlayer('Fantomen');
 
         res.json({ success: true });
@@ -35,7 +35,7 @@ export async function movePlayer(
         const { direction } = req.body;
 
         console.log('movePlayer', direction);
-        const game = gameManager.getGame()?.game;
+        const game = gameService.getGame()?.game;
         const player = game?.getPlayer('Fantomen');
         if (!game || !player) {
             throw Error('movePlayer: NO PLAYER OR GAME');
@@ -73,7 +73,7 @@ export async function zoomPlayer(
     try {
         const { depth } = req.body;
 
-        const game = gameManager.getGame()?.game;
+        const game = gameService.getGame()?.game;
         const player = game?.getPlayer('Fantomen');
         if (!game || !player) {
             throw Error('NO PLAYER OR GAME');

@@ -4,6 +4,7 @@ import { getDepthName } from "../../../shared/src/phraseology";
 import { DescriptionFeedText } from "./DescriptionFeedText";
 import { useRef } from "react";
 import { audioManager } from "../../audio/AudioManager";
+import { useSettingsStore } from "../../store/settingsStore";
 
 type CurrentDescriptionRef = {
     id: string;
@@ -12,6 +13,7 @@ type CurrentDescriptionRef = {
 }
 
 export function DescriptionFeed() {
+    const descriptionNarrator = useSettingsStore((state) => state.settings.descriptionNarrator);
     const title = useSceneStore((state) => state.title);
     const attention = useSceneStore((state) => state.attention);
     const sceneReady = useSceneStore(selectSceneReady);
@@ -58,7 +60,11 @@ export function DescriptionFeed() {
             narratorCompleted: false,
         };
 
-        audioManager.play(description.text).then(() => handleNarratorSpeakComplete(description.id));
+        if (descriptionNarrator) {
+            audioManager.play(description.text).then(() => handleNarratorSpeakComplete(description.id));
+        } else {
+            currentDescriptionRef.current.narratorCompleted = true;
+        }
     }
 
     function renderDescription(description: SceneDescription | DirectionDescription | AlertMessage) {

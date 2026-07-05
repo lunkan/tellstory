@@ -1,0 +1,22 @@
+.button {
+    border: 0;
+    padding: 8px 16px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 5px 5px lightblue;
+    border: solid 1px #000;
+    cursor: pointer;
+}
+
+.close-button {
+    border: 0;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: 0;
+    cursor: pointer;
+}

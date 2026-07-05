@@ -10,7 +10,8 @@ export function TitleScreen() {
     return (
         <div className="title-screen">
             <button className="title-screen--btn" onClick={() => handleNewGame()}>Start</button>
-            <Link to="/editor">Editor</Link>
+            <div><Link to="/editor">Editor</Link></div>
+            <div><Link to="/admin">Admin</Link></div>
         </div>
     );
 }

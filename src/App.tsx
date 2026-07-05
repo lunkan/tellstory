@@ -8,11 +8,15 @@ import { EditoreNewWorldScreen } from "./editor/EditorNewWorldScreen";
 import { EditoreLoadWorldScreen } from "./editor/EditorLoadWorldScreen";
 import { NewGameScreenScreen } from "./game-menu/NewGameScreen";
 import { TitleScreen } from "./TitleScreen";
+import { AdminScreen } from "./admin/AdminScreen";
+import { useSettingsStore } from "./store/settingsStore";
 
 export default function App() {
+    const syncSettings = useSettingsStore((state) => state.sync);
 
     useEffect(() => {
         wsService.connect();
+        syncSettings();
     }, []);
 
     return (
@@ -21,6 +25,7 @@ export default function App() {
                 <Route path="/" element={<TitleScreen />} />
                 <Route path="/menu" element={<NewGameScreenScreen />} />
                 <Route path="/game" element={<GameScreen />} />
+                <Route path="/admin" element={<AdminScreen />} />
                 <Route path="/editor" element={<EditoreMenuScreen />} />
                 <Route path="/editor/new" element={<EditoreNewWorldScreen />} />
                 <Route path="/editor/load" element={<EditoreLoadWorldScreen />} />
