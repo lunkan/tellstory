@@ -1,11 +1,11 @@
-import { CanvasRenderer } from "../utils/CanvasRenderer";
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
 
 export class MoveHandler extends CanvasEventHandler {
     private _screenStartX: number = -1;
     private _screenStartY: number = -1;
 
-    constructor (renderer: CanvasRenderer, point: DOMPoint) {
+    constructor(renderer: CanvasRenderer, point: DOMPoint) {
         super(renderer);
         this._screenStartX = point.x;
         this._screenStartY = point.y;
@@ -17,7 +17,7 @@ export class MoveHandler extends CanvasEventHandler {
     }
 
     public pointerUp(point: DOMPoint): void {
-        if (point.x === this._screenStartX && point.y ===  this._screenStartY) {
+        if (point.x === this._screenStartX && point.y === this._screenStartY) {
             return;
         }
 

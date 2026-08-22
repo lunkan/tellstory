@@ -7,9 +7,10 @@ import { DIRECTION, getDirectionFromAdjacentVector, getDirectionFromQuadrantVect
 import { DescriptionMessage, DirectionDescriptionMessage, PlayerLocationChangeMessage, PlayerLocationDirection } from "../../shared/src/message";
 import { EnvironmentalContext, ProfileGeneratorFactory } from "./profile-generator";
 import { websocketService } from "../websocket/websocket-service";
-import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
+//import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
 import { Storyteller } from "../../storyteller/storyteller";
 import { IGameObserver } from "../../engine/types";
+import { config } from "../../engine/config/config";
 
 export class PlayerObserver implements IGameObserver {
     private _player: Character;
@@ -104,7 +105,8 @@ export class PlayerObserver implements IGameObserver {
             if (directionVector) {
                 const direction = getDirectionFromAdjacentVector(directionVector.x, directionVector.y);
                 const movementCost = node.tile?.terrain.reduce((acc, terrain) => {
-                    const tileMoveCost = tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrain.type)?.movementCost || 0;
+                    const tileMoveCost = config.getTile(terrain.type)?.movementCost || 0;
+                    //tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrain.type)?.movementCost || 0;
                     return Math.max(acc, tileMoveCost);
                 }, 0);
 

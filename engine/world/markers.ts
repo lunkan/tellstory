@@ -1,4 +1,4 @@
-import * as QTns from 'js-quadtree';
+/*import * as QTns from 'js-quadtree';
 import type { QuadTree as QuadTreeType } from 'js-quadtree';
 // js-quadtree exposes named exports under ESM (Vite) but only a CJS default
 // export under Node/tsx. Normalize across both interop shapes.
@@ -44,4 +44,4 @@ export class Markers {
         const points = this._quadTree.query(new Box(0, 0, this._size, this._size));
         return points.map((point) => point.data);
     }
-}
+}*/

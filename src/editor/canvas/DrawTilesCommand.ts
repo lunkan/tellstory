@@ -1,7 +1,9 @@
 import { Tile } from "../../../engine/world/tile";
-import { GridRect } from "./CanvasRenderer";
-import tilesJSON from '../../../engine/config/tiles.json' with { type: 'json' };
-import { TerrainSetting, VectorSetting } from "../../../storyteller/types";
+//import tilesJSON from '../../../engine/config/tiles.json' with { type: 'json' };
+import { config } from "../../../engine/config/config";
+import { TerrainSetting, VectorSetting } from "../../../engine/types";
+import { DrawCommand, GridRect } from "./types";
+import { QuadNode } from "../../../engine/world/quad-node";
 
 const NUM_TERRAIN_SLOTS = 16;
 const TOPOGRAPHY_COLORS = [
@@ -22,14 +24,29 @@ const TOPOGRAPHY_COLORS = [
     '#EDE5E3',
 ];
 
-export class TileRenderer {
-    private _ctx: CanvasRenderingContext2D;
+export class DrawTilesCommand implements DrawCommand {
+    private _nodes: QuadNode[];
+    private _tileSize: number;
 
-    constructor(ctx: CanvasRenderingContext2D) {
-        this._ctx = ctx;
+    constructor(nodes: QuadNode[], tileSize: number) {
+        this._nodes = nodes;
+        this._tileSize = tileSize;
     }
 
-    public draw(tile: Tile, gridRect: GridRect): void {
+    public execute(ctx: CanvasRenderingContext2D): void {
+        for (const node of this._nodes) {
+            if (node && node.tile) {
+                this._drawTile(node.tile, {
+                    x: node.bounds.x,
+                    y: node.bounds.y,
+                    width: this._tileSize,
+                    height: this._tileSize,
+                }, ctx);
+            }
+        }
+    }
+
+    private _drawTile(tile: Tile, gridRect: GridRect, ctx: CanvasRenderingContext2D): void {
         if (!tile) {
             return;
         }
@@ -39,34 +56,34 @@ export class TileRenderer {
 
         //if (waterConfig) {
         if (tile.hasTag('water')) {
-            this._drawWater(gridRect);
+            this._drawWater(gridRect, ctx);
         } else if (elevationConfig) {
-            this._drawTypography(elevationConfig.value || 0, gridRect);
+            this._drawTypography(elevationConfig.value || 0, gridRect, ctx);
         }
 
-        const vectorTypes = tile.vectors.filter((vectorConfig) => this._getConfig(vectorConfig)?.category === 'vector');
-        this._drawVectors(vectorTypes, gridRect);
+        const vectorTypes = tile.vectors.filter((vectorConfig) => config.getTile(vectorConfig.type)?.category === 'vector');
+        this._drawVectors(vectorTypes, gridRect, ctx);
 
         const basicTerrainTypes = tile.terrain.filter((terrainConfig) => terrainConfig.type !== 'water' && terrainConfig.type !== 'elevation');
-        this._drawTerrain(basicTerrainTypes, gridRect);
+        this._drawTerrain(basicTerrainTypes, gridRect, ctx);
     }
 
-    private _drawWater(gridRect: GridRect): void {
-        this._ctx.fillStyle = '#1A91FC';
-        this._ctx.beginPath();
-        this._ctx.rect(gridRect.x, gridRect.y, gridRect.width, gridRect.height);
-        this._ctx.fill();
+    private _drawWater(gridRect: GridRect, ctx: CanvasRenderingContext2D): void {
+        ctx.fillStyle = '#1A91FC';
+        ctx.beginPath();
+        ctx.rect(gridRect.x, gridRect.y, gridRect.width, gridRect.height);
+        ctx.fill();
     }
 
-    private _drawTypography(elevation: number, gridRect: GridRect): void {
+    private _drawTypography(elevation: number, gridRect: GridRect, ctx: CanvasRenderingContext2D): void {
         const colorIndex = Math.round(elevation * 14);
-        this._ctx.fillStyle = TOPOGRAPHY_COLORS[colorIndex];
-        this._ctx.beginPath();
-        this._ctx.rect(gridRect.x, gridRect.y, gridRect.width, gridRect.height);
-        this._ctx.fill();
+        ctx.fillStyle = TOPOGRAPHY_COLORS[colorIndex];
+        ctx.beginPath();
+        ctx.rect(gridRect.x, gridRect.y, gridRect.width, gridRect.height);
+        ctx.fill();
     }
 
-    private _drawTerrain(terrainSettings: TerrainSetting[], gridRect: GridRect): void {
+    private _drawTerrain(terrainSettings: TerrainSetting[], gridRect: GridRect, ctx: CanvasRenderingContext2D): void {
         const slotSize = gridRect.width / 8;
 
         const slots = this._distributeTerrains(terrainSettings);
@@ -82,14 +99,14 @@ export class TileRenderer {
 
             const value = terrainSettings.find((setting) => setting.type === terrainType)?.value || 0;
 
-            this._ctx.fillStyle = this._getColorByTerrainType(terrainType);
-            this._ctx.beginPath();
-            this._ctx.rect(posX, posY, slotSize * value * 1.5, slotSize * value * 1.5);
-            this._ctx.fill();
+            ctx.fillStyle = this._getColorByTerrainType(terrainType);
+            ctx.beginPath();
+            ctx.rect(posX, posY, slotSize * value * 1.5, slotSize * value * 1.5);
+            ctx.fill();
         });
     }
 
-    private _drawVectors(vectorSettings: VectorSetting[], gridRect: GridRect): void {
+    private _drawVectors(vectorSettings: VectorSetting[], gridRect: GridRect, ctx: CanvasRenderingContext2D): void {
         const lineLength = gridRect.width / 2;
         const x1 = gridRect.x + lineLength;
         const y1 = gridRect.y + lineLength;
@@ -98,17 +115,18 @@ export class TileRenderer {
             const x2 = x1 + vectorSetting.direction.x * lineLength;
             const y2 = y1 + vectorSetting.direction.y * lineLength;
 
-            this._ctx.strokeStyle = this._getConfig(vectorSetting)?.meta.color || '#000000';
-            this._ctx.lineWidth = vectorSetting.value * 10;
-            this._ctx.beginPath();
-            this._ctx.moveTo(x1, y1);
-            this._ctx.lineTo(x2, y2);
-            this._ctx.stroke();
+            ctx.strokeStyle = config.getTile(vectorSetting.type)?.meta.color || '#000000';
+            ctx.lineWidth = vectorSetting.value * 10;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
         });
     }
 
     private _getColorByTerrainType(name: string): string {
-        return tilesJSON.tiles.find((tileConfig) => tileConfig.name === name)?.meta?.color || '#000000';
+        return config.getTile(name)?.meta?.color || '#000000';
+        //return tilesJSON.tiles.find((tileConfig) => tileConfig.name === name)?.meta?.color || '#000000';
     }
 
     private _distributeTerrains(terrainSettings: TerrainSetting[]): string[] {
@@ -177,10 +195,4 @@ export class TileRenderer {
             allocations.map(a => [a.type, a.count])
         );
     }
-
-    private _getConfig(terrainSettings: TerrainSetting): any {
-        return tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrainSettings.type);
-    }
-
-
 }

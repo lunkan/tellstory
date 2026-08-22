@@ -1,0 +1,52 @@
+.wrapper {
+    anchor-name: --wrapper;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.inner {
+    color: white;
+    font-size: 14px;
+    display: flex;
+    gap: 8px;
+}
+
+.toggle {
+    width: 50px;
+    text-align: left;
+    display: block;
+    font-size: 14px;
+    padding: 2px;
+}
+
+.overlay {
+    position: absolute;
+    position-anchor: --wrapper;
+    top: anchor(bottom);
+    left: anchor(left);
+    z-index: 100;
+    background-color: #212121;
+    padding: 4px 16px;
+    box-shadow: 5px 5px black;
+    width: 150px;
+}
+
+.range {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 8px 0;
+}
+
+.range::-webkit-slider-runnable-track {
+    -webkit-appearance: none;
+    background: #9a905d;
+    height: 2px;
+}
+
+.range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #ff0000;
+    margin: -7px 0;
+}

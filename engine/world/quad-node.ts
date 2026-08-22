@@ -16,6 +16,7 @@ import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
 import { QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileDataEntry } from "../types";
+import { hydrate } from "./hydrator/hydrate";
 
 export class QuadNode {
     public readonly key: QuadNodeKey;
@@ -47,14 +48,30 @@ export class QuadNode {
             return;
         }
 
+        if (!this.tile) {
+            hydrate(this); // Want the tile
+        }
+
         this._detached = true;
-        if (this.parent) {
+        if (this.parent && !this.parent.isDetached()) {
             this.parent.detach();
         }
     }
 
     public isDetached(): boolean {
         return this._detached;
+    }
+
+    public isLocked(): boolean {
+        return this._quadrants.some((quadNode) => quadNode.isDetached());
+    }
+
+    public isEditableLeaf(): boolean {
+        return this._detached && !this.isLocked();
+    }
+
+    public isGenerated(): boolean {
+        return !this._detached;
     }
 
     public isDescendant(quadNode: QuadNode | undefined): boolean {
@@ -92,7 +109,7 @@ export class QuadNode {
     public getQuadrants(createIfMissing?: boolean): QuadNode[] {
         if (this._quadrants.length || !createIfMissing) {
             return this._quadrants;
-        } else if (this.depth + 1 >= QuadNodeKey.MAX_DEPTH) {
+        } else if (this.depth + 1 > QuadNodeKey.MAX_DEPTH) {
             return this._quadrants; // Creat no more levels after depth of MAX_DEPTH
         }
 
@@ -216,6 +233,7 @@ export class QuadNode {
             nodeId: this.key.id,
             terrain: this.tile.terrain,
             vectors: this.tile.vectors,
+            markers: this.tile.markers
         };
 
         return [tileData, ...quadrantTiles];

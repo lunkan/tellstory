@@ -14,6 +14,8 @@ export interface SelectedEntity {
     }
 }
 
+export type EditState = 'draw' | 'erase' | 'transform' | 'select' | null;
+
 interface EditorStore {
     worldId: number;
     loading: boolean;
@@ -24,12 +26,12 @@ interface EditorStore {
     //startingLocations: Marker[];
     selectedTerrain: SelectedEntity | null;
     paintValue: number;
-    editState: 'draw' | 'transform' | 'select' | null;
+    editState: EditState;
     setWorldId: (worldId: number) => void;
     save: () => Promise<void>;
     selectTerrain: (entity: SelectedEntity) => void;
     setPaintValue: (value: number) => void;
-    setEditState: (state: 'draw' | 'transform' | 'select' | null) => void;
+    setEditState: (state: EditState) => void;
 }
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
@@ -41,7 +43,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     //markers: [],
     //startingLocations: [],
     selectedTerrain: null,
-    paintValue: 0,
+    paintValue: 0.5,
     editState: 'select',
     setWorldId: async (worldId) => {
         set({ worldId, loading: true });
@@ -80,6 +82,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
             console.log('No world to save');
             return;
         }
+
+        console.log('save', world.getData());
 
         await worldRepository.save({
             ...world.getData(),

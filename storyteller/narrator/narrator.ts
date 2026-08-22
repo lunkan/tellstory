@@ -25,6 +25,7 @@ export class Narrator {
     }
 
     public async speak(text: string): Promise<Buffer> {
+        console.log('speak', text);
         const audioStream = await this._client.textToSpeech.stream("JBFqnCBsd6RMkjVDRZzb", {
             modelId: "eleven_v3",
             text,

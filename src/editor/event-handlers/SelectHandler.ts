@@ -1,11 +1,12 @@
-import { CanvasRenderer } from "../utils/CanvasRenderer";
+
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
 
 export class SelectHandler extends CanvasEventHandler {
     private _screenStartX: number = -1;
     private _screenStartY: number = -1;
 
-    constructor (renderer: CanvasRenderer, point: DOMPoint) {
+    constructor(renderer: CanvasRenderer, point: DOMPoint) {
         super(renderer);
         this._screenStartX = point.x;
         this._screenStartY = point.y;

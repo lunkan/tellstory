@@ -3,7 +3,7 @@ type QuadNodeChildIndex = 0 | 1 | 2 | 3;
 
 export class QuadNodeKey {
     public static readonly QUADRANT_BIT_Length: number = 2;
-    public static readonly MAX_DEPTH: number = 10;
+    public static readonly MAX_DEPTH: number = 12; //10;
 
     public static get HASH_BIT_SIZE() {
         return QuadNodeKey.MAX_DEPTH * QuadNodeKey.QUADRANT_BIT_Length;

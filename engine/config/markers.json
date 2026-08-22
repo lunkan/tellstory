@@ -4,362 +4,410 @@
     "markers": [
         {
             "name": "player-start",
+            "category": "starting-location",
             "tags": [],
-            "zMin": 5
+            "depth": 0
         },
         {
             "name": "Waterfall",
+            "category": "landmark",
             "tags": [
                 "river"
             ],
-            "zMin": 5
+            "depth": 5
         },
         {
             "name": "Pond",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 8
+            "depth": 8
         },
         {
             "name": "Spring",
+            "category": "landmark",
             "tags": [
                 "elevation",
                 "forrest",
                 "grassland"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Boulder field",
+            "category": "landmark",
             "tags": [
                 "elevation",
                 "forrest",
                 "grassland"
             ],
-            "zMin": 6
+            "depth": 6
         },
         {
             "name": "Rock outcrop",
+            "category": "landmark",
             "tags": [
                 "elevation",
                 "forrest",
                 "grassland"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Cliff",
+            "category": "landmark",
             "tags": [
                 "elevation"
             ],
-            "zMin": 6
+            "depth": 6
         },
         {
             "name": "Cave",
+            "category": "landmark",
             "tags": [
                 "elevation",
                 "forrest"
             ],
-            "zMin": 6
+            "depth": 6
         },
         {
             "name": "Ravine",
+            "category": "landmark",
             "tags": [
                 "elevation",
                 "forrest"
             ],
-            "zMin": 5
+            "depth": 5
         },
         {
             "name": "Gorge",
+            "category": "landmark",
             "tags": [
                 "elevation"
             ],
-            "zMin": 6
+            "depth": 6
         },
         {
             "name": "Hill",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 5
+            "depth": 5
         },
         {
             "name": "Ridge",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 7
+            "depth": 7
         },
         {
             "name": "Valley",
+            "category": "landmark",
             "tags": [
                 "elevation"
             ],
-            "zMin": 5
+            "depth": 5
         },
         {
             "name": "Meadow",
+            "category": "landmark",
             "tags": [
                 "forrest"
             ],
-            "zMin": 8
+            "depth": 8
         },
         {
             "name": "Small marsh",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 8
+            "depth": 8
         },
         {
             "name": "Ancient or giant tree",
+            "category": "landmark",
             "tags": [
                 "forrest"
             ],
-            "zMin": 8
+            "depth": 8
         },
         {
             "name": "Fallen log or log bridge",
+            "category": "landmark",
             "tags": [
                 "river"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Large solitary tree",
+            "category": "landmark",
             "tags": [
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Stream crossing",
+            "category": "landmark",
             "tags": [
                 "river"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Fallen log",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Rock outcrop",
+            "category": "landmark",
             "tags": [
                 "elevation"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Cliff edge",
+            "category": "landmark",
             "tags": [
                 "elevation"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Small cave",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Trail junction",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 8
+            "depth": 8
         },
         {
             "name": "Lone stump",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Distinctive bend in a stream",
+            "category": "landmark",
             "tags": [
                 "river"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Dense thicket",
+            "category": "landmark",
             "tags": [
                 "forrest"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Clearing",
+            "category": "landmark",
             "tags": [
                 "forrest"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Ridge crest",
+            "category": "landmark",
             "tags": [
                 "elevation"
             ],
-            "zMin": 8
+            "depth": 8
         },
         {
             "name": "Cluster of wildflowers",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Cluster of Ferns",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Cluster of birch trees",
+            "category": "landmark",
             "tags": [
                 "forrest"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Cairn",
+            "category": "landmark",
             "tags": [
                 "elevation"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Signpost",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Old stone wall",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Small grove",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Isolated bush",
+            "category": "landmark",
             "tags": [
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Shrub cluster",
+            "category": "landmark",
             "tags": [
                 "forrest"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Rock pile",
+            "category": "landmark",
             "tags": [
                 "elevation"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Small hill",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 8
+            "depth": 8
         },
         {
             "name": "Hollow tree",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Old fence line",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Old gate",
+            "category": "landmark",
             "tags": [
                 "forrest",
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Abandoned windmill",
+            "category": "landmark",
             "tags": [
                 "grassland"
             ],
-            "zMin": 9
+            "depth": 9
         },
         {
             "name": "Drainage ditch",
+            "category": "landmark",
             "tags": [
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Field boundary",
+            "category": "landmark",
             "tags": [
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Distinct patch of taller grass",
+            "category": "landmark",
             "tags": [
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         },
         {
             "name": "Bare soil",
+            "category": "landmark",
             "tags": [
                 "grassland"
             ],
-            "zMin": 10
+            "depth": 10
         }
     ]
 }

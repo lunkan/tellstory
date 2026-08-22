@@ -8,17 +8,12 @@
             "tags": [
                 "water"
             ],
+            "cluster": 0,
             "attentionValue": 0.1,
             "movementCost": 1,
             "meta": {
                 "color": "#0093dd"
-            },
-            "subTiles": [
-                {
-                    "name": "water",
-                    "threshold": 0.1
-                }
-            ]
+            }
         },
         {
             "name": "lake",
@@ -26,36 +21,27 @@
             "tags": [
                 "water"
             ],
+            "cluster": 0,
             "attentionValue": 0.1,
             "movementCost": 1,
             "meta": {
                 "color": "#00679c"
-            },
-            "subTiles": [
-                {
-                    "name": "water",
-                    "threshold": 0.1
-                }
-            ]
+            }
         },
         {
             "name": "river",
             "category": "vector",
+            "cluster": 0,
             "attentionValue": 0.5,
             "movementCost": 0,
             "meta": {
                 "color": "#0093dd"
-            },
-            "subTiles": [
-                {
-                    "name": "river",
-                    "threshold": 1
-                }
-            ]
+            }
         },
         {
             "name": "elevation",
             "category": "typography",
+            "cluster": 0.15,
             "attentionValue": 0.1,
             "movementCost": 0,
             "meta": {
@@ -65,71 +51,42 @@
         {
             "name": "forrest",
             "category": "biome",
+            "cluster": 0.5,
             "attentionValue": 0.1,
             "movementCost": 0,
             "meta": {
                 "color": "#6f7a39"
-            },
-            "subTiles": [
-                {
-                    "name": "forrest",
-                    "threshold": 1
-                }
-            ]
+            }
         },
         {
             "name": "grassland",
             "category": "biome",
+            "cluster": 0.5,
             "attentionValue": 0.1,
             "movementCost": 0,
             "meta": {
                 "color": "#bfbb8e"
-            },
-            "subTiles": [
-                {
-                    "name": "grassland",
-                    "threshold": 1
-                }
-            ]
+            }
         },
         {
             "name": "urban",
             "category": "urban",
+            "cluster": 0.75,
             "attentionValue": 1,
             "movementCost": 0,
             "meta": {
                 "color": "#ff0000"
-            },
-            "subTiles": [
-                {
-                    "name": "house",
-                    "threshold": 1
-                }
-            ]
-        },
-        {
-            "name": "house",
-            "category": "urban",
-            "attentionValue": 1,
-            "movementCost": 0,
-            "meta": {
-                "color": "#B04028"
             }
         },
         {
             "name": "road",
             "category": "vector",
+            "cluster": 0,
             "attentionValue": 0.5,
             "movementCost": 0,
             "meta": {
                 "color": "#292100"
-            },
-            "subTiles": [
-                {
-                    "name": "road",
-                    "threshold": 1
-                }
-            ]
+            }
         }
     ]
 }

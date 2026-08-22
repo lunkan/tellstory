@@ -11,12 +11,14 @@ type SerializedWorldData = {
 
 function createWorld(name: string): Promise<number> {
     const serializedTilesData = JSON.stringify([]);
-    const serializedMarkersData = JSON.stringify([]);
+    //const serializedMarkersData = JSON.stringify([]);
 
     return new Promise((resolve, reject) => {
         db.run(
-            "INSERT INTO worlds (name, tiles, markers) VALUES (?, ?, ?)",
-            [name, serializedTilesData, serializedMarkersData],
+            //"INSERT INTO worlds (name, tiles, markers) VALUES (?, ?, ?)",
+            //[name, serializedTilesData, serializedMarkersData],
+            "INSERT INTO worlds (name, tiles) VALUES (?, ?)",
+            [name, serializedTilesData],
             function (err) {
                 if (err) {
                     reject(err);
@@ -31,12 +33,14 @@ function createWorld(name: string): Promise<number> {
 
 function updateWorld(id: number, worldData: WorldData): Promise<boolean> {
     const serializedTilesData = JSON.stringify(worldData.tiles);
-    const serializedMarkersData = JSON.stringify(worldData.markers);
+    //const serializedMarkersData = JSON.stringify(worldData.markers);
 
     return new Promise((resolve, reject) => {
         db.run(
-            "UPDATE worlds SET tiles = ?, markers = ? WHERE id = ?",
-            [serializedTilesData, serializedMarkersData, id],
+            //"UPDATE worlds SET tiles = ?, markers = ? WHERE id = ?",
+            "UPDATE worlds SET tiles = ? WHERE id = ?",
+            //[serializedTilesData, serializedMarkersData, id],
+            [serializedTilesData, id],
             function (err) {
                 if (err) {
                     reject(err);
@@ -69,7 +73,8 @@ function deleteWorld(id: number): Promise<boolean> {
 function getWorld(id: number): Promise<WorldData> {
     return new Promise((resolve, reject) => {
         db.get(
-            "SELECT id, name, tiles, markers FROM worlds WHERE id = ?",
+            //"SELECT id, name, tiles, markers FROM worlds WHERE id = ?",
+            "SELECT id, name, tiles FROM worlds WHERE id = ?",
             [id],
             (err, row: SerializedWorldData) => {
                 if (err) {
@@ -77,11 +82,14 @@ function getWorld(id: number): Promise<WorldData> {
                     return;
                 }
 
-                const { id, name, tiles, markers } = row;
+                //const { id, name, tiles, markers } = row;
+                const { id, name, tiles } = row;
                 const deserializedTilesData = JSON.parse(tiles);
-                const deserializedMarkersData = JSON.parse(markers);
-                console.log('db:get', deserializedTilesData.length, deserializedMarkersData.length);
-                resolve({ id, name, tiles: deserializedTilesData, markers: deserializedMarkersData });
+                //const deserializedMarkersData = JSON.parse(markers);
+                //console.log('db:get', deserializedTilesData.length, deserializedMarkersData.length);
+                console.log('db:get', deserializedTilesData.length);
+                //resolve({ id, name, tiles: deserializedTilesData, markers: deserializedMarkersData });
+                resolve({ id, name, tiles: deserializedTilesData });
             }
         );
     });

@@ -2,12 +2,13 @@ import db from "./database.js";
 
 // npx tsx setup.ts
 
+// markers TEXT NOT NULL
+
 db.run(`
   CREATE TABLE IF NOT EXISTS worlds (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    tiles TEXT NOT NULL,
-    markers TEXT NOT NULL
+    tiles TEXT NOT NULL
   )
 `, (err) => {
     if (err) {

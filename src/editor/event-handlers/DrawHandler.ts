@@ -1,7 +1,7 @@
 import { QuadNode } from "../../../engine/world/quad-node";
 import { Tile } from "../../../engine/world/tile";
 import { SelectedEntity } from "../../store/editorStore";
-import { CanvasRenderer } from "../utils/CanvasRenderer";
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
 
 export class DrawHandler extends CanvasEventHandler {

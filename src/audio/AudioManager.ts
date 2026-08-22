@@ -31,6 +31,7 @@ class AudioManager {
         this._objectUrl = URL.createObjectURL(await response);
         this._audio.src = this._objectUrl;
 
+        console.log('--- play', text);
         await this._audio.play();
 
         return new Promise((resolve) => {

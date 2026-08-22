@@ -1,6 +1,6 @@
 import { Tile } from "../../../engine/world/tile";
 import { SelectedEntity } from "../../store/editorStore";
-import { CanvasRenderer } from "../utils/CanvasRenderer";
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
 
 var markerIncrementor: number = 0;
@@ -19,7 +19,24 @@ export class MarkerHandler extends CanvasEventHandler {
 
         markerIncrementor++;
         //this.renderer.markers.push({
-        this.renderer.world.markers.addMarker({
+        /*this.renderer.world.markers.addMarker({
+            point: gridPoint,
+            type: entity.name,
+            id: `marker@${markerIncrementor}`,
+        });*/
+
+        // New!!!
+        const node = this.renderer.getNodeFromPoint(viewportPoint);
+        if (!node) {
+            return;
+        }
+
+        if (!node.tile) {
+            node.tile = new Tile();
+        }
+
+        node.detach();
+        node.tile?.addMarker({
             point: gridPoint,
             type: entity.name,
             id: `marker@${markerIncrementor}`,

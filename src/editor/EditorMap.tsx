@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CanvasRenderer } from "./utils/CanvasRenderer";
+import { CanvasRenderer } from "./canvas/CanvasRenderer";
 import { useEditorStore } from "../store/editorStore";
 import { DrawHandler } from "./event-handlers/DrawHandler";
 import { MoveHandler } from "./event-handlers/MoveHandler";

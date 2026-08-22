@@ -1,4 +1,5 @@
-import markersJSON from '../../../engine/config/markers.json' with { type: 'json' };
+//import markersJSON from '../../../engine/config/markers.json' with { type: 'json' };
+import { config } from '../../../engine/config/config';
 import { SelectedEntity, useEditorStore } from '../../store/editorStore';
 
 export function MarkerTab() {
@@ -22,8 +23,8 @@ export function MarkerTab() {
         );
     }
 
-    const playerStart = markersJSON.markers
-        .filter((marker) => marker.name === 'player-start')
+    //const playerStart = markersJSON.markers.filter((marker) => marker.name === 'player-start')
+    const playerStart = config.getMarkersByFilter({ category: 'starting-location' })
         .map((marker) => ({
             ...marker,
             category: 'marker',
@@ -32,8 +33,8 @@ export function MarkerTab() {
             }
         }));
 
-    const markers = markersJSON.markers
-        .filter((marker) => marker.name !== 'player-start')
+    //const markers = markersJSON.markers.filter((marker) => marker.name !== 'player-start')
+    const markers = config.getMarkersByFilter({ category: 'landmark' })
         .map((marker) => ({
             ...marker,
             category: 'marker',

@@ -1,4 +1,4 @@
-import { CanvasRenderer } from "../utils/CanvasRenderer";
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
 
 export abstract class CanvasEventHandler {
     protected renderer: CanvasRenderer;

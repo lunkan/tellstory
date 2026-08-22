@@ -1,5 +1,7 @@
-import tilesJSON from '../config/tiles.json' with { type: 'json' };
-import { TerrainSetting, TileData, VectorSetting } from '../types';
+//import tilesJSON from '../config/tiles.json' with { type: 'json' };
+import { config } from '../config/config';
+import { MarkerSetting, TerrainSetting, TileData, VectorSetting } from '../types';
+//import { Marker } from './markers';
 
 export class Tile {
     public get terrain() {
@@ -8,6 +10,10 @@ export class Tile {
 
     public get vectors() {
         return this._vectors;
+    }
+
+    public get markers() {
+        return this._markers;
     }
 
     public get elevation(): number {
@@ -24,6 +30,11 @@ export class Tile {
 
     private _terrain: TerrainSetting[] = [];
     private _vectors: VectorSetting[] = [];
+    private _markers: MarkerSetting[] = [];
+
+    public addMarker(marker: MarkerSetting): void {
+        this._markers.push(marker);
+    }
 
     public setVector(vector: VectorSetting): void {
         const currentVector = this._vectors.find((v) => v.type === vector.type && v.direction.x === vector.direction.x && v.direction.y === vector.direction.y);
@@ -37,7 +48,8 @@ export class Tile {
 
     public hasTag(tag: string): boolean {
         return this._terrain.some((terrain) => {
-            const tileConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrain.type);
+            //const tileConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrain.type);
+            const tileConfig = config.getTile(terrain.type);
             if (tileConfig && Array.isArray(tileConfig.tags)) {
                 return tileConfig.tags.includes(tag);
             }
@@ -87,6 +99,7 @@ export class Tile {
         return {
             vectors: this._vectors,
             terrain: this._terrain,
+            markers: this._markers
         };
     }
 }

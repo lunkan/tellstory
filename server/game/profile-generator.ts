@@ -1,11 +1,12 @@
 import { QuadNode } from "../../engine/world/quad-node";
 import { World } from "../../engine/world/world";
 import { DIRECTION, DIRECTION_NAME, getDirectionFromAdjacentVector, getDirectionFromQuadrantVector } from "../../shared/src/direction";
-import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
+//import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
 import { Character } from "../../engine/core/character";
 import { ChronicleEventType } from "../../engine/chronicle/chronicle";
 import { LocationProfile, LocationProfileContext } from "../../storyteller/types";
 import { kMaxLength } from "buffer";
+import { config } from "../../engine/config/config";
 
 export class EnvironmentalContext {
     public readonly eventId: String;
@@ -109,7 +110,8 @@ export class EnvironmentalContext {
 
         const vectorMarkers = node.tile.vectors.map((spacialVector) => {
             const direction = getDirectionFromAdjacentVector(spacialVector.direction.x, spacialVector.direction.y);
-            const tileConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === spacialVector.type);
+            const tileConfig = config.getTile(spacialVector.type);
+            //tilesJSON.tiles.find((tileConfig) => tileConfig.name === spacialVector.type);
 
             return {
                 type: spacialVector.type,

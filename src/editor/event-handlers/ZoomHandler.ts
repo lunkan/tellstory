@@ -1,4 +1,5 @@
-import { CanvasRenderer } from "../utils/CanvasRenderer";
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
+
 
 export class ZoomHandler {
     protected renderer: CanvasRenderer;
@@ -11,9 +12,15 @@ export class ZoomHandler {
         this.renderer = renderer;
     }
 
+    // Larger => faster zoom per wheel notch. Applied exponentially so every
+    // zoom level gets the same perceptual step.
+    protected static readonly ZOOM_SENSITIVITY = 0.001;
+
     public onWheel(wheelDelta: number, point: DOMPoint): void {
-        const scaleMod = Math.max(1, this.renderer.scale);
-        const zoomDelta = (wheelDelta * scaleMod) / 1000;
+        // Multiply scale by a constant factor per notch instead of adding a
+        // clamped step, so the relative change is identical at every level.
+        const factor = Math.exp(wheelDelta * ZoomHandler.ZOOM_SENSITIVITY);
+        const zoomDelta = this.renderer.scale * (factor - 1);
 
         var viewportRect = this.viewport.getBoundingClientRect();
         var x = (point.x - viewportRect.left) - viewportRect.width / 2; //x position within the element.

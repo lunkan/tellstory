@@ -1,12 +1,19 @@
 import type { Request, Response } from "express";
 import { worldRepository } from "../db/repositories/world-repository";
-import { Marker } from "../../engine/world/markers";
-import { TileDataEntry, WorldData } from "../../engine/types";
+//import { Marker } from "../../engine/world/markers";
+import { MarkerSetting, TileDataEntry, WorldData } from "../../engine/types";
 import { WorldDataSummary } from "../types";
 
 type GetWorldRequest = { id: number };
 type CreateWorldRequest = { name: string };
-type UpdateWorldRequest = { id: number, name: string, tiles: TileDataEntry[], markers: Marker[], startingLocations: Marker[] };
+type UpdateWorldRequest = {
+    id: number,
+    name: string,
+    tiles: TileDataEntry[],
+    //markers: Marker[],
+    //startingLocations: Marker[]
+    startingLocations: MarkerSetting[]
+};
 
 export async function createNewWorld(
     req: Request<unknown, unknown, CreateWorldRequest>,
@@ -78,11 +85,13 @@ export async function updateWorld(
 ) {
     try {
         const { id } = req.params;
-        const { name, tiles, markers } = req.body;
+        //const { name, tiles, markers } = req.body;
+        const { name, tiles } = req.body;
 
         console.log('Put world');
 
-        const success = await worldRepository.updateWorld(id, { id, name, tiles, markers });
+        //const success = await worldRepository.updateWorld(id, { id, name, tiles, markers });
+        const success = await worldRepository.updateWorld(id, { id, name, tiles });
 
         res.json({
             success,

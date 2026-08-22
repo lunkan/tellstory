@@ -1,5 +1,5 @@
 import { GameEvent } from "./core/events/game-event.interface";
-import { Marker } from "./world/markers";
+//import { Marker } from "./world/markers";
 
 export interface IGameObserver {
     onEvent(event: GameEvent): void;
@@ -63,13 +63,21 @@ export type VectorSetting = {
     },
 }
 
+export type MarkerSetting = {
+    point: QuadNodes2DPoint;
+    type: string;
+    id: string;
+};
+
 export type TileData = {
-    vectors: VectorSetting[],
-    terrain: TerrainSetting[],
+    vectors: VectorSetting[];
+    terrain: TerrainSetting[];
+    markers: MarkerSetting[];
 }
 
 export type TileDataEntry = TileData & {
-    nodeId: string,
+    nodeId: string;
+    detached?: boolean;
 }
 
 /* WORLD */
@@ -78,6 +86,6 @@ export type WorldData = {
     id: number;
     name: string;
     tiles: TileDataEntry[];
-    markers: Marker[];
+    //markers: Marker[];
 }
 
