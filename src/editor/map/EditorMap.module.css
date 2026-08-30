@@ -1,0 +1,6 @@
+.map {
+    grid-area: map;
+    flex: 1;
+    overflow: hidden;
+    background-color: #000;
+}

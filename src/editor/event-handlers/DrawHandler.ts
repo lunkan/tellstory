@@ -1,3 +1,4 @@
+import { dehydrate } from "../../../engine/world/hydrator/hydrate";
 import { QuadNode } from "../../../engine/world/quad-node";
 import { Tile } from "../../../engine/world/tile";
 import { SelectedEntity } from "../../store/editorStore";
@@ -26,16 +27,36 @@ export class DrawHandler extends CanvasEventHandler {
             return;
         }
 
+        console.log('pointerMove', node.isLocked());
+        if (node.isLocked()) {
+            return;
+        }
+
         this._currentNode = node;
+
         if (!node.tile) {
             node.tile = new Tile();
         }
 
         node.detach();
+        node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
+
+        let value = this._value;
         node.tile.setTerrain({
             type: this._type,
-            value: Math.max(0, Math.min(1, this._value)),
+            value,
         });
+
+        let parentNode = node.parent;
+        while (parentNode && 5 <= parentNode.depth) {
+            value = value * 0.25;
+            parentNode.tile!.applyTerrain({
+                type: this._type,
+                value,
+            });
+
+            parentNode = parentNode.parent;
+        }
 
         this.renderer.refresh();
     }

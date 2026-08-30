@@ -1,4 +1,4 @@
-import { EditorMap } from "./EditorMap";
+import { EditorMap } from "./map/EditorMap";
 import { EditorTopbar } from "./EditorTopbar";
 import { Sidebar } from "./sidebar/Sidebar";
 import { useEditorStore } from "../store/editorStore";

@@ -1,3 +1,4 @@
+import { dehydrate } from "../../../engine/world/hydrator/hydrate";
 import { QuadNode } from "../../../engine/world/quad-node";
 import { Tile } from "../../../engine/world/tile";
 import { SelectedEntity } from '../../store/editorStore';
@@ -44,8 +45,14 @@ export class DrawLineHandler extends CanvasEventHandler {
             return;
         }
 
-        this._setLineSegment(previousNode, node);
-        this._setLineSegment(node, previousNode);
+        const vectorValue = Math.max(0, Math.min(1, this._value));
+
+        this._setLineSegment(previousNode, node, vectorValue);
+        this._setLineSegment(node, previousNode, vectorValue);
+
+        this._updateParentLineSegment(previousNode, node, vectorValue);
+
+
         this.renderer.refresh();
         previousNode = node;
         this.finish();
@@ -78,10 +85,14 @@ export class DrawLineHandler extends CanvasEventHandler {
             return false; // Same or undefined - ot allowed
         }
 
+        if (node.isLocked()) {
+            return false;
+        }
+
         return previousNode.isAdjacent(node);
     }
 
-    private _setLineSegment(node: QuadNode, targetNode: QuadNode): boolean {
+    private _setLineSegment(node: QuadNode, targetNode: QuadNode, value: number): boolean {
         const vector = node.getNormalizedRelativePosition(targetNode);
         if (!vector) {
             return false;
@@ -92,12 +103,55 @@ export class DrawLineHandler extends CanvasEventHandler {
         }
 
         node.detach();
+        node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
+
         node.tile.setVector({
             type: this._type,
-            value: Math.max(0, Math.min(1, this._value)),
+            value: value,
             direction: vector,
         });
 
         return true;
+    }
+
+    private _updateParentLineSegment(node: QuadNode, targetNode: QuadNode, value: number): void {
+        const nodeParent: QuadNode | undefined = node.parent;
+        const targetNodeParent: QuadNode | undefined = targetNode.parent;
+        if (!nodeParent || !targetNodeParent || nodeParent === targetNodeParent) {
+            return;
+        }
+
+        const delta1 = nodeParent.getNormalizedRelativePosition(targetNodeParent);
+        const delta2 = targetNodeParent.getNormalizedRelativePosition(nodeParent);
+
+        if (!delta1 || !delta2) {
+            return;
+        }
+
+        nodeParent.tile?.applyVector({
+            type: this._type,
+            value: value,
+            direction: { x: delta1.x, y: delta1.y },
+        });
+
+        targetNodeParent.tile?.applyVector({
+            type: this._type,
+            value: value,
+            direction: { x: delta2.x, y: delta2.y },
+        });
+
+        this._updateParentLineSegment(nodeParent, targetNodeParent, value);
+
+        /*let parentNode = node.parent;
+        while (parentNode && 5 <= parentNode.depth) {
+            value = value * 0.25;
+            parentNode.tile!.applyVector({
+                type: this._type,
+                value: value,
+                direction: vector,
+            });
+
+            parentNode = parentNode.parent;
+        }*/
     }
 }

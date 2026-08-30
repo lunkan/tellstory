@@ -46,6 +46,16 @@ export class Tile {
         this._vectors.push(vector);
     }
 
+    public applyVector(vector: VectorSetting): void {
+        const currentVector = this._vectors.find((v) => v.type === vector.type && v.direction.x === vector.direction.x && v.direction.y === vector.direction.y);
+        if (currentVector) {
+            currentVector.value = vector.value + vector.value;
+            return;
+        }
+
+        this._vectors.push(vector);
+    }
+
     public hasTag(tag: string): boolean {
         return this._terrain.some((terrain) => {
             //const tileConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrain.type);
@@ -74,9 +84,37 @@ export class Tile {
         return this._terrain.find((terrain) => terrain.type === type);
     }
 
+    // Adds/reduce value on top of current
+    public applyTerrain(mutadedTerrain: TerrainSetting): void {
+        if (this.hasTerrain(mutadedTerrain.type)) {
+            this._terrain = this._terrain.map((terrain) => {
+                if (terrain.type !== mutadedTerrain.type) {
+                    return terrain;
+                }
+
+                return {
+                    ...terrain,
+                    value: this._clampValue(mutadedTerrain.value + terrain.value),
+                };
+            });
+        } else {
+            this._terrain.push(mutadedTerrain);
+        }
+    }
+
+    // Overrides value
     public setTerrain(mutadedTerrain: TerrainSetting): void {
         if (this.hasTerrain(mutadedTerrain.type)) {
-            this._terrain = this._terrain.map((terrain) => terrain.type === mutadedTerrain.type ? mutadedTerrain : terrain);
+            this._terrain = this._terrain.map((terrain) => {
+                if (terrain.type !== mutadedTerrain.type) {
+                    return terrain;
+                }
+
+                return {
+                    ...terrain,
+                    value: this._clampValue(terrain.value),
+                };
+            });
         } else {
             this._terrain.push(mutadedTerrain);
         }
@@ -101,5 +139,9 @@ export class Tile {
             terrain: this._terrain,
             markers: this._markers
         };
+    }
+
+    private _clampValue(value: number): number {
+        return Math.max(0, Math.min(1, value));
     }
 }

@@ -1,0 +1,14 @@
+.zoom-level {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    border: solid 1px #000;
+    padding: 8px;
+    text-align: center;
+    background-color: #212121;
+    color: #ffffff;
+}
+
+.depth-label {
+    font-size: 11px;
+}

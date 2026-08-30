@@ -35,8 +35,6 @@ export class World {
 
         //this._hydrator = new Hydrator(this.markers);
 
-        console.log('WORLD DATA', worldData.tiles);
-
         for (const tileEntry of worldData.tiles) {
             const tile = new Tile();
             tileEntry.terrain.forEach((terrainSetting) => tile.setTerrain(terrainSetting));

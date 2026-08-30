@@ -1,3 +1,5 @@
+import styles from "./EditorMapZoomLevel.module.css";
+
 type EditorMapZoomLevelProps = {
     depth: number;
 };
@@ -20,10 +22,10 @@ const WORLD_SIZE_METER: number = 320000;
 
 export function EditorMapZoomLevel({ depth }: EditorMapZoomLevelProps) {
     return (
-        <div className="editor-zoom-level">
-            <div className="editor-zoom-level--depth">{depth}</div>
-            <div className="editor-zoom-level--depth-label">Depth</div>
-            <div className="editor-zoom-level--depth-square-size">{getSquareWidth(depth)}</div>
+        <div className={styles.zoomLevel}>
+            <div className={styles.depth}>{depth}</div>
+            <div className={styles.depthLabel}>Depth</div>
+            <div className={styles.depthSquareSize}>{getSquareWidth(depth)}</div>
         </div>
     );
 }

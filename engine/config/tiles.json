@@ -71,7 +71,7 @@
         {
             "name": "urban",
             "category": "urban",
-            "cluster": 0.75,
+            "cluster": 0.5,
             "attentionValue": 1,
             "movementCost": 0,
             "meta": {

@@ -43,6 +43,16 @@ export class QuadNode {
         this.bounds = QuadNodeBounds.fromKey(this.key);
     }
 
+    // Dehydrate - if updated
+    /*public cleanChildren(): void {
+        this._quadrants.forEach((quadNode) => {
+            if (!quadNode.isGenerated()) {
+                quadNode.tile = undefined;
+                quadNode.cleanChildren();
+            }
+        });
+    }*/
+
     public detach(): void {
         if (this._detached) {
             return;
@@ -71,7 +81,7 @@ export class QuadNode {
     }
 
     public isGenerated(): boolean {
-        return !this._detached;
+        return !!this.tile && !this._detached;
     }
 
     public isDescendant(quadNode: QuadNode | undefined): boolean {

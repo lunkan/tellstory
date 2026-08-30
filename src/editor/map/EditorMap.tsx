@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { CanvasRenderer } from "./canvas/CanvasRenderer";
-import { useEditorStore } from "../store/editorStore";
-import { DrawHandler } from "./event-handlers/DrawHandler";
-import { MoveHandler } from "./event-handlers/MoveHandler";
-import { SelectHandler } from "./event-handlers/SelectHandler";
-import { ZoomHandler } from "./event-handlers/ZoomHandler";
-import { DrawLineHandler } from './event-handlers/DrawLineHandler';
-import { MarkerHandler } from './event-handlers/MarkerHandler';
-import { EditorMapZoomLevel } from './EditorMapZoomLevel';
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
+import { useEditorStore } from "../../store/editorStore";
+import { DrawHandler } from "../event-handlers/DrawHandler";
+import { MoveHandler } from "../event-handlers/MoveHandler";
+import { SelectHandler } from "../event-handlers/SelectHandler";
+import { ZoomHandler } from "../event-handlers/ZoomHandler";
+import { DrawLineHandler } from '../event-handlers/DrawLineHandler';
+import { MarkerHandler } from '../event-handlers/MarkerHandler';
+import { EditorMapZoomLevel } from './zoom-level/EditorMapZoomLevel';
+
+import styles from "./EditorMap.module.css";
 
 export function EditorMap() {
     //const quadtree = useEditorStore((state) => state.quadtree);
@@ -90,7 +92,7 @@ export function EditorMap() {
     }
 
     return (
-        <div className="editor-map" style={{ position: 'relative' }} ref={viewportRef} onPointerDown={(e) => handlePointerDown(e)} onWheel={(e) => handleWheel(e)}>
+        <div className={styles.map} style={{ position: 'relative' }} ref={viewportRef} onPointerDown={(e) => handlePointerDown(e)} onWheel={(e) => handleWheel(e)}>
             <canvas width="1000" height="1000" ref={canvasRef}></canvas>
             <canvas style={{ position: 'absolute', top: 0, left: 0 }} width="1000" height="1000" ref={overlayRef}></canvas>
             <EditorMapZoomLevel depth={depth}></EditorMapZoomLevel>

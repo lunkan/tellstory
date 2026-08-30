@@ -2,11 +2,10 @@ import { QuadNode } from "../../../engine/world/quad-node";
 import { OverlayRenderer } from "./OverlayRenderer";
 import { World } from '../../../engine/world/world';
 import { hydrate } from "../../../engine/world/hydrator/hydrate";
-import { CanvasLayer } from "./CanvasLayer";
-import { DrawTilesCommand } from "./DrawTilesCommand";
-import { DrawMarkersCommand } from "./DrawMarkersCommand";
+import { drawTiles } from "./commands/drawTiles";
+import { drawMarkers } from "./commands/drawMarkers";
 import { GridBounds, GridPoint, TileCoordinate } from "./types";
-import { DrawGridCommand } from "./DrawGridCommand";
+import { drawGrid } from "./commands/drawGrid";
 import { CanvasMatrix } from "./CanvasMatrix";
 
 export class CanvasRenderer {
@@ -30,7 +29,6 @@ export class CanvasRenderer {
     }
 
     private _matrix: CanvasMatrix = new CanvasMatrix();
-    //private _layers: Map<string, CanvasLayer> = new Map();
     private _layers: Map<string, HTMLCanvasElement> = new Map();
     private _ctx: CanvasRenderingContext2D;
 
@@ -94,9 +92,8 @@ export class CanvasRenderer {
     }
 
     public getNodeFromPoint(viewportPoint: DOMPoint): QuadNode | null {
-
         const gridPoint = this._matrix.getGridPoint(viewportPoint);
-        if (this._matrix.gridPointInBounds(gridPoint)) {
+        if (!this._matrix.gridPointInBounds(gridPoint)) {
             return null;
         }
 
@@ -114,6 +111,10 @@ export class CanvasRenderer {
     public setViewport(width: number, height: number): void {
         this._matrix.setSize(width, height);
         this.overlay.setViewport(width, height);
+
+        this.canvas.width = width;
+        this.canvas.height = height;
+
         this._invalidatTransform();
     }
 
@@ -158,28 +159,48 @@ export class CanvasRenderer {
         const gridBounds = this._matrix.visibleTiles();
 
         const gridLayer = this._layers.get('grid')!;
-        new DrawGridCommand(gridBounds, this._matrix.scale, tileSize).execute(gridLayer.getContext('2d')!);
+
+        drawGrid({
+            ctx: gridLayer.getContext('2d')!,
+            gridBounds,
+            scale: this._matrix.scale,
+            tileSize
+        });
 
         const visibleNodes = this._getVisibleNodes(gridBounds);
-
-        const lockedNodes = visibleNodes.filter((node) => node.isLocked());
         const lockedLayer = this._layers.get('lockedTiles')!;
-        new DrawTilesCommand(lockedNodes, tileSize).execute(lockedLayer.getContext('2d')!);
+        drawTiles({
+            ctx: lockedLayer.getContext('2d')!,
+            nodes: visibleNodes.filter((node) => node.isLocked()),
+            tileSize
+        });
 
-        const editableLeafNodes = visibleNodes.filter((node) => node.isEditableLeaf());
         const editableLeafLayer = this._layers.get('editableLeafTiles')!;
-        new DrawTilesCommand(editableLeafNodes, tileSize).execute(editableLeafLayer.getContext('2d')!);
+        drawTiles({
+            ctx: editableLeafLayer.getContext('2d')!,
+            nodes: visibleNodes.filter((node) => node.isEditableLeaf()),
+            tileSize
+        });
 
-        const generatedNodes = visibleNodes.filter((node) => node.isGenerated());
         const generatedLayer = this._layers.get('generatedTiles')!;
-        new DrawTilesCommand(generatedNodes, tileSize).execute(generatedLayer.getContext('2d')!);
+        drawTiles({
+            ctx: generatedLayer.getContext('2d')!,
+            nodes: visibleNodes.filter((node) => node.isGenerated()),
+            tileSize
+        });
 
-        const markers = visibleNodes.flatMap((node) => this.world.getMarkersFromNode(node));
         const markerLayer = this._layers.get('markers')!;
-        new DrawMarkersCommand(markers).execute(markerLayer.getContext('2d')!);
+        drawMarkers({
+            ctx: markerLayer.getContext('2d')!,
+            markers: visibleNodes.flatMap((node) => this.world.getMarkersFromNode(node))
+        });
 
-        this._ctx.drawImage(lockedLayer, 0, 0);
         this._ctx.drawImage(editableLeafLayer, 0, 0);
+
+        this._ctx.save();
+        this._ctx.filter = 'grayscale(0.5)';
+        this._ctx.drawImage(lockedLayer, 0, 0);
+        this._ctx.restore();
 
         this._ctx.save();
         this._ctx.globalAlpha = 0.5;
@@ -188,8 +209,6 @@ export class CanvasRenderer {
 
         this._ctx.drawImage(markerLayer, 0, 0);
         this._ctx.drawImage(gridLayer, 0, 0);
-
-        /*this._drawActiveTile();*/
     }
 
     private _getVisibleNodes(gridBounds: GridBounds): QuadNode[] {

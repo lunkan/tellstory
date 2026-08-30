@@ -1,7 +1,3 @@
-export interface DrawCommand {
-    execute: (ctx: CanvasRenderingContext2D) => void
-}
-
 export type GridBounds = {
     x: number;
     y: number;

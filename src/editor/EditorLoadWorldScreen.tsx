@@ -12,23 +12,12 @@ export function EditoreLoadWorldScreen() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log('Load it');
         loadWorlds();
-        /*fetch(`/world`).then((response) => {
-            console.log('REsp');
-            response.json().then((data) => {
-                console.log('Data', data);
-                setLoading(false);
-                setWorlds(data.worlds);
-            });
-        });*/
     }, []);
 
     function loadWorlds(): void {
         fetch(`/world`).then((response) => {
-            console.log('REsp');
             response.json().then((data) => {
-                console.log('Data', data);
                 setLoading(false);
                 setWorlds(data.worlds);
             });
