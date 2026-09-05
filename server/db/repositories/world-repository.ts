@@ -82,13 +82,9 @@ function getWorld(id: number): Promise<WorldData> {
                     return;
                 }
 
-                //const { id, name, tiles, markers } = row;
                 const { id, name, tiles } = row;
                 const deserializedTilesData = JSON.parse(tiles);
-                //const deserializedMarkersData = JSON.parse(markers);
-                //console.log('db:get', deserializedTilesData.length, deserializedMarkersData.length);
                 console.log('db:get', deserializedTilesData.length);
-                //resolve({ id, name, tiles: deserializedTilesData, markers: deserializedMarkersData });
                 resolve({ id, name, tiles: deserializedTilesData });
             }
         );

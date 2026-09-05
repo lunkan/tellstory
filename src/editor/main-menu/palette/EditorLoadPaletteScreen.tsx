@@ -1,48 +1,36 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEditorStore } from "../store/editorStore";
-import { WorldDataSummary } from "../../server/types";
-//import { WorldDataSummary } from "../../storyteller/types";
+import { usePaletteEditorStore } from "../../../store/paletteEditorStore";
 
-
-export function EditoreLoadWorldScreen() {
-    const [loading, setLoading] = useState<boolean>(true);
-    const [worlds, setWorlds] = useState<WorldDataSummary[]>([]);
+export function EditoreLoadPaletteScreen() {
+    const storedPalettes = usePaletteEditorStore((state) => state.storedPalettes);
+    const loadStoredPalettes = usePaletteEditorStore((state) => state.loadStoredPalettes);
+    const deletePaletteById = usePaletteEditorStore((state) => state.deletePaletteById);
+    const setPaletteId = usePaletteEditorStore((state) => state.loadPalette);
     const [deleteToggle, setDeleteToggle] = useState<boolean>(false);
     const navigate = useNavigate();
 
     useEffect(() => {
-        loadWorlds();
+        loadStoredPalettes();
     }, []);
 
-    function loadWorlds(): void {
-        fetch(`/world`).then((response) => {
-            response.json().then((data) => {
-                setLoading(false);
-                setWorlds(data.worlds);
-            });
-        });
-    }
-
-    function handleSelectWorld(worldId: number) {
+    function handleSelectPalette(paletteId: number) {
         if (deleteToggle) {
-            fetch(`/world/${worldId}`, {
-                method: "DELETE",
-            }).then(() => {
-                console.log('Deleted');
-                loadWorlds();
-            });
+            console.log('delete', paletteId);
+            deletePaletteById(paletteId);
         } else {
-            useEditorStore.getState().setWorldId(worldId);
-            navigate(`/editor/${worldId}`);
+            setPaletteId(paletteId);
+            navigate(`/palette`);
         }
     }
+
+    console.log('EditoreLoadPaletteScreen', storedPalettes, !storedPalettes.length);
 
     function handleCancel() {
         navigate(`/editor`);
     }
 
-    if (loading) {
+    if (!storedPalettes.length) {
         return (
             <main className="editor-menu-screen">
                 <div className="editor-menu-screen--menu">
@@ -56,7 +44,7 @@ export function EditoreLoadWorldScreen() {
         <main className="editor-menu-screen">
             <div className="editor-menu-screen--menu">
                 <div className="editor-menu-screen--header">
-                    <h2>Worlds</h2>
+                    <h2>Palettes</h2>
                     <input
                         type="checkbox"
                         value="toggleDelete"
@@ -64,9 +52,9 @@ export function EditoreLoadWorldScreen() {
                     />
                 </div>
                 <ul className="editor-menu-screen--list">
-                    {worlds.map((worldData, i) => (
+                    {storedPalettes.map((paletteSummary, i) => (
                         <li key={i}>
-                            <button className="editor-screen--menu-btn" onClick={() => handleSelectWorld(worldData.id)}>{worldData.name}{deleteToggle ? ' (Delete) ' : ''}</button>
+                            <button className="editor-screen--menu-btn" onClick={() => handleSelectPalette(paletteSummary.id)}>{paletteSummary.name}{deleteToggle ? ' (Delete) ' : ''}</button>
                         </li>
                     ))}
                 </ul>

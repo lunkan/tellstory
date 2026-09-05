@@ -1,0 +1,22 @@
+.tab-bar {
+    display: flex;
+    gap: 8px;
+}
+
+.tab {
+    display: flex;
+    font-size: 14px;
+    align-items: center;
+    background-color: #111;
+    color: #666;
+    border: 0
+}
+
+.selected-tab {
+    display: flex;
+    font-size: 14px;
+    align-items: center;
+    background-color: #212121;
+    color: #fff;
+    border: 0
+}

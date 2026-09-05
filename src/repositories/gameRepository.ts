@@ -1,8 +1,8 @@
-import { DIRECTION } from "../../shared/src/direction";
+﻿import { DIRECTION } from "../../shared/src/direction";
 
 async function create(worldId: number): Promise<void> {
     console.log('handleStart');
-    const res = await fetch("/game", {
+    const res = await fetch("/api/game", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ worldId }),
@@ -16,7 +16,7 @@ async function create(worldId: number): Promise<void> {
 
 async function move(direction: DIRECTION): Promise<void> {
     console.log('handleMove', direction);
-    const res = await fetch("/game/move", {
+    const res = await fetch("/api/game/move", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ direction }),
@@ -30,7 +30,7 @@ async function move(direction: DIRECTION): Promise<void> {
 
 async function zoom(depth: number): Promise<void> {
     console.log('HandleZoom', depth);
-    const res = await fetch("/game/zoom", {
+    const res = await fetch("/api/game/zoom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ depth }),

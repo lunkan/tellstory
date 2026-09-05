@@ -1,31 +1,20 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEditorStore } from "../store/editorStore";
+import { usePaletteEditorStore } from "../../../store/paletteEditorStore";
 
 
-export function EditoreNewWorldScreen() {
-    const [worldName, setWorldName] = useState('');
+export function EditoreNewPaletteScreen() {
+    const newPalette = usePaletteEditorStore((state) => state.newPalette);
+    const [paletteName, setPaletteName] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        console.log('handleSubmit', worldName);
+        console.log('handleSubmit', paletteName);
 
         try {
-            const res = await fetch("/world", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: worldName }),
-            });
-            
-            const data: any = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error ?? 'New game Request failed');
-            }
-
-            useEditorStore.getState().setWorldId(data.worldId);
-            navigate(`/editor/${data.worldId}`);
-
+            await newPalette(paletteName);
+            navigate(`/palette`);
         } catch (err) {
             //setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
@@ -41,16 +30,16 @@ export function EditoreNewWorldScreen() {
     return (
         <main className="editor-menu-screen">
             <div className="editor-menu-screen--menu">
-                <h2>New world</h2>
+                <h2>New Palette</h2>
                 <form className="editor-menu-screen--form" onSubmit={handleSubmit}>
-                    <label htmlFor="worldName">Name</label>
+                    <label htmlFor="paletteName">Name</label>
                     <input
-                        id="worldName"
-                        name="worldName"
+                        id="paletteName"
+                        name="paletteName"
                         type="text"
-                        value={worldName}
+                        value={paletteName}
                         autoComplete="off"
-                        onChange={(e) => setWorldName(e.target.value)}
+                        onChange={(e) => setPaletteName(e.target.value)}
                     />
                     <button type="submit">Submit</button>
                 </form>

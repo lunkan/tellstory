@@ -1,0 +1,35 @@
+.topbar {
+    grid-area: topbar;
+    background-color: #212121;
+    padding: 4px 8px 6px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.group {
+    display: flex;
+    gap: 4px;
+}
+
+.label {
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+}
+
+.btn {
+    font-size: 12px;
+    padding: 4px 8px;
+    background-color: #323232;
+    color: #ffffff;
+    border: transparent;
+}
+
+.btn-selected {
+    font-size: 12px;
+    padding: 4px 8px;
+    background-color: #323232;
+    color: #ffffff;
+    border: transparent;
+    outline: solid 2px #fff;
+}

@@ -1,0 +1,23 @@
+.screen {
+    width: 100%;
+    height: 100vh;
+
+    display: grid;
+    grid-template-areas:
+        "topbar"
+        "page";
+    grid-template-columns: 1fr;
+    grid-template-rows: 40px 1fr;
+}
+
+.tab-group {
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    background-color: #000;
+}
+
+.tab-panel {
+    flex: 1;
+    background-color: #212121;
+}

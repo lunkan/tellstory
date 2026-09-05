@@ -4,35 +4,24 @@ import { useNavigate } from "react-router-dom";
 export function EditoreMenuScreen() {
     const navigate = useNavigate();
 
-    function handleContinue() {}
+    function handleContinue() { }
 
     function handleNew() {
         navigate(`/editor/new`);
-
-        /*try {
-            const res = await fetch("/world", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: 'Hello new' }),
-            });
-            
-            const data: any = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error ?? 'New game Request failed');
-            }
-
-            navigate(`/editor/${data.id}`);
-
-        } catch (err) {
-            //setError(err instanceof Error ? err.message : "Unknown error");
-        } finally {
-            //setLoading(false);
-        }*/
     }
 
     function handleLoad() {
         console.log('Load');
         navigate(`/editor/load`);
+    }
+
+    function handleNewResource() {
+        navigate(`/palette/new`);
+    }
+
+    function handleLoadResource() {
+        console.log('Load Resource');
+        navigate(`/palette/load`);
     }
 
     function handleCancel() {
@@ -42,12 +31,18 @@ export function EditoreMenuScreen() {
     return (
         <main className="editor-menu-screen">
             <div className="editor-menu-screen--menu">
-                <h2>Editor</h2>
+                <h2>Map Editor</h2>
                 <button className="editor-screen--menu-btn" onClick={() => handleContinue()}>Continue (...)</button>
                 <button className="editor-screen--menu-btn" onClick={() => handleNew()}>New</button>
                 <button className="editor-screen--menu-btn" onClick={() => handleLoad()}>Load</button>
-                <button className="editor-screen--menu-btn" onClick={() => handleCancel()}>Cancel</button>
             </div>
+            <div className="editor-menu-screen--menu">
+                <h2>Resource Editor</h2>
+                <button className="editor-screen--menu-btn" onClick={() => handleContinue()}>Continue (...)</button>
+                <button className="editor-screen--menu-btn" onClick={() => handleNewResource()}>New</button>
+                <button className="editor-screen--menu-btn" onClick={() => handleLoadResource()}>Load</button>
+            </div>
+            <button className="editor-screen--menu-btn" onClick={() => handleCancel()}>Cancel</button>
         </main>
     );
 }

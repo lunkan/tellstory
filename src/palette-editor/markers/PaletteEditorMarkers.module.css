@@ -1,0 +1,9 @@
+.tabPanel {
+    padding: 16px;
+}
+
+.tagGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

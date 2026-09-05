@@ -22,12 +22,7 @@ export default defineConfig({
         host: "0.0.0.0",
         port: 5173,
         proxy: {
-            "/chat": "http://localhost:3000",
-            "/game": "http://localhost:3000",
-            "/world": "http://localhost:3000",
-            "/sound": "http://localhost:3000",
-            "/admin": "http://localhost:3000",
-            "/settings": "http://localhost:3000",
+            "/api": "http://localhost:3000",
         },
         hmr: {
             protocol: "ws",

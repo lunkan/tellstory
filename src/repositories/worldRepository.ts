@@ -1,7 +1,7 @@
-import { WorldData } from "../../engine/types";
+﻿import { WorldData } from "../../engine/types";
 
 async function create(name: string): Promise<number> {
-    const res = await fetch("/world", {
+    const res = await fetch("/api/world", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, tiles: [] }),
@@ -16,13 +16,13 @@ async function create(name: string): Promise<number> {
 }
 
 async function load(worldId: number): Promise<WorldData> {
-    const response = await fetch(`/world/${worldId}`);
+    const response = await fetch(`/api/world/${worldId}`);
     const data = await response.json();
     return data.worldData;
 }
 
 async function save(world: WorldData): Promise<boolean> {
-    const res = await fetch(`/world/${world.id}`, {
+    const res = await fetch(`/api/world/${world.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(world),

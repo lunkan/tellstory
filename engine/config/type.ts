@@ -6,6 +6,7 @@ export type TileMetaConfig = {
 }
 
 export type TileConfigData = {
+    id: number;
     name: string;
     category: string;
     tags: TileTag[] | undefined,
@@ -19,7 +20,15 @@ export type TileConfig = TileConfigData & {
     tags: TileTag[],
 }
 
+export type VectorConfigData = {
+    id: number;
+    name: string;
+    attentionValue: number;
+    meta: TileMetaConfig;
+}
+
 export type MarkerConfigData = {
+    id: number;
     name: string;
     category: string;
     tags: string[] | undefined,
@@ -34,5 +43,6 @@ export type ConfigData = {
     name: string;
     version: string;
     tiles: TileConfigData[];
+    vectors: VectorConfigData[];
     markers: MarkerConfigData[];
 }

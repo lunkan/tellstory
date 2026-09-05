@@ -1,6 +1,6 @@
-async function narrate(text: string, abortSignal: AbortSignal): Promise<Blob> {
+﻿async function narrate(text: string, abortSignal: AbortSignal): Promise<Blob> {
     console.log('handleSound');
-    const res = await fetch("/sound/narrate", {
+    const res = await fetch("/api/sound/narrate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),

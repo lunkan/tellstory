@@ -19,6 +19,20 @@ db.run(`
 });
 
 db.run(`
+  CREATE TABLE IF NOT EXISTS palettes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    data TEXT NOT NULL
+  )
+`, (err) => {
+    if (err) {
+        console.error(err.message);
+    } else {
+        console.log("Palette table ready");
+    }
+});
+
+db.run(`
   CREATE TABLE IF NOT EXISTS locationProfiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     key TEXT NOT NULL,

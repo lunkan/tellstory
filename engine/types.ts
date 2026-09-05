@@ -1,3 +1,4 @@
+import { MarkerConfigData, TileConfigData, VectorConfigData } from "./config/type";
 import { GameEvent } from "./core/events/game-event.interface";
 //import { Marker } from "./world/markers";
 
@@ -86,6 +87,16 @@ export type WorldData = {
     id: number;
     name: string;
     tiles: TileDataEntry[];
-    //markers: Marker[];
+}
+
+/* PALETTE */
+
+export type PaletteData = {
+    id: number;
+    name: string;
+    version: string;
+    tiles: TileConfigData[];
+    vectors: VectorConfigData[];
+    markers: MarkerConfigData[];
 }
 

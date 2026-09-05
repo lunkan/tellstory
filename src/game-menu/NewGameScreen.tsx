@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGameStore } from "../store/gameStore";
 import { WorldDataSummary } from "../../server/types";
@@ -14,7 +14,7 @@ export function NewGameScreenScreen() {
     }, []);
 
     function loadWorlds(): void {
-        fetch(`/world`).then((response) => {
+        fetch(`/api/world`).then((response) => {
             response.json().then((data) => {
                 setLoading(false);
                 setWorlds(data.worlds);

@@ -1,5 +1,5 @@
-async function config(configSettings: { [key: string]: unknown }): Promise<boolean> {
-    const res = await fetch("/admin/config", {
+﻿async function config(configSettings: { [key: string]: unknown }): Promise<boolean> {
+    const res = await fetch("/api/admin/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(configSettings),
@@ -14,7 +14,7 @@ async function config(configSettings: { [key: string]: unknown }): Promise<boole
 }
 
 async function clearStorage(storageType: string): Promise<boolean> {
-    const res = await fetch("/admin/clear", {
+    const res = await fetch("/api/admin/clear", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: storageType }),

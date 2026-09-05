@@ -1,0 +1,13 @@
+.toolbar {
+    display: flex;
+    width: 100%;
+    color: #ccc;
+    font-size: 14px;
+    margin: 24px 0;
+    gap: 24px;
+}
+
+.group {
+    display: flex;
+    gap: 8px;
+}
