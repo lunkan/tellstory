@@ -1,0 +1,33 @@
+.wrapper {
+    display: block;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: solid 4px #E5D5C5;
+    border-top-color: #BE9B7B;
+    border-radius: 50%;
+    animation: app-loading-spin 0.9s linear infinite;
+    margin: 24px auto;
+}
+
+.text {
+    margin: 0;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+@keyframes app-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-loading-screen--spinner {
+        animation-duration: 3s;
+    }
+}

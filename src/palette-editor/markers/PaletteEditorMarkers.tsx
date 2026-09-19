@@ -6,10 +6,13 @@ import styles from './PaletteEditorMarkers.module.css';
 import { usePaletteEditorStore } from '../../store/paletteEditorStore';
 import { useState } from 'react';
 import { Input } from '../../components/input/Input';
-import { MarkerConfigData } from '../../../engine/config/type';
+import { MarkerConfigData, MarkerMetaConfig } from '../../../engine/config/type';
 import { Select } from '../../components/select/Select';
 import { Chip } from '../../components/chip/Chip';
 import { PaletteEditorMarkerTagModal } from './marker-tag-modal/PalettEditorMarkerTagModal';
+import { PaletteEditorMarkerMetaModal } from './marker-meta-modal/PalettEditorMarkerMetaModal';
+import { Avatar } from '../../components/avatar/Avatar';
+import { PalettEditorGenerateMarkersPromtModal } from './generate-markers-promt-modal/PalettEditorGenerateMarkersPromtModal';
 
 type PendingUpdate = {
     id: number;
@@ -29,14 +32,16 @@ export function PaletteEditorMarkers() {
     const [editableRows, setEditableRows] = useState<number[]>([]);
     const [activeMarker, setActiveMarker] = useState<MarkerConfigData>();
     const [isTagModalOpen, setIsTagModalOpen] = useState<boolean>(false);
+    const [isMetaModalOpen, setIsMetaModalOpen] = useState<boolean>(false);
+    const [isGenerateMarkersPromtModalOpen, setIsGenerateMarkersPromtModalOpen] = useState<boolean>(false);
     const [pendingUpdates, setPendingUpdates] = useState<PendingUpdate[]>([]);
 
     const colgroupData = [
         { width: '15%' },
         { width: '15%' },
-        { width: '5%' },
+        { width: '10%' },
         { width: '30%' },
-        { width: '15%' },
+        { width: '10%' },
         { width: '10%' },
         { width: '10%' },
     ];
@@ -75,10 +80,30 @@ export function PaletteEditorMarkers() {
         setEditableRows([...editableRows, ...ids]);
     }
 
+    function handleEditAll(): void {
+        const rowIds = paletteData?.markers.map((marker) => marker.id) || [];
+        setEditableRows(rowIds);
+    }
+
+    function handleSaveAll(): void {
+        setEditableRows([]);
+        updatePaletteData({
+            markers: pendingUpdates as any,
+        });
+
+        setPendingUpdates([]);
+    }
+
     function handleAddTags(id: number): void {
         console.log('!handleAddTags');
         setActiveMarker(getEditState(id) as any);
         setIsTagModalOpen(true);
+    }
+
+    function handleAddMetaTags(id: number): void {
+        console.log('!handleAddMetaTags');
+        setActiveMarker(getEditState(id) as any);
+        setIsMetaModalOpen(true);
     }
 
     function handleClearTag(id: number, tagName: string): void {
@@ -118,6 +143,11 @@ export function PaletteEditorMarkers() {
         });
     }
 
+    function handleCancel(id: number): void {
+        setEditableRows(editableRows.filter((currRowId) => currRowId !== id));
+        setPendingUpdates(pendingUpdates.filter((currRowId) => currRowId.id !== id));
+    }
+
     function updateCell<K extends keyof PendingUpdate>(id: number, key: K, value: PendingUpdate[K]): void {
         const update = pendingUpdates.find((pendingUpdate) => pendingUpdate.id === id);
         if (update) {
@@ -143,8 +173,37 @@ export function PaletteEditorMarkers() {
         setIsTagModalOpen(false);
     }
 
+    function handleMetaModalClose(metaConfig?: MarkerMetaConfig): void {
+        console.log('Close the meta modal', metaConfig);
+
+        if (metaConfig && activeMarker) {
+            updateCell(activeMarker.id, 'meta', metaConfig);
+        }
+
+        setActiveMarker(undefined);
+        setIsMetaModalOpen(false);
+    }
+
+    async function onGenerateMarkers(): Promise<void> {
+        setIsGenerateMarkersPromtModalOpen(true);
+    }
+
+    function handleGenerateMarkersModalClose(markers?: MarkerConfigData[]): void {
+        if (markers) {
+            console.log('Has markers', markers);
+            const ids = addMarkerData(markers);
+            setEditableRows([...editableRows, ...ids]);
+        }
+
+        setIsGenerateMarkersPromtModalOpen(false);
+    }
+
     function getMarkerTBodyData(): any {
         if (!paletteData) return [];
+
+        console.log('####');
+        console.log(paletteData);
+        console.log('####');
 
         return paletteData.markers?.map((markerData) => {
             if (!editableRows.includes(markerData.id)) {
@@ -156,14 +215,20 @@ export function PaletteEditorMarkers() {
                     </div>
                     ;
 
+                const meta =
+                    <div className={styles.tagGroup}>
+                        {markerData.meta?.color ? <Chip text="color" size="small" leading={<Avatar size="xSmall" bgColor={markerData.meta?.color}></Avatar>}></Chip> : null}
+                    </div>
+                    ;
+
                 return {
                     id: markerData.id,
                     cells: [
                         { text: markerData.name },
                         { text: markerData.category },
-                        { text: '?' },
+                        { text: `${markerData.attention?.min || '?'}..${markerData.attention?.max || '?'}` },
                         { text: tags },
-                        { text: '?' },
+                        { text: meta },
                         { text: <Button size="small" resizeMode="fill" onClick={() => handleEdit(markerData.id)} text="Edit"></Button> },
                         { text: <Button size="small" resizeMode="fill" onClick={() => handleDelete(markerData.id)} text="Delete"></Button> }
                     ],
@@ -187,6 +252,18 @@ export function PaletteEditorMarkers() {
                 </Select>
                 ;
 
+            const attention = <div className={styles.attGroup}>
+                <Input type="text" size="xSmall" className={styles.attInput} defaultValue={currentMarkerData.attention?.min} id={`attMin@${markerData.id}`} onChange={(e) => updateCell(markerData.id, 'attention', {
+                    min: e.target.value,
+                    max: Number(currentMarkerData.attention?.max),
+                })}></Input>
+                <span>..</span>
+                <Input type="text" size="xSmall" className={styles.attInput} defaultValue={currentMarkerData.attention?.max} id={`attMax@${markerData.id}`} onChange={(e) => updateCell(markerData.id, 'attention', {
+                    min: Number(currentMarkerData.attention?.min),
+                    max: e.target.value,
+                })}></Input>
+            </div>;
+
             const tags =
                 <div className={styles.tagGroup}>
                     {currentMarkerData.tags?.map((tagName, i) =>
@@ -196,16 +273,25 @@ export function PaletteEditorMarkers() {
                 </div>
                 ;
 
+            const meta =
+                <div className={styles.tagGroup}>
+                    <div className={styles.tagGroup}>
+                        {currentMarkerData.meta?.color ? <Chip text="color" size="small" leading={<Avatar size="xSmall" bgColor={currentMarkerData.meta?.color}></Avatar>}></Chip> : null}
+                    </div>
+                    <Button text="+" size="xSmall" onClick={() => handleAddMetaTags(markerData.id)}></Button>
+                </div >
+                ;
+
             return {
                 id: markerData.id,
                 cells: [
-                    { text: <Input type="text" defaultValue={markerData.name} id={`name@${markerData.id}`} onChange={(e) => updateCell(markerData.id, 'name', e.target.value)}></Input> },
+                    { text: <Input size="xSmall" type="text" defaultValue={markerData.name} id={`name@${markerData.id}`} onChange={(e) => updateCell(markerData.id, 'name', e.target.value)}></Input> },
                     { text: category },
-                    { text: '?' },
+                    { text: attention },
                     { text: tags },
-                    { text: '?' },
+                    { text: meta },
                     { text: <Button resizeMode="fill" size="small" onClick={() => handleSave(markerData.id)} text="Save"></Button> },
-                    { text: <Button resizeMode="fill" size="small" onClick={() => handleDelete(markerData.id)} text="Delete"></Button> }
+                    { text: <Button resizeMode="fill" size="small" onClick={() => handleCancel(markerData.id)} text="Cancel"></Button> }
                 ],
             };
         });
@@ -221,12 +307,18 @@ export function PaletteEditorMarkers() {
             <Toolbar>
                 <ToolbarButtonGroup>
                     <Button text="Add marker" onClick={handleAddMarker}></Button>
-                    <Button text="Generate markers"></Button>
+                    <Button text="Generate markers" onClick={onGenerateMarkers}></Button>
+                </ToolbarButtonGroup>
+                <ToolbarButtonGroup>
+                    <Button text="Edit all" onClick={handleEditAll}></Button>
+                    <Button text="Save all" onClick={handleSaveAll}></Button>
                 </ToolbarButtonGroup>
             </Toolbar>
 
             <Table colgroupData={colgroupData} theadData={theadData} tbodyData={getMarkerTBodyData()}></Table>
+            <PalettEditorGenerateMarkersPromtModal isOpen={isGenerateMarkersPromtModalOpen} marker={activeMarker} onClose={handleGenerateMarkersModalClose}></PalettEditorGenerateMarkersPromtModal>
             <PaletteEditorMarkerTagModal isOpen={isTagModalOpen} marker={activeMarker} onClose={handleTagModalClose}></PaletteEditorMarkerTagModal>
+            <PaletteEditorMarkerMetaModal isOpen={isMetaModalOpen} marker={activeMarker} onClose={handleMetaModalClose}></PaletteEditorMarkerMetaModal>
         </div>
     );
 }

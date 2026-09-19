@@ -27,11 +27,22 @@ export type VectorConfigData = {
     meta: TileMetaConfig;
 }
 
+export type MarkerMetaConfig = {
+    color?: string,
+}
+
+export type MarkerAttentionConfig = {
+    min: number;
+    max: number;
+}
+
 export type MarkerConfigData = {
     id: number;
     name: string;
     category: string;
+    attention?: MarkerAttentionConfig;
     tags: string[] | undefined,
+    meta?: MarkerMetaConfig,
     depth: number;
 }
 

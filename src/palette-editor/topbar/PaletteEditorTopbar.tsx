@@ -4,10 +4,12 @@ import styles from './PaletteEditorTopbar.module.css';
 import { usePaletteEditorStore } from "../../store/paletteEditorStore";
 import { useState } from "react";
 import { PaletteEditorTopbarImportModal } from "./import-modal/PalettEditorTopbarImportModal";
+import { PaletteEditorTopbarExportModal } from "./export-modal/PalettEditorTopbarExportModal";
 
 export function PaletteEditorTopbar() {
     const paletteName = usePaletteEditorStore((state) => state.data?.name || 'Untitled');
     const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
     const navigate = useNavigate();
 
     function handleQuit(): void {
@@ -27,7 +29,7 @@ export function PaletteEditorTopbar() {
     }
 
     function handleExport(): void {
-        usePaletteEditorStore.getState().save();
+        setIsExportModalOpen(true);
     }
 
     return (
@@ -48,6 +50,7 @@ export function PaletteEditorTopbar() {
                 <div className={styles.group}></div>
             </div>
             <PaletteEditorTopbarImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)}></PaletteEditorTopbarImportModal>
+            <PaletteEditorTopbarExportModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)}></PaletteEditorTopbarExportModal>
         </>
     );
 }

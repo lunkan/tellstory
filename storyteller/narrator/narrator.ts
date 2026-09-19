@@ -1,32 +1,38 @@
 import dotenv from "dotenv";
-import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
+// Type-only, so it is erased at compile time. The runtime import lives in
+// _getClient() below: loading this SDK costs ~2s, which would otherwise be
+// paid on every server start and every tsx watch restart.
+import type { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 
 dotenv.config();
 
-const apiKey: string | undefined = process.env.ELEVENLABS_API_KEY;
-
-console.log('VOICE LOADED', apiKey);
-
-if (!apiKey) {
-    throw new Error("Please set ELEVENLABS_API_KEY in your .env file.");
-}
-
-export function getKey(): string {
-    return apiKey || '';
+export function hasKey(): boolean {
+    return Boolean(process.env.ELEVENLABS_API_KEY);
 }
 
 export class Narrator {
-    private _client: ElevenLabsClient;
+    private _client: Promise<ElevenLabsClient> | undefined;
 
-    constructor() {
-        this._client = new ElevenLabsClient({
-            apiKey: process.env.ELEVENLABS_API_KEY,
-        });
+    private _getClient(): Promise<ElevenLabsClient> {
+        if (!this._client) {
+            this._client = (async () => {
+                const apiKey = process.env.ELEVENLABS_API_KEY;
+                if (!apiKey) {
+                    throw new Error("Please set ELEVENLABS_API_KEY in your .env file.");
+                }
+
+                const { ElevenLabsClient } = await import("@elevenlabs/elevenlabs-js");
+                return new ElevenLabsClient({ apiKey });
+            })();
+        }
+
+        return this._client;
     }
 
     public async speak(text: string): Promise<Buffer> {
         console.log('speak', text);
-        const audioStream = await this._client.textToSpeech.stream("JBFqnCBsd6RMkjVDRZzb", {
+        const client = await this._getClient();
+        const audioStream = await client.textToSpeech.stream("JBFqnCBsd6RMkjVDRZzb", {
             modelId: "eleven_v3",
             text,
             outputFormat: "mp3_44100_128",

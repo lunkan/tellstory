@@ -13,14 +13,20 @@ import { useSettingsStore } from "./store/settingsStore";
 import { PaletteEditorScreen } from "./palette-editor/PaletteEditorScreen";
 import { EditoreLoadPaletteScreen } from "./editor/main-menu/palette/EditorLoadPaletteScreen";
 import { EditoreNewPaletteScreen } from "./editor/main-menu/palette/EditorNewPaletteScreen";
+import { AppLoadingScreen } from "./AppLoadingScreen";
 
 export default function App() {
     const syncSettings = useSettingsStore((state) => state.sync);
+    const settingsStatus = useSettingsStore((state) => state.status);
 
     useEffect(() => {
         wsService.connect();
         syncSettings();
     }, []);
+
+    if (settingsStatus !== "ready") {
+        return <AppLoadingScreen failed={settingsStatus === "error"} onRetry={syncSettings} />;
+    }
 
     return (
         <BrowserRouter>

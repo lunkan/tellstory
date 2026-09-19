@@ -2,6 +2,10 @@
 
 async function getSettings(): Promise<SettingsData> {
     const response = await fetch(`/api/settings`);
+    if (!response.ok) {
+        throw new Error(`Failed to load settings (${response.status})`);
+    }
+
     const data = await response.json();
     return data.settings;
 }

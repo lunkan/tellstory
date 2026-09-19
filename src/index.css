@@ -285,6 +285,34 @@ pre {
     opacity: 0.25;
 }
 
+.app-loading-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    gap: 24px;
+    color: #3C2F2F;
+}
+
+/*.app-loading-screen--spinner {
+    width: 48px;
+    height: 48px;
+    border: solid 4px #E5D5C5;
+    border-top-color: #BE9B7B;
+    border-radius: 50%;
+    animation: app-loading-spin 0.9s linear infinite;
+}
+
+.app-loading-screen--label {
+    margin: 0;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}*/
+
+
+
 .title-screen {
     display: flex;
     flex-direction: column;

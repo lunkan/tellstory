@@ -1,0 +1,19 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 24px 0;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+}
+
+.btnGroup {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+}

@@ -1,10 +1,11 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import styles from './Chip.module.css';
 
 type ChipProps = {
     text: string;
     color?: string;
     size?: 'large' | 'medium' | 'small';
+    leading?: ReactNode;
     onClear?: () => void;
 };
 
@@ -12,6 +13,7 @@ export function Chip({
     text,
     color = "#e5e7eb",
     size = 'medium',
+    leading,
     onClear,
 }: ChipProps) {
 
@@ -24,6 +26,11 @@ export function Chip({
 
     return (
         <span className={styles.chip} style={style}>
+            {leading && (
+                <span>
+                    {leading}
+                </span>
+            )}
             <span>{text}</span>
             {onClear && (
                 <button type="button" className={styles.clearBtn} onClick={onClear}>

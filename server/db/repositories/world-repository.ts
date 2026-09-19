@@ -84,7 +84,6 @@ function getWorld(id: number): Promise<WorldData> {
 
                 const { id, name, tiles } = row;
                 const deserializedTilesData = JSON.parse(tiles);
-                console.log('db:get', deserializedTilesData.length);
                 resolve({ id, name, tiles: deserializedTilesData });
             }
         );

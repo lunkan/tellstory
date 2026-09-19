@@ -87,7 +87,6 @@ function getPalette(id: number): Promise<PaletteData> {
                 const { data } = row;
                 const deserializedData = JSON.parse(data);
                 deserializedData.id = id;
-                console.log('db:get', deserializedData);
                 resolve(deserializedData);
             }
         );
