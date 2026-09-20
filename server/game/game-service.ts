@@ -8,7 +8,8 @@ import { GamePod } from "./game-pod";
 let gamePod: GamePod | undefined;
 
 function newGame(worldData: WorldData): GamePod {
-    const world = new World(worldData);
+    const paletteData = {} as any; // Must load palette here
+    const world = new World(worldData, paletteData);
     const storyteller = new Storyteller(worldData.id);
     const game = new Game(world);
     gamePod = new GamePod(game, storyteller);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePaletteEditorStore } from "../../../store/paletteEditorStore";
+import { usePaletteEditorStore } from "../../store/paletteEditorStore";
 
 export function EditoreLoadPaletteScreen() {
     const storedPalettes = usePaletteEditorStore((state) => state.storedPalettes);

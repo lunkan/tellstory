@@ -11,6 +11,38 @@
 // 10 - 336m    # Nearby area
 // 11 - 177m    # Immediate surroundings
 // 12 - 89m     -
+// 13 - 45m     ???
+// 14 - 22.5m     ???
+// 15 - 11m     ???
+// 16 - 5.5m     ???
+// 17 - 2m     ???
+// 18 - 1m     ???
+
+
+// ------------ Zones
+// ...
+// 4   - 1600m
+// 3   - 800m
+// ------------ Macro-Environment
+// 2   - 400m
+// 1   - 200m
+// 0   - 100m
+// ------------ Local Perimeter
+// -1  - 50m
+// -2  - 25m
+// -3  - 12.5m
+// ------------ Micro-Environment
+// -4  - 6m
+// -5  - 3m
+// -6  - 1.5m
+
+// 2^Sizem 
+
+
+// 0 - 7 (1m - 5.5m) = Detail level (Generate items) * (Micro-Environment)
+// 0 - 7 (1m - 89m) = Detail level (Generate objects) * (Local Perimeter)
+// 8 - 10 (89m - 336m) = Visible level (Generate buildings) * (Macro-Environment)
+// 11 < (336m < ) = Visible level (Generate markers and tiles) * (Zone)
 
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";

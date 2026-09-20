@@ -2,12 +2,12 @@ import db from "./database.js";
 
 // npx tsx setup.ts
 
-// markers TEXT NOT NULL
-
 db.run(`
   CREATE TABLE IF NOT EXISTS worlds (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    palette INTEGER NOT NULL,
     tiles TEXT NOT NULL
   )
 `, (err) => {
@@ -16,6 +16,19 @@ db.run(`
     } else {
         console.log("World table ready");
     }
+});
+
+// Migrations for databases created before these columns existed. ADD COLUMN
+// needs a DEFAULT to satisfy NOT NULL on existing rows, which is where the 0 comes from.
+[
+    "ALTER TABLE worlds ADD COLUMN size INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE worlds ADD COLUMN palette INTEGER NOT NULL DEFAULT 0",
+].forEach((statement) => {
+    db.run(statement, (err) => {
+        if (err && !err.message.includes("duplicate column name")) {
+            console.error(err.message);
+        }
+    });
 });
 
 db.run(`

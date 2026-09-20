@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEditorStore } from "../../../store/editorStore";
-import { WorldDataSummary } from "../../../../server/types";
+import { useEditorStore } from "../../store/editorStore";
+import { WorldDataSummary } from "../../../server/types";
 //import { WorldDataSummary } from "../../storyteller/types";
 
 

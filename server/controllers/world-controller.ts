@@ -5,7 +5,7 @@ import { MarkerSetting, TileDataEntry, WorldData } from "../../engine/types";
 import { WorldDataSummary } from "../types";
 
 type GetWorldRequest = { id: number };
-type CreateWorldRequest = { name: string };
+type CreateWorldRequest = { name: string; size: number; palette: number; };
 type UpdateWorldRequest = {
     id: number,
     name: string,
@@ -20,10 +20,10 @@ export async function createNewWorld(
     res: Response,
 ) {
     try {
-        const { name } = req.body;
-        console.log('Creating new world');
+        const { name, size, palette } = req.body;
+        console.log('Creating new world', name, size, palette);
 
-        const worldId = await worldRepository.createWorld(name);
+        const worldId = await worldRepository.createWorld(name, size, palette);
 
         res.json({
             worldId: worldId,

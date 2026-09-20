@@ -5,20 +5,24 @@ import { WorldDataSummary } from "../../types";
 type SerializedWorldData = {
     id: number;
     name: string;
+    size: number;
+    palette: number;
     tiles: string;
-    markers: string;
+    //markers: string;
 }
 
-function createWorld(name: string): Promise<number> {
+function createWorld(name: string, size: number, palette: number): Promise<number> {
     const serializedTilesData = JSON.stringify([]);
     //const serializedMarkersData = JSON.stringify([]);
+
+
 
     return new Promise((resolve, reject) => {
         db.run(
             //"INSERT INTO worlds (name, tiles, markers) VALUES (?, ?, ?)",
             //[name, serializedTilesData, serializedMarkersData],
-            "INSERT INTO worlds (name, tiles) VALUES (?, ?)",
-            [name, serializedTilesData],
+            "INSERT INTO worlds (name, size, palette, tiles) VALUES (?, ?, ?, ?)",
+            [name, size, palette, serializedTilesData],
             function (err) {
                 if (err) {
                     reject(err);
@@ -31,7 +35,7 @@ function createWorld(name: string): Promise<number> {
     });
 }
 
-function updateWorld(id: number, worldData: WorldData): Promise<boolean> {
+function updateWorld(id: number, worldData: Pick<WorldData, 'id' | 'name' | 'tiles'>): Promise<boolean> {
     const serializedTilesData = JSON.stringify(worldData.tiles);
     //const serializedMarkersData = JSON.stringify(worldData.markers);
 
@@ -74,7 +78,7 @@ function getWorld(id: number): Promise<WorldData> {
     return new Promise((resolve, reject) => {
         db.get(
             //"SELECT id, name, tiles, markers FROM worlds WHERE id = ?",
-            "SELECT id, name, tiles FROM worlds WHERE id = ?",
+            "SELECT id, name, size, palette, tiles FROM worlds WHERE id = ?",
             [id],
             (err, row: SerializedWorldData) => {
                 if (err) {
@@ -82,9 +86,9 @@ function getWorld(id: number): Promise<WorldData> {
                     return;
                 }
 
-                const { id, name, tiles } = row;
+                const { id, name, size, palette, tiles } = row;
                 const deserializedTilesData = JSON.parse(tiles);
-                resolve({ id, name, tiles: deserializedTilesData });
+                resolve({ id, name, size, palette, tiles: deserializedTilesData });
             }
         );
     });
@@ -93,7 +97,7 @@ function getWorld(id: number): Promise<WorldData> {
 function getWorlds(): Promise<WorldDataSummary[]> {
     return new Promise((resolve, reject) => {
         db.all(
-            "SELECT id, name FROM worlds",
+            "SELECT id, name, size, palette FROM worlds",
             [],
             (err, rows: SerializedWorldData[]) => {
                 if (err) {
@@ -101,7 +105,7 @@ function getWorlds(): Promise<WorldDataSummary[]> {
                     return;
                 }
 
-                const worldSummaryData = rows.map((row) => ({ id: row.id, name: row.name }));
+                const worldSummaryData = rows.map((row) => ({ id: row.id, name: row.name, size: row.size, palette: row.palette }));
                 resolve(worldSummaryData);
             }
         );

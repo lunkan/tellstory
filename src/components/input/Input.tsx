@@ -10,10 +10,11 @@ type InputSizeStyle = {
 
 type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
     label?: string;
+    hint?: string;
     size?: InputSize;
 };
 
-export function Input({ label, size, className, ...props }: InputProps) {
+export function Input({ label, hint, size, className, ...props }: InputProps) {
     const style: CSSProperties = {
         ...getStyleBySize(size || 'medium'),
     };
@@ -21,9 +22,10 @@ export function Input({ label, size, className, ...props }: InputProps) {
     return (
         <div className={className}>
             <label>
-                {label && <span>{label}</span>}
-                <input className={styles.input} style={style} {...props} />
+                {label && <div>{label}</div>}
+                <input className={styles.input} style={style} autoComplete="off" {...props} />
             </label>
+            {hint && <div className={styles.hint}>{hint}</div>}
         </div>
     );
 }

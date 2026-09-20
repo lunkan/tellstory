@@ -9,7 +9,7 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
 export function Select({ label, children, ...props }: SelectProps) {
     return (
         <label>
-            {label && <span>{label}</span>}
+            {label && <div>{label}</div>}
 
             <select className={styles.select} {...props}>
                 {children}

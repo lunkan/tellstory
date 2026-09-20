@@ -1,3 +1,4 @@
+import { PaletteData } from '../types';
 import { TileConfig, MarkerConfig, ConfigData } from './type';
 
 type TileConfigFilter = {
@@ -19,14 +20,15 @@ function isInitilized(): boolean {
     return initilized;
 }
 
-function init(configData: ConfigData): void {
+function set(paletteData: PaletteData): void {
     // Reset on init
     tileMap.clear();
     markerMap.clear();
     initilized = false;
 
     // Tiles
-    configData.tiles.forEach((tileConfigData) => {
+    //configData.tiles.forEach((tileConfigData) => {
+    paletteData.tiles.forEach((tileConfigData) => {
         const tileConfig = {
             ...tileConfigData,
             tags: tileConfigData.tags || [],
@@ -36,7 +38,8 @@ function init(configData: ConfigData): void {
     });
 
     // Markers
-    configData.markers.forEach((markerConfigData) => {
+    //configData.markers.forEach((markerConfigData) => {
+    paletteData.markers.forEach((markerConfigData) => {
         const markerConfig = {
             ...markerConfigData,
             tags: markerConfigData.tags || [],
@@ -84,7 +87,8 @@ function getMarkersByFilter(filter: MarkerConfigFilter): MarkerConfig[] {
 
 export const config = {
     isInitilized,
-    init,
+    set,
+    //init,
     getTile,
     getTilesByFilter,
     getMarker,

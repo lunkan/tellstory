@@ -1,3 +1,17 @@
+// 0 -  320km   -
+// 1 -  160km   -
+// 2 -  80km    -
+// 3 -  40km    -
+// 4 -  20km    -
+// 5* - 10km    # Horizon
+// 6 -  5km     # Region
+// 7 -  2.5km   # District
+// 8 -  1.25km  # Neighborhood
+// 9 -  675m    # Local area
+// 10 - 336m    # Nearby area
+// 11 - 177m    # Immediate surroundings
+// 12 - 89m     -
+
 import { MarkerConfigData, TileConfigData, VectorConfigData } from "./config/type";
 import { GameEvent } from "./core/events/game-event.interface";
 //import { Marker } from "./world/markers";
@@ -86,6 +100,8 @@ export type TileDataEntry = TileData & {
 export type WorldData = {
     id: number;
     name: string;
+    size: number;
+    palette: number;
     tiles: TileDataEntry[];
 }
 

@@ -3,16 +3,16 @@ import { wsService } from "./websocket/websocketService";
 import { GameScreen } from "./game/GameScreen";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { EditorScreen } from "./editor/EditorScreen";
-import { EditoreMenuScreen } from "./editor/main-menu/EditorMenuScreen";
-import { EditoreNewWorldScreen } from "./editor/main-menu/world/EditorNewWorldScreen";
-import { EditoreLoadWorldScreen } from "./editor/main-menu/world/EditorLoadWorldScreen";
+import { EditoreMenuScreen } from "./editor-menu/EditorMenuScreen";
+import { EditoreNewWorldScreen } from "./editor-menu/world/EditorNewWorldScreen";
+import { EditoreLoadWorldScreen } from "./editor-menu/world/EditorLoadWorldScreen";
 import { NewGameScreenScreen } from "./game-menu/NewGameScreen";
 import { TitleScreen } from "./TitleScreen";
 import { AdminScreen } from "./admin/AdminScreen";
 import { useSettingsStore } from "./store/settingsStore";
 import { PaletteEditorScreen } from "./palette-editor/PaletteEditorScreen";
-import { EditoreLoadPaletteScreen } from "./editor/main-menu/palette/EditorLoadPaletteScreen";
-import { EditoreNewPaletteScreen } from "./editor/main-menu/palette/EditorNewPaletteScreen";
+import { EditoreLoadPaletteScreen } from "./editor-menu/palette/EditorLoadPaletteScreen";
+import { EditoreNewPaletteScreen } from "./editor-menu/palette/EditorNewPaletteScreen";
 import { AppLoadingScreen } from "./AppLoadingScreen";
 
 export default function App() {

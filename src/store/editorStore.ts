@@ -3,6 +3,7 @@ import { create } from "zustand";
 //import { QuadNodeKey } from "../../engine/world/quad-node-key";
 import { World } from "../../engine/world/world";
 import { worldRepository } from "../repositories/worldRepository";
+import { paletteRepository } from "../repositories/paletteRepository";
 //import { Tile } from "../../engine/world/tile";
 //import { Marker } from "../../engine/world/markers";
 
@@ -27,7 +28,8 @@ interface EditorStore {
     selectedTerrain: SelectedEntity | null;
     paintValue: number;
     editState: EditState;
-    setWorldId: (worldId: number) => void;
+    newWorld: (name: string, size: number, palette: number) => Promise<boolean>;
+    setWorldId: (worldId: number) => Promise<void>;
     save: () => Promise<void>;
     selectTerrain: (entity: SelectedEntity) => void;
     setPaintValue: (value: number) => void;
@@ -45,11 +47,21 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     selectedTerrain: null,
     paintValue: 0.5,
     editState: 'select',
+    newWorld: async (name: string, size: number, palette: number) => {
+        const worldId = await worldRepository.create(name, size, palette);
+        if (!worldId) {
+            return false;
+        }
+
+        await get().setWorldId(worldId);
+        return true;
+    },
     setWorldId: async (worldId) => {
         set({ worldId, loading: true });
 
         const worldData = await worldRepository.load(worldId);
-        const world = new World(worldData);
+        const paletteData = await paletteRepository.load(worldData.palette);
+        const world = new World(worldData, paletteData);
 
 
         /*const quadtree = new QuadNode();

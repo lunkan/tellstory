@@ -1,9 +1,9 @@
-import tilesJSON from '../config/tiles.json' with { type: 'json' };
-import markersJSON from '../config/markers.json' with { type: 'json' };
+//import tilesJSON from '../config/tiles.json' with { type: 'json' };
+//import markersJSON from '../config/markers.json' with { type: 'json' };
 
 import { config } from "../config/config";
-import { MarkerConfigData, TileConfigData } from '../config/type';
-import { MarkerSetting, QuadNodeDelta, QuadNodePoint, WorldData } from "../types";
+//import { MarkerConfigData, TileConfigData } from '../config/type';
+import { MarkerSetting, PaletteData, QuadNodeDelta, QuadNodePoint, WorldData } from "../types";
 import { hydrate } from "./hydrator/hydrate";
 //import { Hydrator } from "./hydrator";
 //import { Marker, Markers } from "./markers";
@@ -20,15 +20,18 @@ export class World {
 
     //private _hydrator: Hydrator;
 
-    constructor(worldData: WorldData) {
-        if (!config.isInitilized()) {
+    constructor(worldData: WorldData, PaletteData: PaletteData) {
+        config.set(PaletteData);
+
+        /*if (!config.isInitilized()) {
+
             config.init({
                 name: tilesJSON.name,
                 version: tilesJSON.version,
                 tiles: tilesJSON.tiles as TileConfigData[],
                 markers: markersJSON.markers as MarkerConfigData[],
             });
-        }
+        }*/
 
         this.quadtree = new QuadNode();
         //this.markers = new Markers(this.quadtree.bounds.size);
@@ -156,10 +159,10 @@ export class World {
         return hydrate(parentNode);
     }
 
-    public getData(): WorldData {
+    public getData(): Pick<WorldData, 'tiles'> {
         return {
-            id: -1,
-            name: 'unknown',
+            //id: -1,
+            //name: 'unknown',
             //markers: this.markers.getAll(),
             tiles: this.quadtree.getDetachedTiles(),
         };
