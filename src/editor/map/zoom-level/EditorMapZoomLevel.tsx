@@ -1,7 +1,10 @@
+import { getTileSizeMeter } from "../../../../engine/world/scale";
 import styles from "./EditorMapZoomLevel.module.css";
 
 type EditorMapZoomLevelProps = {
     depth: number;
+    /** Levels above the leaf. Decides the physical size, which depth alone can't. */
+    scale: number;
 };
 
 // 0 -  320km   -
@@ -18,21 +21,19 @@ type EditorMapZoomLevelProps = {
 // 11 - 177m    # Immediate surroundings
 // 12 - 89m     -
 
-const WORLD_SIZE_METER: number = 320000;
-
-export function EditorMapZoomLevel({ depth }: EditorMapZoomLevelProps) {
+export function EditorMapZoomLevel({ depth, scale }: EditorMapZoomLevelProps) {
     return (
         <div className={styles.zoomLevel}>
             <div className={styles.depth}>{depth}</div>
             <div className={styles.depthLabel}>Depth</div>
-            <div className={styles.depthSquareSize}>{getSquareWidth(depth)}</div>
+            <div className={styles.depthSquareSize}>{getSquareWidth(scale)}</div>
         </div>
     );
 }
 
-function getSquareWidth(depth: number): string {
-    // Each depth level halves the width, which means dividing by 2^depth
-    const squareSizeMeter = Math.round(WORLD_SIZE_METER / Math.pow(2, depth));
+function getSquareWidth(scale: number): string {
+    // Each level above the leaf doubles the width
+    const squareSizeMeter = Math.round(getTileSizeMeter(scale));
     if (squareSizeMeter < 1000) {
         return `${squareSizeMeter}m`;
     }

@@ -28,12 +28,13 @@ export class CanvasRenderer {
         return this._matrix.height;
     }
 
-    private _matrix: CanvasMatrix = new CanvasMatrix();
+    private _matrix: CanvasMatrix;
     private _layers: Map<string, HTMLCanvasElement> = new Map();
     private _ctx: CanvasRenderingContext2D;
 
     constructor(world: World, canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
         this.world = world;
+        this._matrix = new CanvasMatrix(world.quadtree.maxDepth);
         this.canvas = canvas;
         this.overlay = new OverlayRenderer(overlay);
 
@@ -53,6 +54,11 @@ export class CanvasRenderer {
 
     public getDepth(): number {
         return this._matrix.depth;
+    }
+
+    /** Shallowest depth this world zooms out to. */
+    public get minDepth(): number {
+        return this._matrix.minDepth;
     }
 
     public setDepth(value: number): void {
@@ -164,7 +170,8 @@ export class CanvasRenderer {
             ctx: gridLayer.getContext('2d')!,
             gridBounds,
             scale: this._matrix.scale,
-            tileSize
+            tileSize,
+            rootSize: this.world.quadtree.bounds.size,
         });
 
         const visibleNodes = this._getVisibleNodes(gridBounds);

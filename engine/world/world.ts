@@ -9,13 +9,21 @@ import { hydrate } from "./hydrator/hydrate";
 //import { Marker, Markers } from "./markers";
 import { QuadNode } from "./quad-node";
 import { QuadNodeKey } from "./quad-node-key";
+import { MAX_ZOOM_OUT } from "./scale";
 import { Tile } from "./tile";
 
 export class World {
-    public static readonly MAX_ZOOM_DEPTH: number = QuadNodeKey.MAX_DEPTH; // - 1; // 12; //7;
-    public static readonly MIN_ZOOM_DEPTH: number = 5;
-
     public readonly quadtree: QuadNode;
+
+    /** Deepest level this world subdivides to - its leaf. */
+    public get maxZoomDepth(): number {
+        return this.quadtree.maxDepth;
+    }
+
+    /** Shallowest level a character may zoom out to: MAX_ZOOM_OUT levels above the leaf. */
+    public get minZoomDepth(): number {
+        return Math.max(0, this.quadtree.maxDepth - MAX_ZOOM_OUT);
+    }
     //public readonly markers: Markers;
 
     //private _hydrator: Hydrator;
@@ -33,7 +41,11 @@ export class World {
             });
         }*/
 
-        this.quadtree = new QuadNode();
+        if (worldData.size < 1 || worldData.size > QuadNodeKey.MAX_DEPTH) {
+            throw Error(`World size ${worldData.size} is outside 1..${QuadNodeKey.MAX_DEPTH}`);
+        }
+
+        this.quadtree = QuadNode.createRoot(worldData.size);
         //this.markers = new Markers(this.quadtree.bounds.size);
 
         //this._hydrator = new Hydrator(this.markers);

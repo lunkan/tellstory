@@ -1,26 +1,21 @@
 import { QuadNodeBoundsData, QuadNodes2DPoint, QuadNodes2DRect } from "../types";
-import { QuadNodeKey } from "./quad-node-key";
-
-export const QUAD_TREE_ROOT_SIZE: number = Math.pow(2, QuadNodeKey.MAX_DEPTH);
 
 export class QuadNodeBounds {
-    public static fromKey(key: QuadNodeKey): QuadNodeBounds {
-        let x = 0;
-        let y = 0;
-        let size = QUAD_TREE_ROOT_SIZE;
+    /**
+     * A leaf tile is always 1 unit, so a world capped at `maxDepth` spans
+     * 2^maxDepth units. This is the only place the root extent is decided -
+     * every other node derives its bounds from its parent.
+     */
+    public static createRoot(maxDepth: number): QuadNodeBounds {
+        return new QuadNodeBounds(0, 0, Math.pow(2, maxDepth));
+    }
 
-        for (let i = key.depth - 1; i >= 0; i--) {
-            size /= 2;
+    public static createChild(parent: QuadNodeBounds, quadrant: number): QuadNodeBounds {
+        const size = parent.size / 2;
+        const qx = (quadrant >> 1) & 1;
+        const qy = quadrant & 1;
 
-            const q = Number((key.hash >> BigInt(i * 2)) & 0b11n);
-            const qx = (q >> 1) & 1;
-            const qy = q & 1;
-
-            x += qx * size;
-            y += qy * size;
-        }
-
-        return new QuadNodeBounds(x, y, size);
+        return new QuadNodeBounds(parent.x + qx * size, parent.y + qy * size, size);
     }
 
     public readonly x: number = 0;

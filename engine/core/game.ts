@@ -41,7 +41,7 @@ export class Game {
 
         const startingNode = this.world.findNodeByPoint({
             ...playerStart.point,
-            z: World.MAX_ZOOM_DEPTH,
+            z: this.world.maxZoomDepth,
         });
 
         if (!startingNode) {

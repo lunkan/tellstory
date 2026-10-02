@@ -58,7 +58,7 @@ export class Character {
     }
 
     public getQuadrantNodes(): QuadNode[] {
-        if (this._currentLocation && this._currentLocation.getPoint().z < World.MAX_ZOOM_DEPTH) {
+        if (this._currentLocation && this._currentLocation.scale > 0) {
             return this.world.findQuadrantNodes(this.getCurrentLocation().key);
         }
 
@@ -66,7 +66,7 @@ export class Character {
     }
 
     public getParentNode(): QuadNode | undefined {
-        if (this._currentLocation && this._currentLocation.getPoint().z > World.MIN_ZOOM_DEPTH) {
+        if (this._currentLocation && this._currentLocation.depth > this.world.minZoomDepth) {
             return this.getCurrentLocation().parent;
         }
 
@@ -121,7 +121,7 @@ export class Character {
 
     private _findImmediatLocation(node: QuadNode): QuadNode {
         let immediatLocation = node;
-        while (immediatLocation.depth < World.MAX_ZOOM_DEPTH) {
+        while (immediatLocation.scale > 0) {
             const quadrantNode = immediatLocation.getQuadrantAt(0, 0, true); // Pick best (close to road landmark ...)
             if (!quadrantNode) {
                 break;

@@ -27,6 +27,8 @@ export interface PlayerLocationChangeMessage {
     timestamp: number;
     playerId: string;
     directions: PlayerLocationDirection[];
+    /** Depth range the player may zoom within. Depends on the world's size. */
+    zoomRange: { min: number; max: number };
 }
 
 export interface DescriptionMessage {

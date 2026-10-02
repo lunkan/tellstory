@@ -6,13 +6,15 @@ import { Button } from "../../components/button/Button";
 import { Select } from "../../components/select/Select";
 import { usePaletteEditorStore } from "../../store/paletteEditorStore";
 import { Card } from "../../components/card/Card";
+import { QuadNodeKey } from "../../../engine/world/quad-node-key";
+import { getTileSizeMeter } from "../../../engine/world/scale";
 
 
 export function EditoreNewWorldScreen() {
     const storedPalettes = usePaletteEditorStore((state) => state.storedPalettes);
     const loadStoredPalettes = usePaletteEditorStore((state) => state.loadStoredPalettes);
     const [worldName, setWorldName] = useState('');
-    const [worldSize, setWorldSize] = useState(15);
+    const [worldSize, setWorldSize] = useState(QuadNodeKey.MAX_DEPTH);
     const [worldPalette, setWorldPalette] = useState('');
     const navigate = useNavigate();
 
@@ -56,7 +58,8 @@ export function EditoreNewWorldScreen() {
     }
 
     function getWorldSizeHint(): string {
-        const meters = Math.pow(2, worldSize) * 100;
+        // A leaf tile is a fixed number of metres, so each size step doubles the world
+        const meters = Math.round(getTileSizeMeter(worldSize));
         if (meters < 1000) {
             return `${meters}m x ${meters}m`;
         }
@@ -78,7 +81,7 @@ export function EditoreNewWorldScreen() {
                         label="Size"
                         type="number"
                         min="1"
-                        max="20"
+                        max={QuadNodeKey.MAX_DEPTH}
                         step="1"
                         name="worldSize"
                         value={worldSize}

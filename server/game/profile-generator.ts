@@ -1,4 +1,5 @@
 import { QuadNode } from "../../engine/world/quad-node";
+import { getTileSizeMeter } from "../../engine/world/scale";
 import { World } from "../../engine/world/world";
 import { DIRECTION, DIRECTION_NAME, getDirectionFromAdjacentVector, getDirectionFromQuadrantVector } from "../../shared/src/direction";
 //import tilesJSON from '../../engine/config/tiles.json' with { type: 'json' };
@@ -26,7 +27,7 @@ export class EnvironmentalContext {
     }
 
     public get hasOverview(): boolean {
-        return this.depth < World.MAX_ZOOM_DEPTH;
+        return this._player.getCurrentLocation().scale > 0;
     }
 
     public get current(): LocationProfile {
@@ -167,8 +168,8 @@ export class EnvironmentalContext {
     }
 
     private _getSize(node: QuadNode): number {
-        // Size in km. 320 = max
-        return 320 / Math.pow(2, node.depth);
+        // Size in km. 320 = a full depth world's root
+        return getTileSizeMeter(node.scale) / 1000;
     }
 }
 

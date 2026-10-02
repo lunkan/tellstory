@@ -48,7 +48,7 @@ export class DrawHandler extends CanvasEventHandler {
         });
 
         let parentNode = node.parent;
-        while (parentNode && 5 <= parentNode.depth) {
+        while (parentNode && this.renderer.minDepth <= parentNode.depth) {
             value = value * 0.25;
             parentNode.tile!.applyTerrain({
                 type: this._type,

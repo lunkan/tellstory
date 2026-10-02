@@ -43,7 +43,8 @@ export type MarkerConfigData = {
     attention?: MarkerAttentionConfig;
     tags: string[] | undefined,
     meta?: MarkerMetaConfig,
-    depth: number;
+    /** Levels above the leaf this marker belongs at. See engine/world/scale.ts. */
+    scale: number;
 }
 
 export type MarkerConfig = MarkerConfigData & {

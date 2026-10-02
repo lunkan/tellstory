@@ -23,12 +23,14 @@ export function EditorMap() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const overlayRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<CanvasRenderer | null>(null);
-    const [depth, setDepth] = useState<number>(5);
+    const [depth, setDepth] = useState<number>(0);
+    const maxDepth = world?.quadtree.maxDepth ?? 0;
 
     useEffect(() => {
         if (world && canvasRef.current && overlayRef.current && !rendererRef.current) {
             rendererRef.current = new CanvasRenderer(world, canvasRef.current, overlayRef.current);
             rendererRef.current.clear();
+            setDepth(rendererRef.current.getDepth());
         }
 
         /*if (markers && quadtree && canvasRef.current && overlayRef.current && !rendererRef.current) {
@@ -85,7 +87,7 @@ export function EditorMap() {
             const wheelDelta = (e.nativeEvent as any).wheelDelta;
             new ZoomHandler(rendererRef.current).onWheel(wheelDelta, new DOMPoint(e.clientX, e.clientY));
 
-            const depth = Math.floor(Math.sqrt(rendererRef.current.scale)) + 5;
+            const depth = Math.floor(Math.sqrt(rendererRef.current.scale)) + rendererRef.current.minDepth;
             rendererRef.current.setDepth(depth);
             setDepth(rendererRef.current.getDepth());
         }
@@ -95,7 +97,7 @@ export function EditorMap() {
         <div className={styles.map} style={{ position: 'relative' }} ref={viewportRef} onPointerDown={(e) => handlePointerDown(e)} onWheel={(e) => handleWheel(e)}>
             <canvas width="1000" height="1000" ref={canvasRef}></canvas>
             <canvas style={{ position: 'absolute', top: 0, left: 0 }} width="1000" height="1000" ref={overlayRef}></canvas>
-            <EditorMapZoomLevel depth={depth}></EditorMapZoomLevel>
+            <EditorMapZoomLevel depth={depth} scale={maxDepth - depth}></EditorMapZoomLevel>
         </div>
     );
 }

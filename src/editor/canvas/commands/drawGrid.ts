@@ -1,4 +1,3 @@
-import { QUAD_TREE_ROOT_SIZE } from "../../../../engine/world/quad-node-bounds";
 import { GridBounds } from "../types";
 
 const LINE_COLOR: string = '#333333'; //#000000';
@@ -8,10 +7,11 @@ type DrawGridOptions = {
     gridBounds: GridBounds;
     scale: number;
     tileSize: number;
+    rootSize: number;
 }
 
 export function drawGrid(options: DrawGridOptions) {
-    const { ctx, gridBounds, scale, tileSize } = options;
+    const { ctx, gridBounds, scale, tileSize, rootSize } = options;
 
     // Set line configuration
     ctx.strokeStyle = LINE_COLOR;
@@ -26,7 +26,7 @@ export function drawGrid(options: DrawGridOptions) {
         ctx.lineWidth = (2 - x % 2) / scale;
         ctx.beginPath();
         ctx.moveTo(x * tileSize, 0); //0);
-        ctx.lineTo(x * tileSize, QUAD_TREE_ROOT_SIZE); //SIZE);
+        ctx.lineTo(x * tileSize, rootSize);
         ctx.stroke();
     }
 
@@ -35,7 +35,7 @@ export function drawGrid(options: DrawGridOptions) {
         ctx.lineWidth = (2 - y % 2) / scale;
         ctx.beginPath();
         ctx.moveTo(0, y * tileSize);
-        ctx.lineTo(QUAD_TREE_ROOT_SIZE, y * tileSize);
+        ctx.lineTo(rootSize, y * tileSize);
         ctx.stroke();
     }
 }

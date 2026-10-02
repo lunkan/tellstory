@@ -121,6 +121,7 @@ export class PlayerObserver implements IGameObserver {
         });
 
         const { playerId, point, timestamp } = event
+        const world = this._player.world;
         websocketService.sendMessage({
             eventId: event.id,
             type: 'playerLocationChange',
@@ -128,6 +129,7 @@ export class PlayerObserver implements IGameObserver {
             timestamp,
             playerId,
             point,
+            zoomRange: { min: world.minZoomDepth, max: world.maxZoomDepth },
         } as PlayerLocationChangeMessage);
     }
 

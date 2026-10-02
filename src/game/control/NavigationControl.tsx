@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
 import { useSceneStore } from "../../store/sceneStore";
 import { DIRECTION, DIRECTION_NAME } from "../../../shared/src/direction";
-import { World } from "../../../engine/world/world";
 
 export function NavigationControl() {
     const currentPosition = useSceneStore((state) => state.currentPosition);
+    const zoomRange = useSceneStore((state) => state.zoomRange);
     const directions = useSceneStore((state) => state.directions);
     const attention = useSceneStore((state) => state.attention);
     const setAttention = useSceneStore((state) => state.setAttention);
@@ -73,15 +73,15 @@ export function NavigationControl() {
     }
 
     function handleZoom(e: React.WheelEvent<HTMLDivElement>): void {
-        if (!currentPosition) {
+        if (!currentPosition || !zoomRange) {
             return;
         }
 
         zoom.current = e.deltaY > 0
-            ? Math.min(zoom.current + 1, World.MAX_ZOOM_DEPTH - currentPosition.z)
-            : Math.max(zoom.current - 1, World.MIN_ZOOM_DEPTH - currentPosition.z);
+            ? Math.min(zoom.current + 1, zoomRange.max - currentPosition.z)
+            : Math.max(zoom.current - 1, zoomRange.min - currentPosition.z);
 
-        const normDepth = Math.max(World.MIN_ZOOM_DEPTH, Math.min(World.MAX_ZOOM_DEPTH, currentPosition.z + zoom.current));
+        const normDepth = Math.max(zoomRange.min, Math.min(zoomRange.max, currentPosition.z + zoom.current));
         setAttention({ type: 'zoom', value: normDepth });
         clearTimeout(zoomTimerRef.current);
 

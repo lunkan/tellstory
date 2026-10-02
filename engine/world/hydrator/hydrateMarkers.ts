@@ -7,7 +7,7 @@ import { QuadNode } from '../quad-node';
 type MarkerConfigEntry = {
     name: string;
     tags: string[];
-    depth: number;
+    scale: number;
 };
 
 export function hydrateMarkers(node: QuadNode): QuadNode {
@@ -19,7 +19,7 @@ export function hydrateMarkers(node: QuadNode): QuadNode {
 
     const terrainTypes = node.tile?.terrain.map((terrainConfig) => terrainConfig.type);
     //const markers = markersJSON.markers.filter((marker) => node.depth === marker.depth && marker.tags.some((tag) => terrainTypes?.includes(tag)));
-    const markers = config.getMarkersByFilter({ depth: node.depth, tags: terrainTypes });
+    const markers = config.getMarkersByFilter({ scale: node.scale, tags: terrainTypes });
 
     if (!markers.length) {
         return node;

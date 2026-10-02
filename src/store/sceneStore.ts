@@ -14,6 +14,7 @@ import { DIRECTION, DIRECTION_NAME } from "../../shared/src/direction";
 import { gameRepository } from "../repositories/gameRepository";
 import { QuadNodePoint } from "../../engine/types";
 import { getDepthName } from "../../shared/src/phraseology";
+import { getReferenceDepth } from "../../engine/world/scale";
 
 export interface SceneMessage {
     id: string,
@@ -54,6 +55,7 @@ interface SceneStore {
     title: string; // - if no other title
     eventId: string | undefined;
     currentPosition: QuadNodePoint | undefined; // Can be fetched on post
+    zoomRange: { min: number; max: number } | undefined; // from event, depends on world size
     directions: PlayerLocationDirection[]; // from event
     messages: SceneMessage[],
     attention: Attention | null;
@@ -71,6 +73,7 @@ const cleanState = {
     title: 'Unknown',
     eventId: undefined,
     currentPosition: undefined,
+    zoomRange: undefined,
     directions: [],
     messages: [],
     attention: null,
@@ -84,15 +87,20 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
     movePlayer: async (direction: DIRECTION) => {
         set({
             ...cleanState,
+            zoomRange: get().zoomRange, // A property of the world, not of the scene
             title: `Moving ${DIRECTION_NAME[direction]}`,
         });
 
         await gameRepository.move(direction);
     },
     zoomPlayer: async (zoom: number) => {
+        const zoomRange = get().zoomRange;
+        const scale = zoomRange ? zoomRange.max - zoom : 0;
+
         set({
             ...cleanState,
-            title: `Scanning the ${getDepthName(zoom)}`,
+            zoomRange,
+            title: `Scanning the ${getDepthName(getReferenceDepth(scale))}`,
         });
 
         await gameRepository.zoom(zoom);
@@ -102,6 +110,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
             set({
                 eventId: message.eventId,
                 currentPosition: message.point,
+                zoomRange: message.zoomRange,
                 directions: message.directions,
             });
 

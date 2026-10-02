@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { worldRepository } from "../db/repositories/world-repository";
 //import { Marker } from "../../engine/world/markers";
 import { MarkerSetting, TileDataEntry, WorldData } from "../../engine/types";
+import { QuadNodeKey } from "../../engine/world/quad-node-key";
 import { WorldDataSummary } from "../types";
 
 type GetWorldRequest = { id: number };
@@ -22,6 +23,13 @@ export async function createNewWorld(
     try {
         const { name, size, palette } = req.body;
         console.log('Creating new world', name, size, palette);
+
+        // Size is the world's max depth and can never change after creation -
+        // stored node ids depend on it, so it has to be right the first time.
+        if (!Number.isInteger(size) || size < 1 || size > QuadNodeKey.MAX_DEPTH) {
+            res.status(400).json({ error: `size must be a whole number between 1 and ${QuadNodeKey.MAX_DEPTH}` });
+            return;
+        }
 
         const worldId = await worldRepository.createWorld(name, size, palette);
 

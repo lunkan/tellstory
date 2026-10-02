@@ -17,18 +17,34 @@
 */
 
 import { QuadNode } from "../../../engine/world/quad-node";
-import { QUAD_TREE_ROOT_SIZE } from "../../../engine/world/quad-node-bounds";
+import { MAX_ZOOM_OUT } from "../../../engine/world/scale";
 import { GridBounds, GridPoint, GridRect, TileCoordinate } from "./types";
 
-const SIZE: number = QUAD_TREE_ROOT_SIZE;
-
 export class CanvasMatrix {
-    private _level: number = 5; // Based on scale
+    private _level: number; // Based on scale
     private _scale: number = 0.5; // 100 x 10 = 1000px
     private _width: number = 0;
     private _height: number = 0;
     private _x: number = 0;
     private _y: number = 0;
+
+    private readonly _maxDepth: number;
+    private readonly _rootSize: number;
+
+    /** Shallowest depth the editor zooms out to: MAX_ZOOM_OUT levels above the leaf. */
+    public get minDepth(): number {
+        return Math.max(0, this._maxDepth - MAX_ZOOM_OUT);
+    }
+
+    public get maxDepth(): number {
+        return this._maxDepth;
+    }
+
+    constructor(maxDepth: number) {
+        this._maxDepth = maxDepth;
+        this._rootSize = Math.pow(2, maxDepth);
+        this._level = Math.max(0, maxDepth - MAX_ZOOM_OUT);
+    }
 
     public get scale(): number {
         return this._scale;
@@ -49,8 +65,8 @@ export class CanvasMatrix {
     public get transformMtx(): DOMMatrix {
         const viewportOffsetX = this.width / 2;
         const viewportOffsetY = this.height / 2;
-        const gridOffsetX = (SIZE * this._scale) / 2;
-        const gridOffsetY = (SIZE * this._scale) / 2;
+        const gridOffsetX = (this._rootSize * this._scale) / 2;
+        const gridOffsetY = (this._rootSize * this._scale) / 2;
         const tx = this._x + viewportOffsetX - gridOffsetX;
         const ty = this._y + viewportOffsetY - gridOffsetY;
 
@@ -70,7 +86,7 @@ export class CanvasMatrix {
     }
 
     public setDepth(value: number): void {
-        this._level = Math.max(5, Math.min(value, 12));
+        this._level = Math.max(this.minDepth, Math.min(value, this._maxDepth));
     }
 
     public zoom(zoomDelta: number, x: number, y: number): void {
@@ -94,7 +110,7 @@ export class CanvasMatrix {
 
     public getTileSize(): number {
         const numTiles = this._level === 0 ? 1 : Math.pow(2, this._level);
-        return (SIZE / numTiles);
+        return (this._rootSize / numTiles);
     }
 
     public getViewPointFromNode(node: QuadNode): DOMPoint {
@@ -148,9 +164,9 @@ export class CanvasMatrix {
     }
 
     public gridPointInBounds(point: GridPoint): boolean {
-        if (point.x < 0 || point.x > SIZE) {
+        if (point.x < 0 || point.x > this._rootSize) {
             return false;
-        } else if (point.y < 0 || point.x > SIZE) {
+        } else if (point.y < 0 || point.y > this._rootSize) {
             return false;
         }
 
@@ -163,8 +179,8 @@ export class CanvasMatrix {
 
         const x = Math.max(0, topLeft.x);
         const y = Math.max(0, topLeft.y);
-        const width = Math.min(SIZE, bottomRight.x) - x;
-        const height = Math.min(SIZE, bottomRight.y) - y;
+        const width = Math.min(this._rootSize, bottomRight.x) - x;
+        const height = Math.min(this._rootSize, bottomRight.y) - y;
 
         return {
             x,

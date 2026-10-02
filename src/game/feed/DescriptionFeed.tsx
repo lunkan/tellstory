@@ -1,6 +1,7 @@
 import { Typewriter } from "./Typewriter";
 import { AlertMessage, DirectionDescription, SceneDescription, selectSceneReady, selectAlertMessage, selectDirectionDescription, selectPrimaryDescription, selectSecondaryDescription, useSceneStore } from "../../store/sceneStore";
 import { getDepthName } from "../../../shared/src/phraseology";
+import { getReferenceDepth } from "../../../engine/world/scale";
 import { DescriptionFeedText } from "./DescriptionFeedText";
 import { useRef } from "react";
 import { audioManager } from "../../audio/AudioManager";
@@ -16,6 +17,7 @@ export function DescriptionFeed() {
     const descriptionNarrator = useSettingsStore((state) => state.settings.descriptionNarrator);
     const title = useSceneStore((state) => state.title);
     const attention = useSceneStore((state) => state.attention);
+    const zoomRange = useSceneStore((state) => state.zoomRange);
     const sceneReady = useSceneStore(selectSceneReady);
     const primaryDescription = useSceneStore(selectPrimaryDescription);
     const secondaryDescription = useSceneStore(selectSecondaryDescription);
@@ -88,7 +90,8 @@ export function DescriptionFeed() {
     }
 
     if (attention?.type === 'zoom') {
-        return (<DescriptionFeedText label={`Overview ${getDepthName(attention.value || 0)}`}></DescriptionFeedText>);
+        const scale = zoomRange ? zoomRange.max - (attention.value || 0) : 0;
+        return (<DescriptionFeedText label={`Overview ${getDepthName(getReferenceDepth(scale))}`}></DescriptionFeedText>);
     }
 
     if (attention?.type === 'direction') {

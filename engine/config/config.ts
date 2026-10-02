@@ -6,9 +6,9 @@ type TileConfigFilter = {
 };
 
 type MarkerConfigFilter = {
-    category: string;
+    category?: string;
     tags?: string[];
-    depth?: number;
+    scale?: number;
 };
 
 const tileMap: Map<string, TileConfig> = new Map();
@@ -75,9 +75,9 @@ function getMarkersByFilter(filter: MarkerConfigFilter): MarkerConfig[] {
     for (const markerConfig of markerMap.values()) {
         const matchTags = filter.tags ? markerConfig.tags.some((tag) => filter.tags!.includes(tag)) : true;
         const matchCategory = filter.category ? markerConfig.category === filter.category : true;
-        const matchDepth = filter.depth ? markerConfig.depth === filter.depth : true;
+        const matchScale = filter.scale !== undefined ? markerConfig.scale === filter.scale : true;
 
-        if (matchTags && matchCategory && matchDepth) {
+        if (matchTags && matchCategory && matchScale) {
             markers.push(markerConfig);
         }
     }

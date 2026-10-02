@@ -51,9 +51,15 @@ import { QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNod
 import { hydrate } from "./hydrator/hydrate";
 
 export class QuadNode {
+    public static createRoot(maxDepth: number): QuadNode {
+        return new QuadNode(maxDepth);
+    }
+
     public readonly key: QuadNodeKey;
     public readonly bounds: QuadNodeBounds;
     public readonly parent: QuadNode | undefined;
+    /** Deepest level this world subdivides to. Seeded at the root, inherited by every child. */
+    public readonly maxDepth: number;
 
     public tile: Tile | undefined;
 
@@ -61,18 +67,25 @@ export class QuadNode {
         return this.key.depth;
     }
 
+    /** Levels above the leaf: 0 at the leaf, `maxDepth` at the root. Comparable across worlds. */
+    public get scale() {
+        return this.maxDepth - this.depth;
+    }
+
     private _quadrants: QuadNode[] = [];
     private _detached: boolean = false;
 
-    constructor(parent?: QuadNode, index?: any) {
+    private constructor(maxDepth: number, parent?: QuadNode, index?: any) {
+        this.maxDepth = maxDepth;
+
         if (!parent) {
             this.key = new QuadNodeKey(0n, 0);
+            this.bounds = QuadNodeBounds.createRoot(maxDepth);
         } else {
             this.parent = parent;
             this.key = parent.key.createChildKey(index);
+            this.bounds = QuadNodeBounds.createChild(parent.bounds, index);
         }
-
-        this.bounds = QuadNodeBounds.fromKey(this.key);
     }
 
     // Dehydrate - if updated
@@ -151,13 +164,13 @@ export class QuadNode {
     public getQuadrants(createIfMissing?: boolean): QuadNode[] {
         if (this._quadrants.length || !createIfMissing) {
             return this._quadrants;
-        } else if (this.depth + 1 > QuadNodeKey.MAX_DEPTH) {
-            return this._quadrants; // Creat no more levels after depth of MAX_DEPTH
+        } else if (this.scale === 0) {
+            return this._quadrants; // Leaf level - this world subdivides no further
         }
 
         for (let i = 0; i < 4; i++) {
             // const quadrantKey = this.key.createChildKey(i as any);
-            const quadrant = new QuadNode(this, i); //new QuadNode(quadrantKey, this);
+            const quadrant = new QuadNode(this.maxDepth, this, i); //new QuadNode(quadrantKey, this);
             this._quadrants.push(quadrant);
         }
 
