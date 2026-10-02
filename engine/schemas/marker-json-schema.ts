@@ -69,6 +69,12 @@ export const MarkerSchema = z.object({
 //const MarkersSchema = z.array(MarkerSchema);
 
 export function createMarkerSchema(tags: string[]) {
+    // z.enum([]) serializes to `{ not: {} }`, which strict Structured Outputs
+    // rejects. With no tags to choose from, fall back to free-form strings.
+    if (!tags.length) {
+        return MarkerSchema;
+    }
+
     return MarkerSchema.extend({
         tags: z.array(z.enum(tags as [string, ...string[]])).describe(
             "Tags describing the environments, areas, or locations where this marker " +

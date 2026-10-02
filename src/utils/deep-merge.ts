@@ -72,18 +72,18 @@ function mergeArraysById(
     return result;
 }
 
+// An empty array qualifies: under mergeArraysById an empty source means
+// "no updates", so it has to merge to the target unchanged rather than
+// falling through to the replace-wholesale branch and clearing it.
 function areObjectsWithId(
     value: unknown[]
 ): value is Array<{ id: string | number }> {
-    return (
-        value.length > 0 &&
-        value.every(
-            item =>
-                isPlainObject(item) &&
-                ("id" in item) &&
-                (typeof item.id === "string" ||
-                    typeof item.id === "number")
-        )
+    return value.every(
+        item =>
+            isPlainObject(item) &&
+            ("id" in item) &&
+            (typeof item.id === "string" ||
+                typeof item.id === "number")
     );
 }
 

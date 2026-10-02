@@ -1,7 +1,6 @@
 import { Table } from '../../components/table/Table';
 import { Toolbar } from '../../components/toolbar/Toolbar';
 import { ToolbarButtonGroup } from '../../components/toolbar/ToolbarButtonGroup';
-import { Button } from '../../components/button/Button';
 import styles from './PaletteEditorMarkers.module.css';
 import { usePaletteEditorStore } from '../../store/paletteEditorStore';
 import { useState } from 'react';
@@ -13,6 +12,8 @@ import { PaletteEditorMarkerTagModal } from './marker-tag-modal/PalettEditorMark
 import { PaletteEditorMarkerMetaModal } from './marker-meta-modal/PalettEditorMarkerMetaModal';
 import { Avatar } from '../../components/avatar/Avatar';
 import { PalettEditorGenerateMarkersPromtModal } from './generate-markers-promt-modal/PalettEditorGenerateMarkersPromtModal';
+
+import { Tag, Button } from '@dashalundqvist/editor_ui_poc';
 
 type PendingUpdate = {
     id: number;
@@ -129,15 +130,14 @@ export function PaletteEditorMarkers() {
     }
 
     function handleSave(id: number): void {
-        const index = pendingUpdates.findIndex((pendingUpdate) => pendingUpdate.id === id);
         setEditableRows(editableRows.filter((currRowId) => currRowId !== id));
 
-        if (index === -1) {
+        const pendingRowUpdates = pendingUpdates.filter((update) => update.id === id);
+        if (!pendingRowUpdates.length) {
             return;
         }
 
-        const pendingRowUpdates = pendingUpdates.splice(index, 1);
-        setPendingUpdates(pendingUpdates);
+        setPendingUpdates(pendingUpdates.filter((update) => update.id !== id));
         updatePaletteData({
             markers: pendingRowUpdates as any,
         });
@@ -201,16 +201,14 @@ export function PaletteEditorMarkers() {
     function getMarkerTBodyData(): any {
         if (!paletteData) return [];
 
-        console.log('####');
-        console.log(paletteData);
-        console.log('####');
-
         return paletteData.markers?.map((markerData) => {
             if (!editableRows.includes(markerData.id)) {
                 const tags =
                     <div className={styles.tagGroup}>
                         {markerData.tags?.map((tagName, i) =>
-                            <Chip key={i} text={tagName} color={getTagColorByName(tagName)} size="small"></Chip>
+                            <Tag key={i} objectName={tagName} label={tagName} removable={false} color={getTagColorByName(tagName)}></Tag>
+
+                            //<Chip key={i} text={tagName} color={getTagColorByName(tagName)} size="small"></Chip>
                         )}
                     </div>
                     ;
@@ -229,8 +227,8 @@ export function PaletteEditorMarkers() {
                         { text: `${markerData.attention?.min || '?'}..${markerData.attention?.max || '?'}` },
                         { text: tags },
                         { text: meta },
-                        { text: <Button size="small" resizeMode="fill" onClick={() => handleEdit(markerData.id)} text="Edit"></Button> },
-                        { text: <Button size="small" resizeMode="fill" onClick={() => handleDelete(markerData.id)} text="Delete"></Button> }
+                        { text: <Button size="compact" onClick={() => handleEdit(markerData.id)}>Edit</Button> },
+                        { text: <Button size="compact" onClick={() => handleDelete(markerData.id)}>Delete</Button> }
                     ],
                 };
             }
@@ -267,9 +265,11 @@ export function PaletteEditorMarkers() {
             const tags =
                 <div className={styles.tagGroup}>
                     {currentMarkerData.tags?.map((tagName, i) =>
-                        <Chip key={i} text={tagName} color={getTagColorByName(tagName)} size="small" onClear={() => handleClearTag(markerData.id, tagName)}></Chip>
+                        //size="small"
+                        <Tag key={i} objectName={tagName} label={tagName} color={getTagColorByName(tagName)} removable={true} onRemove={() => handleClearTag(markerData.id, tagName)}></Tag>
+                        //<Chip key={i} text={tagName} color={getTagColorByName(tagName)} size="small" onClear={() => handleClearTag(markerData.id, tagName)}></Chip>
                     )}
-                    <Button text="+" size="xSmall" onClick={() => handleAddTags(markerData.id)}></Button>
+                    <Button size="compact" onClick={() => handleAddTags(markerData.id)}>+</Button>
                 </div>
                 ;
 
@@ -278,7 +278,7 @@ export function PaletteEditorMarkers() {
                     <div className={styles.tagGroup}>
                         {currentMarkerData.meta?.color ? <Chip text="color" size="small" leading={<Avatar size="xSmall" bgColor={currentMarkerData.meta?.color}></Avatar>}></Chip> : null}
                     </div>
-                    <Button text="+" size="xSmall" onClick={() => handleAddMetaTags(markerData.id)}></Button>
+                    <Button size="compact" onClick={() => handleAddMetaTags(markerData.id)}>+</Button>
                 </div >
                 ;
 
@@ -290,8 +290,8 @@ export function PaletteEditorMarkers() {
                     { text: attention },
                     { text: tags },
                     { text: meta },
-                    { text: <Button resizeMode="fill" size="small" onClick={() => handleSave(markerData.id)} text="Save"></Button> },
-                    { text: <Button resizeMode="fill" size="small" onClick={() => handleCancel(markerData.id)} text="Cancel"></Button> }
+                    { text: <Button size="compact" onClick={() => handleSave(markerData.id)}>Save</Button> },
+                    { text: <Button size="compact" onClick={() => handleCancel(markerData.id)}>Cancel</Button> }
                 ],
             };
         });
@@ -306,12 +306,12 @@ export function PaletteEditorMarkers() {
         <div className={styles.tabPanel}>
             <Toolbar>
                 <ToolbarButtonGroup>
-                    <Button text="Add marker" onClick={handleAddMarker}></Button>
-                    <Button text="Generate markers" onClick={onGenerateMarkers}></Button>
+                    <Button onClick={handleAddMarker}>Add marker</Button>
+                    <Button onClick={onGenerateMarkers}>Generate markers</Button>
                 </ToolbarButtonGroup>
                 <ToolbarButtonGroup>
-                    <Button text="Edit all" onClick={handleEditAll}></Button>
-                    <Button text="Save all" onClick={handleSaveAll}></Button>
+                    <Button onClick={handleEditAll}>Edit all</Button>
+                    <Button onClick={handleSaveAll}>Save all</Button>
                 </ToolbarButtonGroup>
             </Toolbar>
 

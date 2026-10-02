@@ -23,6 +23,8 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     hydrateVectors(node);
     hydrateRoads(node);
     hydrateMarkers(node);
+
+    return node; // Hydration complete
 }
 
 export function dehydrate(node: QuadNode | undefined): QuadNode | undefined {
@@ -34,4 +36,6 @@ export function dehydrate(node: QuadNode | undefined): QuadNode | undefined {
 
     node.tile = undefined;
     node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
+
+    return node;
 }

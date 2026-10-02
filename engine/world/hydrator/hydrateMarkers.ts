@@ -15,12 +15,8 @@ export function hydrateMarkers(node: QuadNode): QuadNode {
         return node; // Can't generate markers without terrain
     }
 
-    // Check how many already - don't generate if provided.
-
     const terrainTypes = node.tile?.terrain.map((terrainConfig) => terrainConfig.type);
-    //const markers = markersJSON.markers.filter((marker) => node.depth === marker.depth && marker.tags.some((tag) => terrainTypes?.includes(tag)));
     const markers = config.getMarkersByFilter({ scale: node.scale, tags: terrainTypes });
-
     if (!markers.length) {
         return node;
     }
@@ -29,10 +25,9 @@ export function hydrateMarkers(node: QuadNode): QuadNode {
     const randIndex = Math.floor(markers.length * rand);
     const marker = markers[randIndex];
 
-    // More markers - filtered by level
-
     node.tile.addMarker({
         point: _findMarkerPoint(marker, node),
+        attention: node.scale,
         type: marker.name,
         id: 'hydrated',
     });

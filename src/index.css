@@ -552,6 +552,13 @@ pre {
     flex-direction: column;
 }
 
+.editor-palett--marker-filter-chip-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+}
+
 .editor-palett--options-heading {
     margin: 24px 0 8px;
     text-transform: uppercase;

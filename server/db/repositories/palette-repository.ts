@@ -22,7 +22,6 @@ function createPalette(data: PaletteData): Promise<number> {
                 }
 
                 console.log('DB:createPalette', this.lastID, data.name, serializedData);
-
                 resolve(this.lastID);
             }
         );
@@ -31,8 +30,6 @@ function createPalette(data: PaletteData): Promise<number> {
 
 function updatePalette(id: number, paletteData: PaletteData): Promise<boolean> {
     const serializedData = JSON.stringify(paletteData);
-
-    console.log('updatePalette', id, paletteData);
 
     return new Promise((resolve, reject) => {
         db.run(

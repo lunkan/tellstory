@@ -30,13 +30,13 @@ export function EditorMap() {
         if (world && canvasRef.current && overlayRef.current && !rendererRef.current) {
             rendererRef.current = new CanvasRenderer(world, canvasRef.current, overlayRef.current);
             rendererRef.current.clear();
+
+            const initalZoom = Math.floor(Math.sqrt(world.maxZoomDepth));
+            rendererRef.current.zoom(initalZoom, 0, 0);
+            const depth = Math.floor(Math.sqrt(rendererRef.current.scale)) + rendererRef.current.minDepth;
+            rendererRef.current.setDepth(depth);
             setDepth(rendererRef.current.getDepth());
         }
-
-        /*if (markers && quadtree && canvasRef.current && overlayRef.current && !rendererRef.current) {
-            rendererRef.current = new CanvasRenderer(quadtree, markers, canvasRef.current, overlayRef.current);
-            rendererRef.current.clear();
-        }*/
     }, []);
 
     useEffect(() => {

@@ -23,11 +23,6 @@ export function TileTab() {
         );
     }
 
-    /*const typography = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'typography');
-    const vectors = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'vector');
-    const biome = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'biome');
-    const urban = tilesJSON.tiles.filter((tileConfig) => tileConfig.category === 'urban');*/
-
     const typography = config.getTilesByFilter({ category: 'typography' });
     const vectors = config.getTilesByFilter({ category: 'vector' });
     const biome = config.getTilesByFilter({ category: 'biome' });

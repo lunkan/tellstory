@@ -27,7 +27,6 @@ export class DrawHandler extends CanvasEventHandler {
             return;
         }
 
-        console.log('pointerMove', node.isLocked());
         if (node.isLocked()) {
             return;
         }
@@ -50,10 +49,13 @@ export class DrawHandler extends CanvasEventHandler {
         let parentNode = node.parent;
         while (parentNode && this.renderer.minDepth <= parentNode.depth) {
             value = value * 0.25;
-            parentNode.tile!.applyTerrain({
-                type: this._type,
-                value,
-            });
+            // The root can't hydrate, so an ancestor may legitimately have no tile.
+            if (parentNode.tile) {
+                parentNode.tile.applyTerrain({
+                    type: this._type,
+                    value,
+                });
+            }
 
             parentNode = parentNode.parent;
         }

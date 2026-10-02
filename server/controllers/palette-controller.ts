@@ -146,6 +146,16 @@ export async function generateMarkersByPrompt(
         const tags = paletteData.tiles.map((tile) => tile.name);
         const existingMarkers = paletteData.markers.map((marker) => marker.name);
 
+        // The instructions tell the model to tag markers using the palette's
+        // tiles, so there is nothing sensible to generate without them.
+        if (!tags.length) {
+            res.status(400).json({
+                error: 'This palette has no tiles, so markers have no tags to '
+                    + 'reference. Add tiles to the palette first.',
+            });
+            return;
+        }
+
         const instructions = `
             Generate markers that satisfy the user's request.
 

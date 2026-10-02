@@ -7,6 +7,7 @@ import { drawMarkers } from "./commands/drawMarkers";
 import { GridBounds, GridPoint, TileCoordinate } from "./types";
 import { drawGrid } from "./commands/drawGrid";
 import { CanvasMatrix } from "./CanvasMatrix";
+import { drawSelectedTile } from "./commands/drawSelectedTile";
 
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
@@ -50,6 +51,7 @@ export class CanvasRenderer {
         this._layers.set('editableLeafTiles', document.createElement("canvas"));
         this._layers.set('generatedTiles', document.createElement("canvas"));
         this._layers.set('markers', document.createElement("canvas"));
+        this._layers.set('selectedTile', document.createElement("canvas"));
     }
 
     public getDepth(): number {
@@ -152,7 +154,12 @@ export class CanvasRenderer {
     }
 
     private _draw(): void {
-        // set canvas size from matrix?
+        // The viewport size arrives from the ResizeObserver, which reports after
+        // the first animation frame. Until then there is nothing to draw, and
+        // zero-sized layer canvases would make drawImage throw.
+        if (this._matrix.width === 0 || this._matrix.height === 0) {
+            return;
+        }
 
         // Update layer transformMtx
         for (const layer of this._layers.values()) {
@@ -202,6 +209,13 @@ export class CanvasRenderer {
             markers: visibleNodes.flatMap((node) => this.world.getMarkersFromNode(node))
         });
 
+        const selectedTileLayer = this._layers.get('selectedTile')!;
+        drawSelectedTile({
+            ctx: selectedTileLayer.getContext('2d')!,
+            selectedTile: this._activeTile,
+            tileSize,
+        });
+
         this._ctx.drawImage(editableLeafLayer, 0, 0);
 
         this._ctx.save();
@@ -216,6 +230,10 @@ export class CanvasRenderer {
 
         this._ctx.drawImage(markerLayer, 0, 0);
         this._ctx.drawImage(gridLayer, 0, 0);
+
+        this._ctx.drawImage(selectedTileLayer, 0, 0);
+
+
     }
 
     private _getVisibleNodes(gridBounds: GridBounds): QuadNode[] {
