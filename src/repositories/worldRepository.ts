@@ -52,6 +52,7 @@ async function generateMapByNode(tile: TileData): Promise<any> {
     });
 
     const data: any = await res.json();
+    console.log('generateMapByNode!!!!', data);
     if (!res.ok) {
         throw new Error(data.error ?? 'Generate map Request failed');
     }

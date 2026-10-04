@@ -4,6 +4,7 @@ import { worldRepository } from "../db/repositories/world-repository";
 import { MarkerSetting, TileData, TileDataEntry, WorldData } from "../../engine/types";
 import { QuadNodeKey } from "../../engine/world/quad-node-key";
 import { WorldDataSummary } from "../types";
+import { generateTileMap } from "../map-generator/map-generator";
 
 type GetWorldRequest = { id: number };
 type CreateWorldRequest = { name: string; size: number; palette: number; };
@@ -142,9 +143,32 @@ export async function generateMapByNode(
         console.log('generateMapByNode', tile);
         //const success = await worldRepository.deleteWorld(id);
 
-        res.json({
-            success: true,
+        // Very shitty result from layout.
+        const result = await generateTileMap({
+            dimensions: {
+                width: 313,
+                height: 313,
+            },
+            terrain: tile.terrain,
+            markers: tile.markers.map((marker) => {
+                return {
+                    type: marker.type,
+                    attention: marker.attention || 0,
+                };
+            }),
         });
+        console.log('generateMapByNode:::', result);
+
+        if (result) {
+            res.json({
+                tileMap: result,
+                success: true,
+            });
+        } else {
+            res.json({
+                success: false,
+            });
+        }
 
     } catch (err) {
         console.error(err);

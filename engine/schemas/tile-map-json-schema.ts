@@ -1,141 +1,60 @@
-import { number, z } from "zod";
-//import { zodTextFormat } from "openai/helpers/zod";
+import { z } from "zod";
 
-// player-starting
-const CategorySchema = z.enum([
-    "landmark",
+const ShapeSchema = z.discriminatedUnion("type", [
+    z.object({
+        type: z.literal("circle").describe("A circular shape defined by its center point and radius."),
+        x: z.number().describe("The X coordinate of the center of the circle in meters, measured from the map origin (0,0)."),
+        y: z.number().describe("The Y coordinate of the center of the circle in meters, measured from the map origin (0,0)."),
+        radius: z.number().describe("The radius of the circle in meters."),
+    }),
+    z.object({
+        type: z.literal("rectangle").describe("A rectangular shape defined by its position, dimensions, and rotation."),
+        x: z.number().describe("The X coordinate of the rectangle's origin in meters, measured from the map origin (0,0)."),
+        y: z.number().describe("The Y coordinate of the rectangle's origin in meters, measured from the map origin (0,0)."),
+        width: z.number().describe("The width of the rectangle in meters."),
+        height: z.number().describe("The height of the rectangle in meters."),
+        rotation: z.number().describe("The rotation of the rectangle in degrees around its origin. 0 degrees means no rotation."),
+    }),
+    z.object({
+        type: z.literal("polygon").describe("A polygon defined by a sequence of points connected in order."),
+        center: z.object({
+            x: z.number().describe("The X coordinate of the polygon's center in meters, measured from the map origin (0,0)."),
+            y: z.number().describe("The Y coordinate of the polygon's center in meters, measured from the map origin (0,0)."),
+        }).describe("The polygon's center position in map coordinates, measured in meters from the map origin (0,0)."),
+        points: z.array(
+            z.object({
+                x: z.number().describe("The X coordinate of the polygon point in meters, measured from the map origin (0,0)."),
+                y: z.number().describe("The Y coordinate of the polygon point in meters, measured from the map origin (0,0)."),
+            })
+        ).describe("The vertices of the polygon in drawing order. The last point is implicitly connected to the first point."),
+    }),
+    z.object({
+        type: z.literal("line").describe("A vector or line segment defined by two points and a width."),
+        width: z.number().describe("The width or thickness of the line in meters."),
+        point1: z.object({
+            x: z.number().describe("The X coordinate of the first endpoint in meters, measured from the map origin (0,0)."),
+            y: z.number().describe("The Y coordinate of the first endpoint in meters, measured from the map origin (0,0)."),
+        }).describe("The first endpoint of the line."),
+        point2: z.object({
+            x: z.number().describe("The X coordinate of the second endpoint in meters, measured from the map origin (0,0)."),
+            y: z.number().describe("The Y coordinate of the second endpoint in meters, measured from the map origin (0,0)."),
+        }).describe("The second endpoint of the vector."),
+    }),
 ]);
 
-export const MarkerSchema = z.object({
-    //id: z.number().int().describe("A unique numeric identifier for this marker."),
-    name: z.string().describe(
-        "The specific thing represented by the marker. " +
-        "Use a concise, human-readable name, such as " +
-        '"Food store", "Waterfall", or "Small grove".'
-    ),
-    category: CategorySchema.describe("The type of the marker. Choose the category that best describes " +
-        "the thing represented by the marker."),
+export const TileMapSchema = z.object({
+    dimensions: z.object({
+        width: z.number().int().describe("The physical width of the map in meters."),
+        height: z.number().int().describe("The physical height of the map in meters."),
+    }).describe("The map is a rectangle whose origin is at coordinate (0,0). These values define its physical width and height in meters."),
+    objects: z.array(
+        z.object({
+            type: z.string().describe("The semantic type of the object, describing what the object represents."),
+            attention: z.number().int().min(0).max(10).describe("The importance or attention level of the object on a scale from 0 to 10. 0 means no particular attention is required; 10 means the object is extremely important and should receive the highest attention."),
+            description: z.string().describe("A concise description of what the object represents and any relevant visual or semantic characteristics."),
+            shape: ShapeSchema.describe("The geometric shape used to represent the object on the map."),
+        })
+    ).describe("The objects contained in the map, including their semantic description, importance, position, and geometric representation."),
+});
 
-    attention: z.object({
-        min: z.number().int().min(1).max(10).describe(
-            "The lower bound of the marker's familiarity range. " +
-            "It represents how far from the object a person could be while still " +
-            "reasonably knowing about the object or what it represents."
-        ),
-
-        max: z.number().int().min(1).max(10).describe(
-            "The upper bound of the marker's familiarity range. " +
-            "It represents how far from the object a person could be while still " +
-            "reasonably knowing about the object or what it represents."
-        ),
-    }).describe(
-        "Describes the geographic range within which the object is likely to be " +
-        "known or recognized by people familiar with the surrounding area. " +
-        "This is about familiarity and awareness, not physical visibility. " +
-        "The range depends on the type of object and on its individual size, " +
-        "prominence, cultural importance, uniqueness, and fame. " +
-        "A small but famous object can have a much larger range than a large " +
-        "but ordinary object. For example, a small but famous spring may be known " +
-        "from far away, while a large but unremarkable building may only be known " +
-        "locally. " +
-        "The scale ranges from 1 (approximately 30 m) to 10 (approximately 100 km). " +
-        "min is the lower bound of the range and max is the upper bound."
-    ),
-
-    tags: z.array(z.string()).describe(
-        "Tags describing the environments, areas, or locations where this marker " +
-        "is likely to be found. Tags represent the typical setting or context in " +
-        "which the object occurs, rather than properties of the object itself. " +
-        "For example, a food store might be tagged 'urban', while a hiking trail " +
-        "might be tagged 'forest'. A marker may have multiple tags when it is " +
-        "commonly found in multiple types of environments. Only use tags from " +
-        "the available tag list."
-    ),
-
-    meta: z.object({
-        color: z.string().describe(
-            "An hex color used to visually represent this marker."
-        ),
-    }),
-}).describe(
-    "A marker represents a real-world type of thing, place, or feature that " +
-    "could be encountered in the world. Markers are abstract descriptions of " +
-    "things rather than specific instances or exact locations. For example, " +
-    '"church", "food store", "park", or "fountain" can each be a marker. ' +
-    "Each marker describes a category of real-world things that may occur in " +
-    "different locations. Generate markers that are relevant to the user's request."
-);
-
-//const MarkersSchema = z.array(MarkerSchema);
-
-export function createMarkerSchema(tags: string[]) {
-    // z.enum([]) serializes to `{ not: {} }`, which strict Structured Outputs
-    // rejects. With no tags to choose from, fall back to free-form strings.
-    if (!tags.length) {
-        return MarkerSchema;
-    }
-
-    return MarkerSchema.extend({
-        tags: z.array(z.enum(tags as [string, ...string[]])).describe(
-            "Tags describing the environments, areas, or locations where this marker " +
-            "is likely to be found. Tags represent the typical setting or context in " +
-            "which the object occurs, rather than properties of the object itself. " +
-            "For example, a food store might be tagged 'urban', while a hiking trail " +
-            "might be tagged 'forest'. A marker may have multiple tags when it is " +
-            "commonly found in multiple types of environments. Only use tags from " +
-            "the available tag list."
-        ),
-    });
-}
-
-// Unit meter
-
-const tileMap = {
-    width: number, // meter
-    height: number, // meter
-    objects: [{
-        type: string,
-        attention: number,
-        description: string,
-        origo: {
-            x: number,
-            y: number,
-        },
-        shape: {
-            type: 'circle' or 'rectangle' or 'polygon',
-
-            // circle
-            x: number,
-            y: number,
-            radius: number,
-
-            // rectangle
-            x: number,
-            y: number,
-            width: number,
-            height: number,
-            rotation: number,
-
-            // polygon
-            point: [{
-                x: number, y: number,
-            }]
-        }
-    }],
-    vectors: [{
-        type: string,
-        attention: number,
-        description: string,
-        shape: {
-            width: number,
-            point1: {
-                x: number,
-                y: number,
-            },
-            point2: {
-                x: number,
-                y: number,
-            },
-        }
-    }]
-}
+export type TileMap = z.infer<typeof TileMapSchema>;

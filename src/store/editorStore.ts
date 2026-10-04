@@ -5,7 +5,7 @@ import { World } from "../../engine/world/world";
 import { worldRepository } from "../repositories/worldRepository";
 import { paletteRepository } from "../repositories/paletteRepository";
 import { QuadNode } from "../../engine/world/quad-node";
-import { TileData, TileDataEntry } from "../../engine/types";
+import { TileData } from "../../engine/types";
 //import { Tile } from "../../engine/world/tile";
 //import { Marker } from "../../engine/world/markers";
 
