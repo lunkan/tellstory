@@ -203,10 +203,26 @@ export class CanvasRenderer {
             tileSize
         });
 
+        // All markers from all layers
+        let depth = this._matrix.depth;
+        const nodes: QuadNode[] = [];
+        while (depth > 0) {
+            const nodesByDepth: QuadNode[] = this.world.findNodesByRect({
+                x: gridBounds.x * tileSize,
+                y: gridBounds.y * tileSize,
+                width: gridBounds.xSize * tileSize,
+                height: gridBounds.ySize * tileSize,
+                z: depth,
+            });
+
+            nodes.push(...nodesByDepth);
+            depth--;
+        }
+
         const markerLayer = this._layers.get('markers')!;
         drawMarkers({
             ctx: markerLayer.getContext('2d')!,
-            markers: visibleNodes.flatMap((node) => this.world.getMarkersFromNode(node))
+            nodes,
         });
 
         const selectedTileLayer = this._layers.get('selectedTile')!;

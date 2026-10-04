@@ -79,7 +79,7 @@ export type VectorSetting = {
 }
 
 export type MarkerSetting = {
-    point: QuadNodes2DPoint;
+    point: QuadNodes2DPoint; // Not used
     type: string;
     attention?: number;
     id: string;

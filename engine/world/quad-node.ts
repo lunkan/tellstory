@@ -161,6 +161,18 @@ export class QuadNode {
         }
     }
 
+    public getAncestors(): QuadNode[] {
+        if (this.parent) {
+            return [this.parent, ...this.parent.getAncestors()];
+        }
+
+        return [];
+    }
+
+    public getAllQuadrants(createIfMissing?: boolean): QuadNode[] {
+        return this.getQuadrants(createIfMissing).flatMap((node) => [node, ...node.getAllQuadrants(createIfMissing)]);
+    }
+
     public getQuadrants(createIfMissing?: boolean): QuadNode[] {
         if (this._quadrants.length || !createIfMissing) {
             return this._quadrants;

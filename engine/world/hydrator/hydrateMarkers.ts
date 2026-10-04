@@ -10,18 +10,63 @@ type MarkerConfigEntry = {
     scale: number;
 };
 
-export function hydrateMarkers(node: QuadNode): QuadNode {
-    if (!node.tile) {
-        return node; // Can't generate markers without terrain
+export function hydrateMarkers(node: QuadNode): void {
+    if (!node?.parent) {
+        return;
     }
 
-    const terrainTypes = node.tile?.terrain.map((terrainConfig) => terrainConfig.type);
+    _hydrateSubTiles(node.parent);
+}
+
+function _hydrateSubTiles(parent: QuadNode): void {
+
+    const quadrantA = parent.getQuadrantAt(0, 0, true);
+    const quadrantB = parent.getQuadrantAt(1, 0, true);
+    const quadrantC = parent.getQuadrantAt(0, 1, true);
+    const quadrantD = parent.getQuadrantAt(1, 1, true);
+
+    [quadrantA, quadrantB, quadrantC, quadrantD]
+        .filter(Boolean)
+        .forEach((quadrant) => _hydrateSubTile(quadrant!));
+}
+
+function _hydrateSubTile(node: QuadNode): void {
+    if (!node.tile) {
+        return; // Can't generate markers without terrain
+    }
+
+    node.tile.terrain
+        .filter((terrainConfig) => terrainConfig.type !== 'elevation')
+        .forEach((terrainConfig) => {
+            const markers = config.getMarkersByFilter({ scale: node.scale, tags: [terrainConfig.type] });
+            let numMarkers = Math.ceil(terrainConfig.value * 3);
+
+            while (numMarkers > 0 && markers.length > 0) {
+                const rand = getRandFromSeeds(BigInt(numMarkers), node.key.hash);
+                const randIndex = Math.floor(markers.length * rand);
+                const marker = markers.splice(randIndex, 1)[0];
+
+                node.tile!.addMarker({
+                    point: _findMarkerPoint(marker, node),
+                    attention: node.scale,
+                    type: marker.name,
+                    id: 'hydrated',
+                });
+
+                numMarkers--;
+            }
+        });
+
+
+    /*const terrainTypes = node.tile?.terrain.map((terrainConfig) => terrainConfig.type);
     const markers = config.getMarkersByFilter({ scale: node.scale, tags: terrainTypes });
     if (!markers.length) {
         return node;
-    }
+    }*/
 
-    const rand = getRandFromSeeds(BigInt(100), node.key.hash);
+    // What terrain is it most of 
+
+    /*const rand = getRandFromSeeds(BigInt(100), node.key.hash);
     const randIndex = Math.floor(markers.length * rand);
     const marker = markers[randIndex];
 
@@ -30,13 +75,18 @@ export function hydrateMarkers(node: QuadNode): QuadNode {
         attention: node.scale,
         type: marker.name,
         id: 'hydrated',
-    });
+    });*/
 
-    return node;
+    //return node;
 }
 
-function _findMarkerPoint(marker: MarkerConfigEntry, node: QuadNode): QuadNodes2DPoint {
-    const markerNode = [...node.getQuadrants()].sort((a, b) => {
+function _findMarkerPoint(_marker: MarkerConfigEntry, node: QuadNode): QuadNodes2DPoint {
+    return {
+        x: (node.bounds.size * 0.5) + node.bounds.x,
+        y: (node.bounds.size * 0.5) + node.bounds.y,
+    };
+
+    /*const markerNode = [...node.getQuadrants()].sort((a, b) => {
         const valueA = _getNodeMarkerWeight(marker, a);
         const valueB = _getNodeMarkerWeight(marker, b);
         return valueB - valueA;
@@ -48,10 +98,10 @@ function _findMarkerPoint(marker: MarkerConfigEntry, node: QuadNode): QuadNodes2
     return {
         x: markerNode.bounds.size * randX + markerNode.bounds.x,
         y: markerNode.bounds.size * randY + markerNode.bounds.y,
-    };
+    };*/
 }
 
-function _getNodeMarkerWeight(marker: MarkerConfigEntry, node: QuadNode): number {
+/*function _getNodeMarkerWeight(marker: MarkerConfigEntry, node: QuadNode): number {
     if (!node.tile) {
         return 0;
     }
@@ -63,4 +113,4 @@ function _getNodeMarkerWeight(marker: MarkerConfigEntry, node: QuadNode): number
 
         return acc;
     }, 0);
-}
+}*/

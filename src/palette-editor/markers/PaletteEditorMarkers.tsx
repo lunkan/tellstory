@@ -190,7 +190,6 @@ export function PaletteEditorMarkers() {
 
     function handleGenerateMarkersModalClose(markers?: MarkerConfigData[]): void {
         if (markers) {
-            console.log('Has markers', markers);
             const ids = addMarkerData(markers);
             setEditableRows([...editableRows, ...ids]);
         }
@@ -224,7 +223,7 @@ export function PaletteEditorMarkers() {
                     cells: [
                         { text: markerData.name },
                         { text: markerData.category },
-                        { text: `${markerData.attention?.min || '?'}..${markerData.attention?.max || '?'}` },
+                        { text: `${markerData.attention?.min || 0}..${markerData.attention?.max || 0}` },
                         { text: tags },
                         { text: meta },
                         { text: <Button size="compact" onClick={() => handleEdit(markerData.id)}>Edit</Button> },

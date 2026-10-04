@@ -1,4 +1,5 @@
-﻿import { WorldData } from "../../engine/types";
+﻿import { TileData, TileDataEntry, WorldData } from "../../engine/types";
+import { QuadNode } from "../../engine/world/quad-node";
 
 async function create(name: string, size: number, palette: number): Promise<number> {
     const res = await fetch("/api/world", {
@@ -41,8 +42,26 @@ async function save(world: Pick<WorldData, 'id' | 'name' | 'tiles'>): Promise<bo
     return true;
 }
 
+async function generateMapByNode(tile: TileData): Promise<any> {
+    console.log('CLIENT:generateMapByNode', tile);
+
+    const res = await fetch("/api/world/generate-map", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tile: tile }),
+    });
+
+    const data: any = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error ?? 'Generate map Request failed');
+    }
+
+    return data;
+}
+
 export const worldRepository = {
     create,
     load,
     save,
+    generateMapByNode
 };

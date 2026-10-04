@@ -11,7 +11,6 @@ export function drawSelectedTile(options: DrawSelectedTileOptions) {
 
     const scale = ctx.getTransform().a;
 
-    console.log('drawSelectedTile', drawSelectedTile);
     if (!selectedTile) return;
 
     // 1. Set the border color

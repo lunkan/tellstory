@@ -44,7 +44,7 @@ export type MarkerConfigData = {
     tags: string[] | undefined,
     meta?: MarkerMetaConfig,
     /** Levels above the leaf this marker belongs at. See engine/world/scale.ts. */
-    scale: number;
+    scale: number; // Is this really used?
 }
 
 export type MarkerConfig = MarkerConfigData & {

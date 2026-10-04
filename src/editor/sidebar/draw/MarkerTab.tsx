@@ -1,9 +1,9 @@
 //import markersJSON from '../../../engine/config/markers.json' with { type: 'json' };
 import { useState } from 'react';
-import { config } from '../../../engine/config/config';
-import { Chip } from '../../components/chip/Chip';
-import { SelectedEntity, useEditorStore } from '../../store/editorStore';
-import { MarkerConfig } from '../../../engine/config/type';
+import { config } from '../../../../engine/config/config';
+import { Chip } from '../../../components/chip/Chip';
+import { SelectedEntity, useEditorStore } from '../../../store/editorStore';
+import { MarkerConfig } from '../../../../engine/config/type';
 
 export function MarkerTab() {
     const selectedTerrain = useEditorStore((state) => state.selectedTerrain);

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { worldRepository } from "../db/repositories/world-repository";
 //import { Marker } from "../../engine/world/markers";
-import { MarkerSetting, TileDataEntry, WorldData } from "../../engine/types";
+import { MarkerSetting, TileData, TileDataEntry, WorldData } from "../../engine/types";
 import { QuadNodeKey } from "../../engine/world/quad-node-key";
 import { WorldDataSummary } from "../types";
 
@@ -15,6 +15,8 @@ type UpdateWorldRequest = {
     //startingLocations: Marker[]
     startingLocations: MarkerSetting[]
 };
+
+type GenerateMapRequest = { tile: TileData };
 
 export async function createNewWorld(
     req: Request<unknown, unknown, CreateWorldRequest>,
@@ -122,6 +124,26 @@ export async function deleteWorld(
 
         res.json({
             success,
+        });
+
+    } catch (err) {
+        console.error(err);
+        const message = err instanceof Error ? err.message : "Unknown error";
+        res.status(500).json({ error: message });
+    }
+}
+
+export async function generateMapByNode(
+    req: Request<unknown, unknown, GenerateMapRequest>,
+    res: Response,
+) {
+    try {
+        const { tile } = req.body;
+        console.log('generateMapByNode', tile);
+        //const success = await worldRepository.deleteWorld(id);
+
+        res.json({
+            success: true,
         });
 
     } catch (err) {

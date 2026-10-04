@@ -1,15 +1,18 @@
 
+import { QuadNode } from "../../../engine/world/quad-node";
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
 
 export class SelectHandler extends CanvasEventHandler {
     private _screenStartX: number = -1;
     private _screenStartY: number = -1;
+    private _selectCallback: (node: QuadNode | null) => void;
 
-    constructor(renderer: CanvasRenderer, point: DOMPoint) {
+    constructor(renderer: CanvasRenderer, point: DOMPoint, callback: (node: QuadNode | null) => void) {
         super(renderer);
         this._screenStartX = point.x;
         this._screenStartY = point.y;
+        this._selectCallback = callback;
         return;
     }
 
@@ -21,6 +24,9 @@ export class SelectHandler extends CanvasEventHandler {
         }
 
         const viewportPoint = super.toViewportPoint(point);
+        const selectedNode = this.renderer.getNodeFromPoint(viewportPoint);
+        console.log('Selected Node', selectedNode);
+        this._selectCallback(selectedNode);
         this.renderer.setActiveTile(viewportPoint);
         this.finish();
     }

@@ -92,6 +92,8 @@ function getMarkersByFilter(filter: MarkerConfigFilter): MarkerConfig[] {
         //const matchScale = filter.scale !== undefined ? markerConfig.scale === filter.scale : true;
         const matchScale = isMarkerMatchingScale(filter.scale, markerConfig);
 
+        //console.log('S', markerConfig.name, matchScale, filter.scale);
+
         /*if (matchTags) {
             console.log('YEES2', matchScale, matchCategory);
         }*/
@@ -118,11 +120,13 @@ function getMarkersByFilter(filter: MarkerConfigFilter): MarkerConfig[] {
     return markers;
 }
 
-function isMarkerMatchingScale(scale: number | undefined, marker: MarkerConfig): boolean {
-    //console.log('M:', marker.name, ':', marker.attention?.min, marker.attention?.max, ' - ', scale, '***', (marker.attention?.min || 0) < (scale || 0), ' - ', (marker.attention?.max || 0) >= (scale || 0));
+function isMarkerMatchingScale(scale: number = 0, marker: MarkerConfig): boolean {
+    if (scale === undefined || !marker.attention) {
+        return true;
+    } else if ((marker.attention?.min || 0) > scale) {
+        return false;
+    }
 
-    if (scale === undefined || !marker.attention) return true;
-    else if ((marker.attention.min || 0) < scale) return false;
     return (marker.attention?.max || 0) >= scale;
 }
 

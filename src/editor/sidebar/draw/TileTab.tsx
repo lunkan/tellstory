@@ -1,6 +1,6 @@
 //import tilesJSON from '../../../engine/config/tiles.json' with { type: 'json' };
-import { config } from '../../../engine/config/config';
-import { SelectedEntity, useEditorStore } from '../../store/editorStore';
+import { config } from '../../../../engine/config/config';
+import { SelectedEntity, useEditorStore } from '../../../store/editorStore';
 
 export function TileTab() {
     const selectedTerrain = useEditorStore((state) => state.selectedTerrain);

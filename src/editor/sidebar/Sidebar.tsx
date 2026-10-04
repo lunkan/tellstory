@@ -1,19 +1,26 @@
-import { useState } from "react";
-import { TileTab } from "./TileTab";
-import { MarkerTab } from "./MarkerTab";
+import { EditState, useEditorStore } from "../../store/editorStore";
+import { SidebarDraw } from "./draw/SidebarDraw";
+import { SidebarSelect } from "./select/SidebarSelect";
+
+type SidebarContentProps = {
+    editState: EditState;
+}
+
+function SidebarContent({ editState }: SidebarContentProps) {
+    switch (editState) {
+        case 'select':
+            return <SidebarSelect />;
+        case 'draw':
+            return <SidebarDraw />;
+        default:
+            return <div>Unknown state</div>;
+    }
+}
 
 export function Sidebar() {
-    const [activeTab, setActiveTab] = useState<'tile' | 'marker'>('tile');
+    const editState = useEditorStore((state) => state.editState);
 
     return (
-        <div className="sidebar">
-            <div className="sidebar-tab-container">
-                <div className="sidebar-tab-bar">
-                    <button className="sidebar-tab" onClick={() => setActiveTab('tile')}>TILE</button>
-                    <button className="sidebar-tab" onClick={() => setActiveTab('marker')}>MARKER</button>
-                </div>
-                {activeTab === 'tile' ? (<TileTab></TileTab>) : (<MarkerTab></MarkerTab>)}
-            </div>
-        </div>
+        <SidebarContent editState={editState} />
     );
 }

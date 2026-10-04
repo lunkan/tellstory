@@ -18,6 +18,7 @@ export function EditorMap() {
     const editState = useEditorStore((state) => state.editState);
     const paintValue = useEditorStore((state) => state.paintValue);
     const selectedTerrain = useEditorStore((state) => state.selectedTerrain);
+    const selectedNode = useEditorStore((state) => state.selectNode);
     const viewportRef = useRef<HTMLDivElement>(null);
     const viewportSizeObserver = useRef<ResizeObserver | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -64,7 +65,7 @@ export function EditorMap() {
 
         switch (editState) {
             case 'select':
-                new SelectHandler(rendererRef.current, point);
+                new SelectHandler(rendererRef.current, point, selectedNode);
                 break;
             case 'transform':
                 new MoveHandler(rendererRef.current, point);

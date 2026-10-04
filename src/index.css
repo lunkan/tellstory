@@ -422,7 +422,7 @@ pre {
         "topbar topbar"
         "map palett";
     grid-template-columns: 1fr 250px;
-    grid-template-rows: 40px 1fr;
+    grid-template-rows: 40px minmax(0, 1fr);
 }
 
 .editor-topbar {

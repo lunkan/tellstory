@@ -4,6 +4,8 @@ import { create } from "zustand";
 import { World } from "../../engine/world/world";
 import { worldRepository } from "../repositories/worldRepository";
 import { paletteRepository } from "../repositories/paletteRepository";
+import { QuadNode } from "../../engine/world/quad-node";
+import { TileData, TileDataEntry } from "../../engine/types";
 //import { Tile } from "../../engine/world/tile";
 //import { Marker } from "../../engine/world/markers";
 
@@ -26,14 +28,17 @@ interface EditorStore {
     //markers: Marker[];
     //startingLocations: Marker[];
     selectedTerrain: SelectedEntity | null;
+    selectedNode: QuadNode | null;
     paintValue: number;
     editState: EditState;
     newWorld: (name: string, size: number, palette: number) => Promise<boolean>;
     setWorldId: (worldId: number) => Promise<void>;
     save: () => Promise<void>;
     selectTerrain: (entity: SelectedEntity) => void;
+    selectNode: (node: QuadNode | null) => void;
     setPaintValue: (value: number) => void;
     setEditState: (state: EditState) => void;
+    generateMap: (node: QuadNode) => void;
 }
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
@@ -45,6 +50,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     //markers: [],
     //startingLocations: [],
     selectedTerrain: null,
+    selectedNode: null,
     paintValue: 0.5,
     editState: 'select',
     newWorld: async (name: string, size: number, palette: number) => {
@@ -108,6 +114,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
             selectedTerrain: selectedTerrain,
         }));
     },
+    selectNode: (node) => {
+        set(() => ({
+            selectedNode: node,
+        }));
+    },
     setPaintValue: (value) => {
         set(() => ({
             paintValue: value,
@@ -118,4 +129,27 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
             editState: state,
         }));
     },
+    generateMap: async (node) => {
+
+        // Only Some of these
+        const ancestorMarkers = node.getAncestors()
+            .filter((node) => !!node.tile)
+            .flatMap((node) => node.tile!.markers);
+
+        const currentMarkers = node.tile?.markers || [];
+
+        // Maybe not all at once - maybe street lamps etc can be generated on deeper depth
+        const decendentMarkers = node.getAllQuadrants(true)
+            .filter((node) => !!node.tile)
+            .flatMap((node) => node.tile!.markers);
+
+        const tileData: TileData = {
+            vectors: [],
+            terrain: node.tile?.terrain || [],
+            markers: [...ancestorMarkers, ...currentMarkers, ...decendentMarkers],
+        };
+
+        const response = await worldRepository.generateMapByNode(tileData);
+        console.log('STOR:generateMap', response);
+    }
 }));

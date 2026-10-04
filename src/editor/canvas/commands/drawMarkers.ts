@@ -1,35 +1,48 @@
-import { MarkerSetting, } from "../../../../engine/types";
+
+import { QuadNode } from "../../../../engine/world/quad-node";
 
 type DrawMarkersOptions = {
     ctx: CanvasRenderingContext2D;
-    markers: MarkerSetting[];
+    nodes: QuadNode[];
 }
 
 export function drawMarkers(options: DrawMarkersOptions) {
-    const { ctx, markers } = options;
+    const { ctx, nodes } = options;
 
+    nodes.forEach((node) => {
+        _drawNodeMarkers(ctx, node);
+    });
+
+}
+
+function _drawNodeMarkers(ctx: CanvasRenderingContext2D, node: QuadNode): void {
+    const markers = node.tile?.markers || [];
+    const bounds = node.bounds;
     const scale = ctx.getTransform().a;
-    const baseDiameter = 5 / scale;
+    const tileSize = bounds.right - bounds.left;
 
-    const adjustedScale = ctx.getTransform().a;
+    const distributionCellHeight = tileSize / markers.length;
 
-    for (const marker of markers) {
-        const attentionDiameter = marker.attention ? marker.attention + 1 : 1;
-        const diameter = baseDiameter * attentionDiameter;
+    for (let i = 0; i < markers.length; i++) {
+        const marker = markers[i];
+        const y = i * distributionCellHeight + distributionCellHeight / 2 + bounds.y;
+        const x = bounds.x + tileSize / 2;
+
+        //const attentionDiameter = marker.attention ? Math.sqrt(marker.attention) + 1 : 1;
+        const diameter = 5 / scale; // (5 * attentionDiameter) / scale; //baseDiameter; // * attentionDiameter;
+
+        const textHeight = 12 / scale;
 
         const color = marker.type === 'player-start' ? '#ff0000' : '#000000'
         ctx.beginPath();
-        ctx.arc(marker.point.x, marker.point.y, diameter, 0, Math.PI * 2);
+        ctx.arc(x, y, diameter, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
 
         // Set font size and family
-        ctx.font = `${12 / adjustedScale}px Arial`;
-
-        // Set text color
-        //ctx.fillStyle = "blue";
+        ctx.font = `${textHeight}px Arial`;
 
         // Draw filled text at coordinates x=50, y=80
-        ctx.fillText(marker.type, marker.point.x + diameter + 8 / adjustedScale, marker.point.y);
+        ctx.fillText(marker.type, x + diameter + 8 / scale, y + textHeight / 4);
     }
 }

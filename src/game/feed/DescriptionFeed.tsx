@@ -63,7 +63,6 @@ export function DescriptionFeed() {
         };
 
         if (descriptionNarrator) {
-            console.log('Hallo');
             audioManager.play(description.text).then(() => handleNarratorSpeakComplete(description.id));
         } else {
             currentDescriptionRef.current.narratorCompleted = true;

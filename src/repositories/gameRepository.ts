@@ -29,7 +29,6 @@ async function move(direction: DIRECTION): Promise<void> {
 }
 
 async function zoom(depth: number): Promise<void> {
-    console.log('HandleZoom', depth);
     const res = await fetch("/api/game/zoom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

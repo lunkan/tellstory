@@ -3,7 +3,7 @@
 
 import { config } from "../config/config";
 //import { MarkerConfigData, TileConfigData } from '../config/type';
-import { MarkerSetting, PaletteData, QuadNodeDelta, QuadNodePoint, WorldData } from "../types";
+import { MarkerSetting, PaletteData, QuadNodeDelta, QuadNodePoint, QuadNodesRect, WorldData } from "../types";
 import { hydrate } from "./hydrator/hydrate";
 //import { Hydrator } from "./hydrator";
 //import { Marker, Markers } from "./markers";
@@ -83,6 +83,7 @@ export class World {
         //return this.markers.getAll().filter((marker) => marker.type === 'player-start');
     }
 
+    // Really needed?
     //public getMarkersFromNode(node: QuadNode): Marker[] {
     public getMarkersFromNode(node: QuadNode): MarkerSetting[] {
         /*const { x, y, size } = node.bounds;
@@ -109,6 +110,10 @@ export class World {
         const node = this.quadtree.findByPoint(point, true);
         //return node ? this._hydrator.hydrate(node) : undefined;
         return node ? hydrate(node) : undefined;
+    }
+
+    public findNodesByRect(rect: QuadNodesRect): QuadNode[] {
+        return this.quadtree.findByRect(rect);
     }
 
     public findNeighbourNode(key: QuadNodeKey, deltaX: QuadNodeDelta, deltaY: QuadNodeDelta): QuadNode | undefined {
