@@ -17,7 +17,7 @@
 */
 
 import { QuadNode } from "../../../engine/world/quad-node";
-import { MAX_ZOOM_OUT } from "../../../engine/world/scale";
+import { LEAF_SIZE_METER, MAX_ZOOM_OUT } from "../../../engine/world/scale";
 import { GridBounds, GridPoint, GridRect, TileCoordinate } from "./types";
 
 export class CanvasMatrix {
@@ -112,6 +112,14 @@ export class CanvasMatrix {
         const numTiles = this._level === 0 ? 1 : Math.pow(2, this._level);
         return (this._rootSize / numTiles);
     }
+
+    public getTileSizeMeters(): number {
+        return this.getTileSize() * LEAF_SIZE_METER;
+    }
+
+    /*public getTileToMeterScale(): number {
+        return this.getTileSize() * LEAF_SIZE_METER;
+    }*/
 
     public getViewPointFromNode(node: QuadNode): DOMPoint {
         const gridPoint = node.getCenterPoint();

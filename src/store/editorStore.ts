@@ -133,23 +133,39 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
         // Only Some of these
         const ancestorMarkers = node.getAncestors()
-            .filter((node) => !!node.tile)
-            .flatMap((node) => node.tile!.markers);
+            .filter((node) => !!node.hasTile())
+            .flatMap((node) => node.getTile()!.markers);
 
-        const currentMarkers = node.tile?.markers || [];
+        const currentMarkers = node.getTile()?.markers || [];
 
         // Maybe not all at once - maybe street lamps etc can be generated on deeper depth
         const decendentMarkers = node.getAllQuadrants(true)
-            .filter((node) => !!node.tile)
-            .flatMap((node) => node.tile!.markers);
+            .filter((node) => !!node.hasTile())
+            .flatMap((node) => node.getTile()!.markers);
 
         const tileData: TileData = {
+            bounds: node.getTileBounds(),
             vectors: [],
-            terrain: node.tile?.terrain || [],
+            terrain: node.getTile()?.terrain || [],
             markers: [...ancestorMarkers, ...currentMarkers, ...decendentMarkers],
         };
 
-        const response = await worldRepository.generateMapByNode(tileData);
-        console.log('STOR:generateMap', response);
+        const tileMap = await worldRepository.generateMapByNode(tileData);
+        //node.tile?.setMap(tileMap);
+
+        node.setTileData({
+            mapData: tileMap,
+        });
+
+        /*
+        const world = get().world.updateNode(nodeId, {
+            mapDate: tileMap,
+        });
+
+        set(() => ({
+            world,
+        }));*/
+
+        console.log('STOR:generateMap', tileMap);
     }
 }));

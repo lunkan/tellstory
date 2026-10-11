@@ -43,10 +43,12 @@ const ShapeSchema = z.discriminatedUnion("type", [
 ]);
 
 export const TileMapSchema = z.object({
-    dimensions: z.object({
+    bounds: z.object({
+        x: z.number().int().describe("The physical x coordinate of the map in meters."),
+        y: z.number().int().describe("The physical y coordinate of the map in meters."),
         width: z.number().int().describe("The physical width of the map in meters."),
         height: z.number().int().describe("The physical height of the map in meters."),
-    }).describe("The map is a rectangle whose origin is at coordinate (0,0). These values define its physical width and height in meters."),
+    }).describe("The map is a rectangle whose origin is at coordinate (x,y). These values define its physical width and height in meters."),
     objects: z.array(
         z.object({
             type: z.string().describe("The semantic type of the object, describing what the object represents."),
@@ -58,3 +60,38 @@ export const TileMapSchema = z.object({
 });
 
 export type TileMap = z.infer<typeof TileMapSchema>;
+export type TileMapObject = TileMap["objects"][number];
+export type TileShape = TileMap["objects"][number]["shape"];
+
+export type TileMapCircleShape = Extract<
+    TileMap["objects"][number]["shape"],
+    { type: "circle" }
+>;
+
+export type TileMapRectangleShape = Extract<
+    TileMap["objects"][number]["shape"],
+    { type: "rectangle" }
+>;
+
+export type TileMapLineShape = Extract<
+    TileMap["objects"][number]["shape"],
+    { type: "line" }
+>;
+
+export function isCircleShape(
+    shape: TileShape
+): shape is TileMapCircleShape {
+    return shape.type === "circle";
+}
+
+export function isRectangleShape(
+    shape: TileShape
+): shape is TileMapRectangleShape {
+    return shape.type === "rectangle";
+}
+
+export function isLineShape(
+    shape: TileShape
+): shape is TileMapLineShape {
+    return shape.type === "line";
+}

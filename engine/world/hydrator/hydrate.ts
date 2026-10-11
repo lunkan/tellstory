@@ -8,7 +8,7 @@ import { hydrateRoads } from './hydrateRoads';
 export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     if (!node || node.isLocked()) {
         return node; // Can't hydrate undefined or locked
-    } else if (node.tile) {
+    } else if (node.hasTile()) {
         return node; // Already hydrated
     } else if (!node.parent) {
         return node; // Root nodes can't hydrate
@@ -55,7 +55,8 @@ export function dehydrate(node: QuadNode | undefined): QuadNode | undefined {
         return node; // Not hydrated
     }
 
-    node.tile = undefined;
+    //node.tile = undefined;
+    node.setTileData(undefined);
     node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
 
     return node;

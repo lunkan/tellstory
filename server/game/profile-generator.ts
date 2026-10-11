@@ -99,7 +99,8 @@ export class EnvironmentalContext {
     }
 
     private _createLocationProfile(node: QuadNode): LocationProfile {
-        if (!node.tile) {
+        const tile = node.getTile();
+        if (!tile) {
             throw Error(`!Missing tile. Node not hybernated: ${node.key.id} `);
         }
 
@@ -107,9 +108,9 @@ export class EnvironmentalContext {
             .filter((marker) => marker.type !== 'player-start')
             .map((marker) => ({ type: marker.type }));
 
-        const terrainMarkers = node.tile.terrain.map((spacialMarker) => ({ type: spacialMarker.type, value: spacialMarker.value }));
+        const terrainMarkers = tile.terrain.map((spacialMarker) => ({ type: spacialMarker.type, value: spacialMarker.value }));
 
-        const vectorMarkers = node.tile.vectors.map((spacialVector) => {
+        const vectorMarkers = tile.vectors.map((spacialVector) => {
             const direction = getDirectionFromAdjacentVector(spacialVector.direction.x, spacialVector.direction.y);
             const tileConfig = config.getTile(spacialVector.type);
             //tilesJSON.tiles.find((tileConfig) => tileConfig.name === spacialVector.type);

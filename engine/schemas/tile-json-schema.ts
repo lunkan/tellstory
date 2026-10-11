@@ -13,10 +13,12 @@ const MarkerSchema = z.object({
 });
 
 export const TileSchema = z.object({
-    dimensions: z.object({
+    bounds: z.object({
+        x: z.number().int().describe("The physical x coordinate of the tile in meters."),
+        y: z.number().int().describe("The physical y coordinate of the tile in meters."),
         width: z.number().int().describe("The physical width of the tile in meters."),
         height: z.number().int().describe("The physical height of the tile in meters."),
-    }).describe("The physical dimensions of the rectangular tile. The tile coordinate system starts at (0,0) and extends to (width,height)."),
+    }).describe("The physical dimensions of the rectangular tile."),
     terrain: z.array(TerrainSchema).describe(
         "Terrain and environmental properties detected or inferred for this tile. Each entry represents one semantic terrain type and its associated value."
     ),

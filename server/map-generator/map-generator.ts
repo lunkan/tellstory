@@ -5,6 +5,8 @@ import { generateResponse } from "../llm-gateway/open-ai-gateway";
 import { TileMap, TileMapSchema } from "../../engine/schemas/tile-map-json-schema";
 import { TileData } from "../../engine/schemas/tile-json-schema";
 
+import exampleTileMapJson from '../../engine/schemas/tile-map-json-example.json' with { type: 'json' };
+
 /*
 optional objects
 
@@ -192,7 +194,9 @@ ${JSON.stringify(tile)}
         `,
     }];
 
-    const text = await generateResponse(instructions, input, {
+    return Promise.resolve(exampleTileMapJson) as Promise<TileMap | null>;
+
+    /*const text = await generateResponse(instructions, input, {
         format: zodTextFormat(TileMapSchema, 'tileMap'),
     });
 
@@ -201,7 +205,5 @@ ${JSON.stringify(tile)}
     } catch (e) {
         console.log('GENERAT MAP FAIL', e);
         return null;
-    }
-
-
+    }*/
 }

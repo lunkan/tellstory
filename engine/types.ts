@@ -14,6 +14,7 @@
 
 import { MarkerConfigData, TileConfigData, VectorConfigData } from "./config/type";
 import { GameEvent } from "./core/events/game-event.interface";
+import { TileMap } from "./schemas/tile-map-json-schema";
 //import { Marker } from "./world/markers";
 
 export interface IGameObserver {
@@ -85,10 +86,19 @@ export type MarkerSetting = {
     id: string;
 };
 
+export type TileBounds = {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 export type TileData = {
+    bounds: TileBounds;
     vectors: VectorSetting[];
     terrain: TerrainSetting[];
     markers: MarkerSetting[];
+    mapData?: TileMap;
 }
 
 export type TileDataEntry = TileData & {

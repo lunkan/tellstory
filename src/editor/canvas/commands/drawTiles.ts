@@ -33,8 +33,9 @@ export function drawTiles(options: DrawTilesOptions): void {
     const { ctx, nodes, tileSize } = options;
 
     for (const node of nodes) {
-        if (node && node.tile) {
-            _drawTile(node.tile, {
+        if (node && node.hasTile()) {
+
+            _drawTile(node.getTile()!, {
                 x: node.bounds.x,
                 y: node.bounds.y,
                 width: tileSize,
@@ -46,6 +47,14 @@ export function drawTiles(options: DrawTilesOptions): void {
 
 function _drawTile(tile: Tile, gridRect: GridRect, ctx: CanvasRenderingContext2D): void {
     if (!tile) {
+        return;
+    }
+
+    if (tile.mapData) {
+        /*ctx.fillStyle = '#ddd';
+        ctx.beginPath();
+        ctx.rect(gridRect.x, gridRect.y, gridRect.width, gridRect.height);
+        ctx.fill();*/
         return;
     }
 

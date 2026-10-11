@@ -19,7 +19,8 @@ export function hydrateVectors(node: QuadNode): QuadNode {
 }
 
 function _hydrateSubTiles(parent: QuadNode): void {
-    if (!parent.tile) {
+    const parentTile = parent.getTile();
+    if (!parentTile) {
         return;
     }
 
@@ -28,11 +29,18 @@ function _hydrateSubTiles(parent: QuadNode): void {
         return;
     }
 
-    quadrants.forEach((quadNode) => {
+    /*quadrants.forEach((quadNode) => {
         if (quadNode && !quadNode?.tile) {
             quadNode.tile = new Tile();
         }
-    })
+    })*/
+
+    quadrants.forEach((quadNode) => {
+        if (quadNode && !quadNode?.hasTile()) {
+            quadNode.setTileData({});
+            //quadNode.tile = new Tile();
+        }
+    });
 
     const quadrantMap = {
         a: quadrants[0]!,
@@ -41,7 +49,7 @@ function _hydrateSubTiles(parent: QuadNode): void {
         d: quadrants[3]!,
     };
 
-    parent.tile.vectors.forEach((vector) => {
+    parentTile.vectors.forEach((vector) => {
         const xQuadrants = _xQuadrantsFromVector(quadrantMap, parent, vector.direction.x);
         const yQuadrants = _yQuadrantsFromVector(quadrantMap, parent, vector.direction.y);
         const vQuadrant = xQuadrants.find((quadrant) => yQuadrants.indexOf(quadrant) !== -1);
@@ -50,7 +58,7 @@ function _hydrateSubTiles(parent: QuadNode): void {
             return;
         }
 
-        vQuadrant.tile?.setVector({
+        /*vQuadrant.tile?.setVector({
             direction: vQuadrant.getNormalizedRelativePosition(parent)!,
             value: vector.value,
             type: vector.type,
@@ -60,6 +68,18 @@ function _hydrateSubTiles(parent: QuadNode): void {
             direction: vector.direction,
             value: vector.value,
             type: vector.type,
+        });*/
+
+        vQuadrant.setTileData({
+            vectors: [{
+                direction: vQuadrant.getNormalizedRelativePosition(parent)!,
+                value: vector.value,
+                type: vector.type,
+            }, {
+                direction: vector.direction,
+                value: vector.value,
+                type: vector.type,
+            }],
         });
     });
 }

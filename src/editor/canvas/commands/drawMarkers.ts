@@ -16,7 +16,7 @@ export function drawMarkers(options: DrawMarkersOptions) {
 }
 
 function _drawNodeMarkers(ctx: CanvasRenderingContext2D, node: QuadNode): void {
-    const markers = node.tile?.markers || [];
+    const markers = node.getTile()?.markers || [];
     const bounds = node.bounds;
     const scale = ctx.getTransform().a;
     const tileSize = bounds.right - bounds.left;

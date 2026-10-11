@@ -1,4 +1,4 @@
-import { QuadNode } from "../../../engine/world/quad-node";
+import { QuadNode, QuadNodeEventData } from "../../../engine/world/quad-node";
 import { OverlayRenderer } from "./OverlayRenderer";
 import { World } from '../../../engine/world/world';
 import { hydrate } from "../../../engine/world/hydrator/hydrate";
@@ -8,6 +8,9 @@ import { GridBounds, GridPoint, TileCoordinate } from "./types";
 import { drawGrid } from "./commands/drawGrid";
 import { CanvasMatrix } from "./CanvasMatrix";
 import { drawSelectedTile } from "./commands/drawSelectedTile";
+import { TileMapObject } from "../../../engine/schemas/tile-map-json-schema";
+import { drawObjects } from "./commands/drawObjects";
+import { getTileSizeMeter, LEAF_SIZE_METER } from "../../../engine/world/scale";
 
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
@@ -15,6 +18,7 @@ export class CanvasRenderer {
     public readonly world: World;
 
     private _activeTile?: TileCoordinate | null;
+    private _invalid: boolean = false;
     private _refreshRequest: number | undefined;
 
     public get scale(): number {
@@ -35,6 +39,8 @@ export class CanvasRenderer {
 
     constructor(world: World, canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
         this.world = world;
+        this.world.quadtree.subscribe(this._onQuadTreeChange.bind(this));
+
         this._matrix = new CanvasMatrix(world.quadtree.maxDepth);
         this.canvas = canvas;
         this.overlay = new OverlayRenderer(overlay);
@@ -203,6 +209,19 @@ export class CanvasRenderer {
             tileSize
         });
 
+        //const test = this._matrix.getTileSize() / LEAF_SIZE_METER;
+
+        //const gx = xMeter / LEAF_SIZE_METER;
+        //const gy = yMeter / LEAF_SIZE_METER;
+        //ctx.fillRect(gx, gy, widthMeter / LEAF_SIZE_METER, heightMeter / LEAF_SIZE_METER);
+
+        // The layer ctx draws in grid units (1 unit = 1 leaf), the transform handles zoom.
+        drawObjects({
+            ctx: generatedLayer.getContext('2d')!,
+            objects: this._getVisibleMapObjects(gridBounds),
+            scale: 1 / LEAF_SIZE_METER,
+        });
+
         // All markers from all layers
         let depth = this._matrix.depth;
         const nodes: QuadNode[] = [];
@@ -252,11 +271,31 @@ export class CanvasRenderer {
 
     }
 
-    private _getVisibleNodes(gridBounds: GridBounds): QuadNode[] {
+    private _getVisibleMapObjects(gridBounds: GridBounds): TileMapObject[] {
         const tileSize = this._matrix.getTileSize();
-        const visibleNodes: QuadNode[] = [];
+        return this.world.quadtree.findMapObjectsByRect({
+            x: gridBounds.x * tileSize,
+            y: gridBounds.y * tileSize,
+            width: gridBounds.xSize * tileSize,
+            height: gridBounds.ySize * tileSize,
+            z: this._matrix.depth,
+        });
 
-        for (let x = gridBounds.x; x < gridBounds.x + gridBounds.xSize; x++) {
+        /*const tileSize = this._matrix.getTileSize();
+        //const visibleNodes: QuadNode[] = [];
+
+        const nodes = this.world.quadtree.findByRect({
+            x: gridBounds.x * tileSize,
+            y: gridBounds.y * tileSize,
+            width: gridBounds.xSize * tileSize,
+            height: gridBounds.ySize * tileSize,
+            z: this._matrix.depth,
+        }, true);
+
+        console.log('_getVisibleMapObjects', this._matrix.depth, ' * ', nodes.length);*/
+
+
+        /*for (let x = gridBounds.x; x < gridBounds.x + gridBounds.xSize; x++) {
             for (let y = gridBounds.y; y < gridBounds.y + gridBounds.ySize; y++) {
                 const node = this.world.quadtree.findByPoint({
                     x: x * tileSize,
@@ -271,10 +310,39 @@ export class CanvasRenderer {
             }
         }
 
+        return visibleNodes;*/
+    }
+
+    private _getVisibleNodes(gridBounds: GridBounds): QuadNode[] {
+        const tileSize = this._matrix.getTileSize();
+        const visibleNodes: QuadNode[] = [];
+
+        for (let x = gridBounds.x; x < gridBounds.x + gridBounds.xSize; x++) {
+            for (let y = gridBounds.y; y < gridBounds.y + gridBounds.ySize; y++) {
+                const node = this.world.quadtree.findByPoint({
+                    x: x * tileSize,
+                    y: y * tileSize,
+                    z: this._matrix.depth,
+                }, true, (node: QuadNode) => {
+                    return node.getTile()?.mapData ? false : true;
+                });
+
+                if (node) {
+                    hydrate(node); //Make sure it's hydrated
+                    visibleNodes.push(node);
+                }
+            }
+        }
+
         return visibleNodes;
     }
 
     private _invalidatTransform(): void {
+        if (this._invalid) {
+            return;
+        }
+
+        this._invalid = true;
         this.clear();
 
         if (this._refreshRequest) {
@@ -284,6 +352,12 @@ export class CanvasRenderer {
         this._refreshRequest = requestAnimationFrame(() => {
             this._draw();
             this._refreshRequest = undefined;
+            this._invalid = false;
         });
+    }
+
+    private _onQuadTreeChange(data: QuadNodeEventData): void {
+        this.refresh();
+        //console.log('Node CHANGED', data);
     }
 }

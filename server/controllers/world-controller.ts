@@ -5,6 +5,7 @@ import { MarkerSetting, TileData, TileDataEntry, WorldData } from "../../engine/
 import { QuadNodeKey } from "../../engine/world/quad-node-key";
 import { WorldDataSummary } from "../types";
 import { generateTileMap } from "../map-generator/map-generator";
+import { isCircleShape, isLineShape, isRectangleShape } from "../../engine/schemas/tile-map-json-schema";
 
 type GetWorldRequest = { id: number };
 type CreateWorldRequest = { name: string; size: number; palette: number; };
@@ -143,12 +144,10 @@ export async function generateMapByNode(
         console.log('generateMapByNode', tile);
         //const success = await worldRepository.deleteWorld(id);
 
+
         // Very shitty result from layout.
         const result = await generateTileMap({
-            dimensions: {
-                width: 313,
-                height: 313,
-            },
+            bounds: tile.bounds,
             terrain: tile.terrain,
             markers: tile.markers.map((marker) => {
                 return {
@@ -157,11 +156,51 @@ export async function generateMapByNode(
                 };
             }),
         });
-        console.log('generateMapByNode:::', result);
 
         if (result) {
             res.json({
-                tileMap: result,
+                tileMap: {
+                    ...result,
+                    bounds: tile.bounds,
+                    objects: result?.objects.map((object) => {
+                        if (isRectangleShape(object.shape)) {
+                            return {
+                                ...object,
+                                shape: {
+                                    ...object.shape,
+                                    x: object.shape.x + tile.bounds.x,
+                                    y: object.shape.y + tile.bounds.y,
+                                },
+                            }
+                        } else if (isLineShape(object.shape)) {
+                            return {
+                                ...object,
+                                shape: {
+                                    ...object.shape,
+                                    point1: {
+                                        x: object.shape.point1.x + tile.bounds.x,
+                                        y: object.shape.point1.y + tile.bounds.y,
+                                    },
+                                    point2: {
+                                        x: object.shape.point2.x + tile.bounds.x,
+                                        y: object.shape.point2.y + tile.bounds.y,
+                                    },
+                                },
+                            }
+                        } else if (isCircleShape(object.shape)) {
+                            return {
+                                ...object,
+                                shape: {
+                                    ...object.shape,
+                                    x: object.shape.x + tile.bounds.x,
+                                    y: object.shape.y + tile.bounds.y,
+                                },
+                            }
+                        }
+
+                        return object;
+                    }),
+                },
                 success: true,
             });
         } else {

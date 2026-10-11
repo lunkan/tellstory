@@ -53,7 +53,7 @@ export class DrawLineHandler extends CanvasEventHandler {
         this._updateParentLineSegment(previousNode, node, vectorValue);
 
 
-        this.renderer.refresh();
+        //this.renderer.refresh();
         previousNode = node;
         this.finish();
         return;
@@ -98,18 +98,27 @@ export class DrawLineHandler extends CanvasEventHandler {
             return false;
         }
 
-        if (!node.tile) {
-            node.tile = new Tile();
+        if (!node.hasTile()) {
+            //node.tile = new Tile();
+            node.setTileData({}); // Probably not needed after update 
         }
 
         node.detach();
         node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
 
-        node.tile.setVector({
+        node.setTileData({
+            vectors: [{
+                type: this._type,
+                value: value,
+                direction: vector,
+            }],
+        });
+
+        /*node.tile.setVector({
             type: this._type,
             value: value,
             direction: vector,
-        });
+        });*/
 
         return true;
     }
@@ -128,7 +137,23 @@ export class DrawLineHandler extends CanvasEventHandler {
             return;
         }
 
-        nodeParent.tile?.applyVector({
+        nodeParent.updateTileData({
+            vectors: [{
+                type: this._type,
+                value: value,
+                direction: { x: delta1.x, y: delta1.y },
+            }],
+        });
+
+        targetNodeParent.updateTileData({
+            vectors: [{
+                type: this._type,
+                value: value,
+                direction: { x: delta2.x, y: delta2.y },
+            }],
+        });
+
+        /*nodeParent.tile?.applyVector({
             type: this._type,
             value: value,
             direction: { x: delta1.x, y: delta1.y },
@@ -138,7 +163,7 @@ export class DrawLineHandler extends CanvasEventHandler {
             type: this._type,
             value: value,
             direction: { x: delta2.x, y: delta2.y },
-        });
+        });*/
 
         this._updateParentLineSegment(nodeParent, targetNodeParent, value);
 

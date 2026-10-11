@@ -104,7 +104,7 @@ export class PlayerObserver implements IGameObserver {
 
             if (directionVector) {
                 const direction = getDirectionFromAdjacentVector(directionVector.x, directionVector.y);
-                const movementCost = node.tile?.terrain.reduce((acc, terrain) => {
+                const movementCost = node.getTile()?.terrain.reduce((acc, terrain) => {
                     const tileMoveCost = config.getTile(terrain.type)?.movementCost || 0;
                     //tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrain.type)?.movementCost || 0;
                     return Math.max(acc, tileMoveCost);

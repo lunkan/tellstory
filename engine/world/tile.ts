@@ -1,9 +1,28 @@
 //import tilesJSON from '../config/tiles.json' with { type: 'json' };
 import { config } from '../config/config';
-import { MarkerSetting, TerrainSetting, TileData, VectorSetting } from '../types';
+import { TileMap } from '../schemas/tile-map-json-schema';
+import { MarkerSetting, TerrainSetting, TileBounds, TileData, VectorSetting } from '../types';
 //import { Marker } from './markers';
 
 export class Tile {
+    public readonly bounds: TileBounds;
+    public readonly mapData: TileMap | undefined;
+    public readonly terrain: TerrainSetting[];
+    public readonly vectors: VectorSetting[];
+    public readonly markers: MarkerSetting[];
+
+    constructor(bounds: TileBounds, data?: Partial<TileData>) {
+        this.bounds = bounds;
+        this.mapData = data?.mapData;
+        this.terrain = data?.terrain?.map((t) => Object.freeze(t)) ?? [];
+        this.vectors = data?.vectors?.map((v) => Object.freeze(v)) ?? [];
+        this.markers = data?.markers?.map((m) => Object.freeze(m)) ?? [];
+    }
+
+    /*public get mapData() {
+        return this._mapData;
+    }
+
     public get terrain() {
         return this._terrain;
     }
@@ -31,6 +50,77 @@ export class Tile {
     private _terrain: TerrainSetting[] = [];
     private _vectors: VectorSetting[] = [];
     private _markers: MarkerSetting[] = [];
+    private _mapData: TileMap | undefined;*/
+
+    public set(tileData: Partial<TileData>): Tile {
+        const mutatedTerrain = [...this.terrain];
+        tileData.terrain?.forEach((terrain) => {
+            const index = mutatedTerrain.findIndex((t) => t.type === terrain.type);
+            if (index !== -1) {
+                mutatedTerrain[index] = terrain;
+            } else {
+                mutatedTerrain.push(terrain);
+            }
+        });
+
+        const mutatedVectors = [...this.vectors];
+        tileData.vectors?.forEach((vector) => {
+            const index = mutatedVectors.findIndex((v) => v.type === vector.type && v.direction.x === vector.direction.x && v.direction.y === vector.direction.y);
+            if (index) {
+                mutatedVectors[index] = vector;
+            } else {
+                mutatedVectors.push(vector);
+            }
+        });
+
+        return new Tile(this.bounds, {
+            terrain: mutatedTerrain,
+            vectors: mutatedVectors,
+            markers: tileData.markers,
+            mapData: tileData.mapData
+        });
+    }
+
+    public update(tileData: Partial<TileData>): Tile {
+        const mutatedTerrain = [...this.terrain];
+        tileData.terrain?.forEach((terrain) => {
+            const index = mutatedTerrain.findIndex((t) => t.type === terrain.type);
+            if (index !== -1) {
+                mutatedTerrain[index] = {
+                    ...mutatedTerrain[index],
+                    ...terrain,
+                    value: this._clampValue(mutatedTerrain[index].value + terrain.value),
+                };
+            } else {
+                mutatedTerrain.push(terrain);
+            }
+        });
+
+        const mutatedVectors = [...this.vectors];
+        tileData.vectors?.forEach((vector) => {
+            const index = mutatedVectors.findIndex((v) => v.type === vector.type && v.direction.x === vector.direction.x && v.direction.y === vector.direction.y);
+            if (index) {
+                mutatedVectors[index] = {
+                    ...mutatedVectors[index],
+                    ...vector
+                }
+            } else {
+                mutatedVectors.push(vector);
+            }
+        });
+
+        return new Tile(this.bounds, {
+            terrain: mutatedTerrain,
+            vectors: mutatedVectors,
+            markers: tileData.markers ? this.markers.concat(tileData.markers) : this.markers,
+            mapData: this.mapData // Don't append map
+        });
+    }
+
+
+    /*public setMap(tileMapData: TileMap): void {
+        this._mapData = tileMapData;
+    }
 
     public addMarker(marker: MarkerSetting): void {
         this._markers.push(marker);
@@ -44,9 +134,9 @@ export class Tile {
         }
 
         this._vectors.push(vector);
-    }
+    }*/
 
-    public applyVector(vector: VectorSetting): void {
+    /*private _applyVector(vector: VectorSetting): void {
         const currentVector = this._vectors.find((v) => v.type === vector.type && v.direction.x === vector.direction.x && v.direction.y === vector.direction.y);
         if (currentVector) {
             currentVector.value = vector.value + vector.value;
@@ -54,11 +144,10 @@ export class Tile {
         }
 
         this._vectors.push(vector);
-    }
+    }*/
 
     public hasTag(tag: string): boolean {
-        return this._terrain.some((terrain) => {
-            //const tileConfig = tilesJSON.tiles.find((tileConfig) => tileConfig.name === terrain.type);
+        return this.terrain.some((terrain) => {
             const tileConfig = config.getTile(terrain.type);
             if (tileConfig && Array.isArray(tileConfig.tags)) {
                 return tileConfig.tags.includes(tag);
@@ -69,23 +158,23 @@ export class Tile {
     }
 
     public getVectorsByType(type: string): VectorSetting[] {
-        return this._vectors.filter((v) => v.type === type);
+        return this.vectors.filter((v) => v.type === type);
     }
 
     public hasTerrain(name: string): boolean {
-        return this._terrain.some((terrain) => terrain.type === name);
+        return this.terrain.some((terrain) => terrain.type === name);
     }
 
-    public addTerrain(...option: TerrainSetting[]): void {
+    /*public addTerrain(...option: TerrainSetting[]): void {
         this._terrain.push(...option);
-    }
+    }*/
 
     public getTerrain(type: string): TerrainSetting | undefined {
-        return this._terrain.find((terrain) => terrain.type === type);
+        return this.terrain.find((terrain) => terrain.type === type);
     }
 
     // Adds/reduce value on top of current
-    public applyTerrain(mutadedTerrain: TerrainSetting): void {
+    /*private _applyTerrain(mutadedTerrain: TerrainSetting): void {
         if (this.hasTerrain(mutadedTerrain.type)) {
             this._terrain = this._terrain.map((terrain) => {
                 if (terrain.type !== mutadedTerrain.type) {
@@ -100,10 +189,10 @@ export class Tile {
         } else {
             this._terrain.push(mutadedTerrain);
         }
-    }
+    }*/
 
     // Overrides value
-    public setTerrain(mutadedTerrain: TerrainSetting): void {
+    /*public setTerrain(mutadedTerrain: TerrainSetting): void {
         if (this.hasTerrain(mutadedTerrain.type)) {
             this._terrain = this._terrain.map((terrain) => {
                 if (terrain.type !== mutadedTerrain.type) {
@@ -118,26 +207,29 @@ export class Tile {
         } else {
             this._terrain.push(mutadedTerrain);
         }
-    }
+    }*/
 
     /*public getTerrainMetrics(): Metric {
         const entries = this._terrain.map(({ type, value }) => [type, value]) || [];
         return Object.fromEntries(entries);
     }*/
 
-    public toString(): string {
+    /*public toString(): string {
+        // What???
         return JSON.stringify({
             elevation: this.value,
             type: this.type,
             value: this.value,
         }, null, 4);
-    }
+    }*/
 
     public getJSON(): TileData {
         return {
-            vectors: this._vectors,
-            terrain: this._terrain,
-            markers: this._markers
+            bounds: this.bounds,
+            vectors: this.vectors,
+            terrain: this.terrain,
+            markers: this.markers,
+            mapData: this.mapData
         };
     }
 

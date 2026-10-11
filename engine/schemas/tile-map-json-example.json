@@ -1,0 +1,116 @@
+{
+    "bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 313,
+        "height": 313
+    },
+    "objects": [
+        {
+            "type": "Post office",
+            "attention": 3,
+            "description": "Old post office",
+            "shape": {
+                "type": "rectangle",
+                "x": 10,
+                "y": 10,
+                "width": 10,
+                "height": 15,
+                "rotation": 0
+            }
+        },
+        {
+            "type": "Resident building",
+            "attention": 1,
+            "description": "Blue resident building 3 floors",
+            "shape": {
+                "type": "rectangle",
+                "x": 15,
+                "y": 10,
+                "width": 10,
+                "height": 10,
+                "rotation": 0
+            }
+        },
+        {
+            "type": "Resident building",
+            "attention": 1,
+            "description": "Big red resident building 8 floors",
+            "shape": {
+                "type": "rectangle",
+                "x": 100,
+                "y": 150,
+                "width": 20,
+                "height": 20,
+                "rotation": 45
+            }
+        },
+        {
+            "type": "Street",
+            "attention": 1,
+            "description": "Street with sidewalk",
+            "shape": {
+                "type": "line",
+                "width": 5,
+                "point1": {
+                    "x": 0,
+                    "y": 40
+                },
+                "point2": {
+                    "x": 90,
+                    "y": 40
+                }
+            }
+        },
+        {
+            "type": "Street",
+            "attention": 1,
+            "description": "Street with sidewalk",
+            "shape": {
+                "type": "line",
+                "width": 5,
+                "point1": {
+                    "x": 90,
+                    "y": 40
+                },
+                "point2": {
+                    "x": 313,
+                    "y": 0
+                }
+            }
+        },
+        {
+            "type": "Street lamp",
+            "attention": 0,
+            "description": "3 meter tall street lamp",
+            "shape": {
+                "type": "circle",
+                "x": 10,
+                "y": 35,
+                "radius": 0.3
+            }
+        },
+        {
+            "type": "Street lamp",
+            "attention": 0,
+            "description": "3 meter tall street lamp",
+            "shape": {
+                "type": "circle",
+                "x": 85,
+                "y": 35,
+                "radius": 0.3
+            }
+        },
+        {
+            "type": "Oak tree",
+            "attention": 0,
+            "description": "Big old oak tree",
+            "shape": {
+                "type": "circle",
+                "x": 50,
+                "y": 100,
+                "radius": 5
+            }
+        }
+    ]
+}

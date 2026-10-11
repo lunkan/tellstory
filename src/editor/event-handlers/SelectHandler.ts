@@ -25,7 +25,6 @@ export class SelectHandler extends CanvasEventHandler {
 
         const viewportPoint = super.toViewportPoint(point);
         const selectedNode = this.renderer.getNodeFromPoint(viewportPoint);
-        console.log('Selected Node', selectedNode);
         this._selectCallback(selectedNode);
         this.renderer.setActiveTile(viewportPoint);
         this.finish();

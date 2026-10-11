@@ -47,10 +47,23 @@
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
-import { QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileDataEntry } from "../types";
+import { QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileBounds, TileData, TileDataEntry } from "../types";
 import { hydrate } from "./hydrator/hydrate";
+import { TileMapObject } from "../schemas/tile-map-json-schema";
+import { getTileSizeMeter, LEAF_SIZE_METER } from "./scale";
+
+export type QuadNodeFilterCallback = (node: QuadNode) => boolean;
+
+export type QuadNodeEventData = {
+    type: string;
+    details?: unknown;
+}
+
+export type QuadNodeEventCallback = (data: QuadNodeEventData) => void;
 
 export class QuadNode {
+    public static EVENT_DATA_CHANGE: string = 'dataChange';
+
     public static createRoot(maxDepth: number): QuadNode {
         return new QuadNode(maxDepth);
     }
@@ -61,7 +74,7 @@ export class QuadNode {
     /** Deepest level this world subdivides to. Seeded at the root, inherited by every child. */
     public readonly maxDepth: number;
 
-    public tile: Tile | undefined;
+    //public tile: Tile | undefined;
 
     public get depth() {
         return this.key.depth;
@@ -72,8 +85,10 @@ export class QuadNode {
         return this.maxDepth - this.depth;
     }
 
+    private _tile: Tile | undefined;
     private _quadrants: QuadNode[] = [];
     private _detached: boolean = false;
+    private _registeredEventCallbacks: QuadNodeEventCallback[] = [];
 
     private constructor(maxDepth: number, parent?: QuadNode, index?: any) {
         this.maxDepth = maxDepth;
@@ -86,6 +101,18 @@ export class QuadNode {
             this.key = parent.key.createChildKey(index);
             this.bounds = QuadNodeBounds.createChild(parent.bounds, index);
         }
+    }
+
+    public subscribe(callback: QuadNodeEventCallback): () => void {
+        this._registeredEventCallbacks.push(callback);
+        return () => {
+            this._registeredEventCallbacks = this._registeredEventCallbacks.filter((subscriber) => subscriber !== callback);
+        };
+    }
+
+    public dispatch(eventData: QuadNodeEventData): void {
+        this._registeredEventCallbacks.forEach((subscriber: QuadNodeEventCallback) => subscriber(eventData));
+        this.parent?.dispatch(eventData);
     }
 
     // Dehydrate - if updated
@@ -103,7 +130,7 @@ export class QuadNode {
             return;
         }
 
-        if (!this.tile) {
+        if (!this._tile) {
             hydrate(this); // Want the tile
         }
 
@@ -126,7 +153,7 @@ export class QuadNode {
     }
 
     public isGenerated(): boolean {
-        return !!this.tile && !this._detached;
+        return !!this._tile && !this._detached;
     }
 
     public isDescendant(quadNode: QuadNode | undefined): boolean {
@@ -143,6 +170,10 @@ export class QuadNode {
         }
 
         return this.isDescendant(quadNode) || quadNode.isDescendant(this);
+    }
+
+    public hasTile(): boolean {
+        return !!this._tile;
     }
 
     public getPoint(): QuadNodePoint {
@@ -219,15 +250,17 @@ export class QuadNode {
         }
     }
 
-    public findByPoint(point: QuadNodePoint, createIfMissing: boolean = false): QuadNode | undefined {
+    public findByPoint(point: QuadNodePoint, createIfMissing: boolean = false, filterCallback?: QuadNodeFilterCallback): QuadNode | undefined {
         if (this.depth > point.z || !this.bounds.contains2DPoint(point)) {
             return;
         } else if (this.depth === point.z) {
             return this;
+        } else if (filterCallback && !filterCallback(this)) {
+            return;
         }
 
         for (const quadrant of this.getQuadrants(createIfMissing)) {
-            const node = quadrant.findByPoint(point, createIfMissing);
+            const node = quadrant.findByPoint(point, createIfMissing, filterCallback);
             if (node) {
                 return node;
             }
@@ -247,6 +280,25 @@ export class QuadNode {
         }
 
         return nodes;
+    }
+
+    // Is this good?
+    public findMapObjectsByRect(rect: QuadNodesRect): TileMapObject[] {
+        // 1) In bounds ?
+        // 2) In depth ? 
+        // 3) Has map nodes ?
+        // 4) Map objects in bounds - then add
+
+        if (rect.z < 4 || !this.bounds.intersects2DRect(rect)) {
+            return []; // No reported after 
+        }
+
+        const objects: TileMapObject[] = this._tile?.mapData ? this._tile.mapData.objects : [];
+        for (const quadrant of this.getQuadrants()) {
+            objects.push(...quadrant.findMapObjectsByRect(rect));
+        }
+
+        return objects;
     }
 
     public getNormalizedRelativePosition(node: QuadNode): QuadNodeNormVector | undefined {
@@ -286,24 +338,63 @@ export class QuadNode {
         return normDistance === 1;
     }
 
+    public setTileData(tileData: Partial<TileData> | undefined): boolean {
+        if (!tileData) {
+            this._tile = undefined;
+        } else if (!this._tile) {
+            this._tile = new Tile(this.getTileBounds(), tileData);
+        } else {
+            this._tile = this._tile.set(tileData);
+        }
+
+        this.dispatch({ type: QuadNode.EVENT_DATA_CHANGE });
+        return true;
+    }
+
+    public updateTileData(tileData: Partial<TileData>): boolean {
+        if (!this._tile) {
+            return false;
+        }
+
+        this._tile = this._tile.update(tileData);
+        this.dispatch({ type: QuadNode.EVENT_DATA_CHANGE });
+        return true;
+    }
+
+    public getTile(): Tile | undefined {
+        return this._tile;
+    }
+
     public getDetachedTiles(): TileDataEntry[] {
         if (!this.isDetached()) {
             return [];
         }
 
         const quadrantTiles = this._quadrants.flatMap((node: QuadNode) => node.getDetachedTiles());
-        if (!this.tile) {
+        if (!this._tile) {
             return quadrantTiles;
         }
 
         const tileData: TileDataEntry = {
             nodeId: this.key.id,
-            terrain: this.tile.terrain,
-            vectors: this.tile.vectors,
-            markers: this.tile.markers
+            ...this._tile,
+            //terrain: this._tile.terrain,
+            //vectors: this._tile.vectors,
+            //markers: this._tile.markers
         };
 
         return [tileData, ...quadrantTiles];
+    }
+
+    public getTileBounds(): TileBounds {
+        // bounds are in grid units (1 unit = 1 leaf), not tile indices
+        const size = getTileSizeMeter(this.scale);
+        return {
+            x: this.bounds.x * LEAF_SIZE_METER,
+            y: this.bounds.y * LEAF_SIZE_METER,
+            width: size,
+            height: size,
+        };
     }
 
     public toString(): string {
@@ -311,7 +402,7 @@ export class QuadNode {
             key: this.key.toString(),
             depth: this.depth,
             bounds: this.bounds.toString(),
-            tile: this.tile?.toString(),
+            tile: this._tile?.toString(),
         }, null, 4);
     }
 
@@ -321,7 +412,7 @@ export class QuadNode {
             depth: this.depth,
             point: this.getPoint(),
             bounds: this.bounds.getJSON(),
-            tile: this.tile?.getJSON(),
+            tile: this._tile?.getJSON(),
         }
     }
 

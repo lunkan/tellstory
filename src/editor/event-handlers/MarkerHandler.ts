@@ -31,18 +31,27 @@ export class MarkerHandler extends CanvasEventHandler {
             return;
         }
 
-        if (!node.tile) {
-            node.tile = new Tile();
+        if (!node.hasTile()) {
+            //node.tile = new Tile();
+            node.setTileData({});
         }
 
         node.detach();
-        node.tile?.addMarker({
+        node.updateTileData({
+            markers: [{
+                point: gridPoint,
+                type: entity.name,
+                id: `marker@${markerIncrementor}`,
+            }],
+        });
+
+        /*node.tile?.addMarker({
             point: gridPoint,
             type: entity.name,
             id: `marker@${markerIncrementor}`,
-        });
+        });*/
 
-        this.renderer.refresh();
+        //this.renderer.refresh();
     }
 
     public pointerMove(_point: DOMPoint): void { /* No action */ }

@@ -24,7 +24,7 @@ export function hydrateRoads(node: QuadNode): QuadNode {
 }
 
 function _hydrateSubTiles(parent: QuadNode): void {
-    if (!parent.tile) {
+    if (!parent.hasTile()) {
         return;
     }
 
@@ -34,10 +34,11 @@ function _hydrateSubTiles(parent: QuadNode): void {
     }
 
     quadrants.forEach((quadNode) => {
-        if (quadNode && !quadNode?.tile) {
-            quadNode.tile = new Tile();
+        if (quadNode && !quadNode?.hasTile()) {
+            quadNode.setTileData({});
+            //quadNode.tile = new Tile();
         }
-    })
+    });
 
     // A | B
     // -----
@@ -49,10 +50,10 @@ function _hydrateSubTiles(parent: QuadNode): void {
         d: quadrants[3]!,
     };
 
-    const aUrban = quadrantMap.a.tile?.getTerrain('urban');
-    const bUrban = quadrantMap.b.tile?.getTerrain('urban');
-    const cUrban = quadrantMap.c.tile?.getTerrain('urban');
-    const dUrban = quadrantMap.d.tile?.getTerrain('urban');
+    const aUrban = quadrantMap.a.getTile()?.getTerrain('urban');
+    const bUrban = quadrantMap.b.getTile()?.getTerrain('urban');
+    const cUrban = quadrantMap.c.getTile()?.getTerrain('urban');
+    const dUrban = quadrantMap.d.getTile()?.getTerrain('urban');
 
     // A
 
@@ -168,23 +169,39 @@ function _setRoadVectorsBetweenQuadNodes(quadNode1: QuadNode, quadNode2: QuadNod
         return;
     }
 
-    const v1 = quadNode1.tile?.getVectorsByType('road').find((vector) => vector.direction.x === delta1.x && vector.direction.y === delta1.y);
-    const v2 = quadNode2.tile?.getVectorsByType('road').find((vector) => vector.direction.x === delta2.x && vector.direction.y === delta2.y);
+    const v1 = quadNode1.getTile()?.getVectorsByType('road').find((vector) => vector.direction.x === delta1.x && vector.direction.y === delta1.y);
+    const v2 = quadNode2.getTile()?.getVectorsByType('road').find((vector) => vector.direction.x === delta2.x && vector.direction.y === delta2.y);
 
     if (!v1) {
-        quadNode1.tile?.setVector({
+        quadNode1.setTileData({
+            vectors: [{
+                direction: { x: delta1.x, y: delta1.y },
+                value: value,
+                type: 'road',
+            }],
+        });
+
+        /*quadNode1.tile?.setVector({
             direction: { x: delta1.x, y: delta1.y },
             value: value,
             type: 'road',
-        });
+        });*/
     }
 
     if (!v2) {
-        quadNode2.tile?.setVector({
+        quadNode2.setTileData({
+            vectors: [{
+                direction: { x: delta2.x, y: delta2.y },
+                value: value,
+                type: 'road',
+            }],
+        });
+
+        /*quadNode2.tile?.setVector({
             direction: { x: delta2.x, y: delta2.y },
             value: value,
             type: 'road',
-        });
+        });*/
     }
 }
 
@@ -200,12 +217,20 @@ function _setOuterRoadVectors(quadNode: QuadNode, value: number): void {
 }
 
 function _setOuterRoadVector(quadNode: QuadNode, vector: QuadNodeNormVector, value: number): void {
-    const vectorSetting = quadNode.tile?.getVectorsByType('road').find((vectorSetting) => vectorSetting.direction.x === vector.x && vectorSetting.direction.y === vector.y);
+    const vectorSetting = quadNode.getTile()?.getVectorsByType('road').find((vectorSetting) => vectorSetting.direction.x === vector.x && vectorSetting.direction.y === vector.y);
     if (!vectorSetting) {
-        quadNode.tile?.setVector({
+        quadNode.setTileData({
+            vectors: [{
+                direction: { x: vector.x, y: vector.y },
+                value: value,
+                type: 'road',
+            }],
+        });
+
+        /*quadNode.tile?.setVector({
             direction: { x: vector.x, y: vector.y },
             value: value,
             type: 'road',
-        });
+        });*/
     }
 }

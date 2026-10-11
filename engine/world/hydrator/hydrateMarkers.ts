@@ -31,11 +31,12 @@ function _hydrateSubTiles(parent: QuadNode): void {
 }
 
 function _hydrateSubTile(node: QuadNode): void {
-    if (!node.tile) {
+    const tile = node.getTile();
+    if (!tile) {
         return; // Can't generate markers without terrain
     }
 
-    node.tile.terrain
+    tile.terrain
         .filter((terrainConfig) => terrainConfig.type !== 'elevation')
         .forEach((terrainConfig) => {
             const markers = config.getMarkersByFilter({ scale: node.scale, tags: [terrainConfig.type] });
@@ -46,12 +47,21 @@ function _hydrateSubTile(node: QuadNode): void {
                 const randIndex = Math.floor(markers.length * rand);
                 const marker = markers.splice(randIndex, 1)[0];
 
-                node.tile!.addMarker({
+                node.updateTileData({
+                    markers: [{
+                        point: _findMarkerPoint(marker, node),
+                        attention: node.scale,
+                        type: marker.name,
+                        id: 'hydrated',
+                    }],
+                });
+
+                /*node.tile!.addMarker({
                     point: _findMarkerPoint(marker, node),
                     attention: node.scale,
                     type: marker.name,
                     id: 'hydrated',
-                });
+                });*/
 
                 numMarkers--;
             }

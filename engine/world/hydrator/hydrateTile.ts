@@ -4,7 +4,7 @@ import { QuadNodeDelta } from '../../types';
 import { getRandFromSeeds, mergeSeeds } from '../../util/number-generator';
 import { QuadNode } from '../quad-node';
 
-import { Tile } from "../tile";
+//import { Tile } from "../tile";
 
 export function hydrateTile(node: QuadNode): QuadNode {
     if (!node?.parent) {
@@ -16,7 +16,8 @@ export function hydrateTile(node: QuadNode): QuadNode {
 }
 
 function _hydrateSubTiles(parent: QuadNode): void {
-    if (!parent.tile) {
+    const parentTile = parent.getTile();
+    if (!parentTile) {
         return;
     }
 
@@ -30,25 +31,35 @@ function _hydrateSubTiles(parent: QuadNode): void {
     }
 
     const quadrants: QuadNode[] = [quadrantA, quadrantB, quadrantC, quadrantD].map((quadrant) => {
-        quadrant.tile = new Tile();
+        //quadrant.tile = new Tile();
+        quadrant.setTileData({});
         return quadrant;
     });
 
     // Water - is water :) !!! Or lake?
-    if (parent.tile.hasTerrain('ocean')) {
+    if (parentTile.hasTerrain('ocean')) {
         quadrants.forEach((quadrant) => {
+            quadrant.setTileData({
+                terrain: [{
+                    type: 'ocean',
+                    value: 1,
+                }],
+            });
+        });
+
+        /*quadrants.forEach((quadrant) => {
             quadrant.tile!.addTerrain({
                 type: 'ocean',
                 value: 1,
             });
-        });
+        });*/
 
         return;
     }
 
     let seedIncrementor = 0;
 
-    parent.tile.terrain.map((terrain) => {
+    parentTile.terrain.map((terrain) => {
         const tileConfig = config.getTile(terrain.type);
         //tilesJSON.tiles.find((tile) => tile.name === terrain.type);
         const cluster = tileConfig?.cluster || 1;
@@ -56,10 +67,17 @@ function _hydrateSubTiles(parent: QuadNode): void {
         const quadrantValues = _getQuadrantValues(seed, terrain.value, cluster);
 
         quadrants.forEach((quadrant, i) => {
-            quadrant.tile?.addTerrain({
+            quadrant.setTileData({
+                terrain: [{
+                    type: terrain.type,
+                    value: quadrantValues[i],
+                }],
+            });
+
+            /*quadrant.tile?.addTerrain({
                 type: terrain.type,
                 value: quadrantValues[i],
-            });
+            });*/
         });
     });
 
@@ -83,7 +101,7 @@ function _hydrateSubTiles(parent: QuadNode): void {
         }
     }
 
-    parent.tile.vectors.forEach((vector) => {
+    parentTile.vectors.forEach((vector) => {
         const xQuadrants = xQuadrantsFromVector(vector.direction.x);
         const yQuadrants = yQuadrantsFromVector(vector.direction.y);
         const vQuadrant = xQuadrants.find((quadrant) => yQuadrants.indexOf(quadrant) !== -1);
@@ -92,7 +110,19 @@ function _hydrateSubTiles(parent: QuadNode): void {
             return;
         }
 
-        vQuadrant.tile?.setVector({
+        vQuadrant.setTileData({
+            vectors: [{
+                direction: vQuadrant.getNormalizedRelativePosition(parent)!,
+                value: vector.value,
+                type: vector.type,
+            }, {
+                direction: vector.direction,
+                value: vector.value,
+                type: vector.type,
+            }],
+        });
+
+        /*vQuadrant.tile?.setVector({
             direction: vQuadrant.getNormalizedRelativePosition(parent)!,
             value: vector.value,
             type: vector.type,
@@ -102,7 +132,7 @@ function _hydrateSubTiles(parent: QuadNode): void {
             direction: vector.direction,
             value: vector.value,
             type: vector.type,
-        });
+        });*/
     });
 }
 

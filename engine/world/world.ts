@@ -2,6 +2,7 @@
 //import markersJSON from '../config/markers.json' with { type: 'json' };
 
 import { config } from "../config/config";
+import { TileMapObject } from "../schemas/tile-map-json-schema";
 //import { MarkerConfigData, TileConfigData } from '../config/type';
 import { MarkerSetting, PaletteData, QuadNodeDelta, QuadNodePoint, QuadNodesRect, WorldData } from "../types";
 import { hydrate } from "./hydrator/hydrate";
@@ -24,43 +25,28 @@ export class World {
     public get minZoomDepth(): number {
         return Math.max(0, this.quadtree.maxDepth - MAX_ZOOM_OUT);
     }
-    //public readonly markers: Markers;
-
-    //private _hydrator: Hydrator;
 
     constructor(worldData: WorldData, PaletteData: PaletteData) {
         config.set(PaletteData);
-
-        /*if (!config.isInitilized()) {
-
-            config.init({
-                name: tilesJSON.name,
-                version: tilesJSON.version,
-                tiles: tilesJSON.tiles as TileConfigData[],
-                markers: markersJSON.markers as MarkerConfigData[],
-            });
-        }*/
 
         if (worldData.size < 1 || worldData.size > QuadNodeKey.MAX_DEPTH) {
             throw Error(`World size ${worldData.size} is outside 1..${QuadNodeKey.MAX_DEPTH}`);
         }
 
         this.quadtree = QuadNode.createRoot(worldData.size);
-        //this.markers = new Markers(this.quadtree.bounds.size);
-
-        //this._hydrator = new Hydrator(this.markers);
-
         for (const tileEntry of worldData.tiles) {
-            const tile = new Tile();
+            /*const tile = new Tile();
             tileEntry.terrain.forEach((terrainSetting) => tile.setTerrain(terrainSetting));
             tileEntry.vectors.forEach((vectorSetting) => tile.setVector(vectorSetting));
             tileEntry.markers.forEach((markerSetting) => tile.addMarker(markerSetting)); // New
-
+*/
             const nodeKey = QuadNodeKey.fromId(tileEntry.nodeId);
             const node = this.quadtree.findByKey(nodeKey, true);
 
             if (node) {
-                node.tile = tile;
+                node.setTileData(tileEntry);
+
+                //.tile = tile;
 
                 // If stored they are detached and all there acestors should be detached as well.
                 // Need to set detached flag though !! 
@@ -78,9 +64,8 @@ export class World {
 
     //public getStartingLocations(): Marker[] {
     public getStartingLocations(): MarkerSetting[] {
-        return this.quadtree.tile?.markers.filter((marker) => marker.type === 'player-start') || [];
+        return this.quadtree.getTile()?.markers.filter((marker) => marker.type === 'player-start') || [];
 
-        //return this.markers.getAll().filter((marker) => marker.type === 'player-start');
     }
 
     // Really needed?
@@ -92,8 +77,12 @@ export class World {
         // Is it strange to get all from here? When tile data is only by node not recursive
         let current: QuadNode | undefined = node;
         const markers: MarkerSetting[] = [];
-        while (current && current.tile) {
-            markers.push(...current.tile.markers);
+
+        while (current) {
+            const tile = current.getTile();
+            if (tile === undefined) break;
+
+            markers.push(...tile.markers);
             current = current.parent;
         }
 
@@ -174,6 +163,13 @@ export class World {
         const parentNode = this.quadtree.findByKey(parentKey);
         //return this._hydrator.hydrate(parentNode);
         return hydrate(parentNode);
+    }
+
+    public findMapObjectsByRect(rect: QuadNodesRect): TileMapObject[] {
+        // Max min depth
+        // TileData - only generated?
+
+        return this.quadtree.findMapObjectsByRect(rect);
     }
 
     public getData(): Pick<WorldData, 'tiles'> {
