@@ -6,17 +6,20 @@ import { MarkerSetting, TerrainSetting, TileBounds, TileData, VectorSetting } fr
 
 export class Tile {
     public readonly bounds: TileBounds;
-    public readonly mapData: TileMap | undefined;
+    //public readonly mapData: TileMap | undefined;
     public readonly terrain: TerrainSetting[];
     public readonly vectors: VectorSetting[];
     public readonly markers: MarkerSetting[];
 
+    public readonly isResolved: boolean;
+
     constructor(bounds: TileBounds, data?: Partial<TileData>) {
         this.bounds = bounds;
-        this.mapData = data?.mapData;
+        //this.mapData = data?.mapData;
         this.terrain = data?.terrain?.map((t) => Object.freeze(t)) ?? [];
         this.vectors = data?.vectors?.map((v) => Object.freeze(v)) ?? [];
         this.markers = data?.markers?.map((m) => Object.freeze(m)) ?? [];
+        this.isResolved = this.markers.some((t) => t.shape);
     }
 
     /*public get mapData() {
@@ -77,7 +80,7 @@ export class Tile {
             terrain: mutatedTerrain,
             vectors: mutatedVectors,
             markers: tileData.markers,
-            mapData: tileData.mapData
+            //mapData: tileData.mapData
         });
     }
 
@@ -113,7 +116,7 @@ export class Tile {
             terrain: mutatedTerrain,
             vectors: mutatedVectors,
             markers: tileData.markers ? this.markers.concat(tileData.markers) : this.markers,
-            mapData: this.mapData // Don't append map
+            //mapData: this.mapData // Don't append map
         });
     }
 
@@ -229,7 +232,7 @@ export class Tile {
             vectors: this.vectors,
             terrain: this.terrain,
             markers: this.markers,
-            mapData: this.mapData
+            //mapData: this.mapData
         };
     }
 

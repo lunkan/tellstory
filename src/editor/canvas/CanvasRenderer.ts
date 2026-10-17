@@ -8,9 +8,9 @@ import { GridBounds, GridPoint, TileCoordinate } from "./types";
 import { drawGrid } from "./commands/drawGrid";
 import { CanvasMatrix } from "./CanvasMatrix";
 import { drawSelectedTile } from "./commands/drawSelectedTile";
-import { TileMapObject } from "../../../engine/schemas/tile-map-json-schema";
+//import { TileMapObject } from "../../../engine/schemas/tile-map-json-schema";
 import { drawObjects } from "./commands/drawObjects";
-import { getTileSizeMeter, LEAF_SIZE_METER } from "../../../engine/world/scale";
+import { LEAF_SIZE_METER } from "../../../engine/world/scale";
 
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
@@ -39,7 +39,7 @@ export class CanvasRenderer {
 
     constructor(world: World, canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
         this.world = world;
-        this.world.quadtree.subscribe(this._onQuadTreeChange.bind(this));
+        this.world.quadtree.subscribe(QuadNode.EVENT_DATA_CHANGE, this._onQuadTreeChange.bind(this));
 
         this._matrix = new CanvasMatrix(world.quadtree.maxDepth);
         this.canvas = canvas;
@@ -62,6 +62,11 @@ export class CanvasRenderer {
 
     public getDepth(): number {
         return this._matrix.depth;
+    }
+
+    // depth vs scale vs zoom
+    public getScale(): number {
+        return this.world.maxZoomDepth - this.getDepth();
     }
 
     /** Shallowest depth this world zooms out to. */
@@ -177,8 +182,43 @@ export class CanvasRenderer {
         const tileSize = this._matrix.getTileSize();
         const gridBounds = this._matrix.visibleTiles();
 
-        const gridLayer = this._layers.get('grid')!;
+        const visibleNodes = this._getVisibleNodes(gridBounds);
 
+        let lockedLayer, editableLeafLayer, generatedLayer;
+
+        if (this.getScale() <= 1) {
+            // Paint all white
+            const ctx = this.canvas.getContext('2d');
+            if (ctx) {
+                ctx.fillStyle = '#ddd';
+                ctx.beginPath();
+                ctx.rect(0, 0, this._matrix.width, this._matrix.height);
+                ctx.fill();
+            }
+        } else {
+            lockedLayer = this._layers.get('lockedTiles')!;
+            drawTiles({
+                ctx: lockedLayer.getContext('2d')!,
+                nodes: visibleNodes.filter((node) => node.state & QuadNode.STATE_LOCKED),
+                tileSize
+            });
+
+            editableLeafLayer = this._layers.get('editableLeafTiles')!;
+            drawTiles({
+                ctx: editableLeafLayer.getContext('2d')!,
+                nodes: visibleNodes.filter((node) => (node.state & (QuadNode.STATE_LOCKED | QuadNode.STATE_DETACHED)) === QuadNode.STATE_DETACHED), //.isEditableLeaf()),
+                tileSize
+            });
+
+            generatedLayer = this._layers.get('generatedTiles')!;
+            drawTiles({
+                ctx: generatedLayer.getContext('2d')!,
+                nodes: visibleNodes.filter((node) => node.state === QuadNode.STATE_HYDRATED), //node.isGenerated()),
+                tileSize
+            });
+        }
+
+        const gridLayer = this._layers.get('grid')!;
         drawGrid({
             ctx: gridLayer.getContext('2d')!,
             gridBounds,
@@ -187,62 +227,48 @@ export class CanvasRenderer {
             rootSize: this.world.quadtree.bounds.size,
         });
 
-        const visibleNodes = this._getVisibleNodes(gridBounds);
-        const lockedLayer = this._layers.get('lockedTiles')!;
-        drawTiles({
-            ctx: lockedLayer.getContext('2d')!,
-            nodes: visibleNodes.filter((node) => node.isLocked()),
-            tileSize
-        });
-
-        const editableLeafLayer = this._layers.get('editableLeafTiles')!;
-        drawTiles({
-            ctx: editableLeafLayer.getContext('2d')!,
-            nodes: visibleNodes.filter((node) => node.isEditableLeaf()),
-            tileSize
-        });
-
-        const generatedLayer = this._layers.get('generatedTiles')!;
-        drawTiles({
-            ctx: generatedLayer.getContext('2d')!,
-            nodes: visibleNodes.filter((node) => node.isGenerated()),
-            tileSize
-        });
-
         //const test = this._matrix.getTileSize() / LEAF_SIZE_METER;
 
         //const gx = xMeter / LEAF_SIZE_METER;
         //const gy = yMeter / LEAF_SIZE_METER;
         //ctx.fillRect(gx, gy, widthMeter / LEAF_SIZE_METER, heightMeter / LEAF_SIZE_METER);
 
-        // The layer ctx draws in grid units (1 unit = 1 leaf), the transform handles zoom.
-        drawObjects({
-            ctx: generatedLayer.getContext('2d')!,
-            objects: this._getVisibleMapObjects(gridBounds),
-            scale: 1 / LEAF_SIZE_METER,
-        });
-
-        // All markers from all layers
-        let depth = this._matrix.depth;
-        const nodes: QuadNode[] = [];
-        while (depth > 0) {
-            const nodesByDepth: QuadNode[] = this.world.findNodesByRect({
-                x: gridBounds.x * tileSize,
-                y: gridBounds.y * tileSize,
-                width: gridBounds.xSize * tileSize,
-                height: gridBounds.ySize * tileSize,
-                z: depth,
-            });
-
-            nodes.push(...nodesByDepth);
-            depth--;
-        }
-
         const markerLayer = this._layers.get('markers')!;
-        drawMarkers({
-            ctx: markerLayer.getContext('2d')!,
-            nodes,
-        });
+
+        //const visibleObjects =  this._getVisibleMapObjects(gridBounds);
+        const allVisibleNodes = this._getAllVisibleNodes(gridBounds);
+
+        if (this.getScale() <= 1) {
+            // The layer ctx draws in grid units (1 unit = 1 leaf), the transform handles zoom.
+            drawObjects({
+                ctx: markerLayer.getContext('2d')!,
+                nodes: allVisibleNodes,
+                scale: 1 / LEAF_SIZE_METER,
+            });
+        } else {
+            // All markers from all layers
+            /*let depth = this._matrix.depth;
+            const nodes: QuadNode[] = [];
+            while (depth > 0) {
+                const nodesByDepth: QuadNode[] = this.world.findNodesByRect({
+                    x: gridBounds.x * tileSize,
+                    y: gridBounds.y * tileSize,
+                    width: gridBounds.xSize * tileSize,
+                    height: gridBounds.ySize * tileSize,
+                    z: depth,
+                });
+
+                nodes.push(...nodesByDepth);
+                depth--;
+            }*/
+
+            drawMarkers({
+                ctx: markerLayer.getContext('2d')!,
+                nodes: allVisibleNodes,
+                scale: 1 / LEAF_SIZE_METER,
+                //nodes,
+            });
+        }
 
         const selectedTileLayer = this._layers.get('selectedTile')!;
         drawSelectedTile({
@@ -251,17 +277,23 @@ export class CanvasRenderer {
             tileSize,
         });
 
-        this._ctx.drawImage(editableLeafLayer, 0, 0);
+        if (editableLeafLayer) {
+            this._ctx.drawImage(editableLeafLayer, 0, 0);
+        }
 
-        this._ctx.save();
-        this._ctx.filter = 'grayscale(0.5)';
-        this._ctx.drawImage(lockedLayer, 0, 0);
-        this._ctx.restore();
+        if (lockedLayer) {
+            this._ctx.save();
+            this._ctx.filter = 'grayscale(0.5)';
+            this._ctx.drawImage(lockedLayer, 0, 0);
+            this._ctx.restore();
+        }
 
-        this._ctx.save();
-        this._ctx.globalAlpha = 0.5;
-        this._ctx.drawImage(generatedLayer, 0, 0);
-        this._ctx.restore();
+        if (generatedLayer) {
+            this._ctx.save();
+            this._ctx.globalAlpha = 0.5;
+            this._ctx.drawImage(generatedLayer, 0, 0);
+            this._ctx.restore();
+        }
 
         this._ctx.drawImage(markerLayer, 0, 0);
         this._ctx.drawImage(gridLayer, 0, 0);
@@ -271,7 +303,20 @@ export class CanvasRenderer {
 
     }
 
-    private _getVisibleMapObjects(gridBounds: GridBounds): TileMapObject[] {
+    private _getAllVisibleNodes(gridBounds: GridBounds): QuadNode[] {
+        const tileSize = this._matrix.getTileSize();
+        return this.world.quadtree.findByRect({
+            x: gridBounds.x * tileSize,
+            y: gridBounds.y * tileSize,
+            width: gridBounds.xSize * tileSize,
+            height: gridBounds.ySize * tileSize,
+            z: this._matrix.depth,
+        }, {
+            selectAllDepth: true,
+        });
+    }
+
+    /*private _getVisibleMapObjects(gridBounds: GridBounds): TileMapObject[] {
         const tileSize = this._matrix.getTileSize();
         return this.world.quadtree.findMapObjectsByRect({
             x: gridBounds.x * tileSize,
@@ -280,38 +325,7 @@ export class CanvasRenderer {
             height: gridBounds.ySize * tileSize,
             z: this._matrix.depth,
         });
-
-        /*const tileSize = this._matrix.getTileSize();
-        //const visibleNodes: QuadNode[] = [];
-
-        const nodes = this.world.quadtree.findByRect({
-            x: gridBounds.x * tileSize,
-            y: gridBounds.y * tileSize,
-            width: gridBounds.xSize * tileSize,
-            height: gridBounds.ySize * tileSize,
-            z: this._matrix.depth,
-        }, true);
-
-        console.log('_getVisibleMapObjects', this._matrix.depth, ' * ', nodes.length);*/
-
-
-        /*for (let x = gridBounds.x; x < gridBounds.x + gridBounds.xSize; x++) {
-            for (let y = gridBounds.y; y < gridBounds.y + gridBounds.ySize; y++) {
-                const node = this.world.quadtree.findByPoint({
-                    x: x * tileSize,
-                    y: y * tileSize,
-                    z: this._matrix.depth,
-                }, true);
-
-                if (node) {
-                    hydrate(node); //Make sure it's hydrated
-                    visibleNodes.push(node);
-                }
-            }
-        }
-
-        return visibleNodes;*/
-    }
+    }*/
 
     private _getVisibleNodes(gridBounds: GridBounds): QuadNode[] {
         const tileSize = this._matrix.getTileSize();
@@ -323,9 +337,9 @@ export class CanvasRenderer {
                     x: x * tileSize,
                     y: y * tileSize,
                     z: this._matrix.depth,
-                }, true, (node: QuadNode) => {
-                    return node.getTile()?.mapData ? false : true;
-                });
+                }, true); /*, (node: QuadNode) => {
+                    return node.getTile()?.isResolved ? false : true;
+                });*/
 
                 if (node) {
                     hydrate(node); //Make sure it's hydrated

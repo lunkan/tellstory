@@ -30,18 +30,26 @@ function _hydrateSubTiles(parent: QuadNode): void {
         return;
     }
 
-    const quadrants: QuadNode[] = [quadrantA, quadrantB, quadrantC, quadrantD].map((quadrant) => {
+    // Keep all 4 - quadrantValues are indexed by position. Skip protected nodes when writing.
+    const quadrants: QuadNode[] = [quadrantA, quadrantB, quadrantC, quadrantD];
+
+
+    /*.map((quadrant) => {
         //quadrant.tile = new Tile();
         quadrant.setTileData({});
         return quadrant;
-    });
+    });*/
 
-    // Water - is water :) !!! Or lake?
-    if (parentTile.hasTerrain('ocean')) {
-        quadrants.forEach((quadrant) => {
+    // Water (ocean, lake) - dominant water type above threshold makes all quadrants full water
+    const waterTerrain = parentTile.terrain
+        .filter((terrain) => config.getTile(terrain.type)?.tags.includes('water'))
+        .sort((a, b) => b.value - a.value)[0];
+
+    if (waterTerrain && waterTerrain.value > 0.5) {
+        quadrants.filter((quadrant) => quadrant.canHydrate()).forEach((quadrant) => {
             quadrant.setTileData({
                 terrain: [{
-                    type: 'ocean',
+                    type: waterTerrain.type,
                     value: 1,
                 }],
             });
@@ -67,6 +75,10 @@ function _hydrateSubTiles(parent: QuadNode): void {
         const quadrantValues = _getQuadrantValues(seed, terrain.value, cluster);
 
         quadrants.forEach((quadrant, i) => {
+            if (!quadrant.canHydrate()) {
+                return;
+            }
+
             quadrant.setTileData({
                 terrain: [{
                     type: terrain.type,
@@ -107,6 +119,8 @@ function _hydrateSubTiles(parent: QuadNode): void {
         const vQuadrant = xQuadrants.find((quadrant) => yQuadrants.indexOf(quadrant) !== -1);
         if (!vQuadrant) {
             console.log('FAIL');
+            return;
+        } else if (!vQuadrant.canHydrate()) {
             return;
         }
 

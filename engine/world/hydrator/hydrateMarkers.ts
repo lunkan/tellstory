@@ -26,7 +26,7 @@ function _hydrateSubTiles(parent: QuadNode): void {
     const quadrantD = parent.getQuadrantAt(1, 1, true);
 
     [quadrantA, quadrantB, quadrantC, quadrantD]
-        .filter(Boolean)
+        .filter((quadrant) => quadrant?.canHydrate())
         .forEach((quadrant) => _hydrateSubTile(quadrant!));
 }
 

@@ -1,22 +1,34 @@
 import { isCircleShape, isLineShape, isRectangleShape, TileMapCircleShape, TileMapLineShape, TileMapObject, TileMapRectangleShape } from "../../../../engine/schemas/tile-map-json-schema";
+import { QuadNode } from "../../../../engine/world/quad-node";
 
 
 type DrawObjectOptions = {
     ctx: CanvasRenderingContext2D;
-    objects: TileMapObject[];
+    nodes: QuadNode[]; //TileMapObject[];
     scale: number;
 }
 
 export function drawObjects(options: DrawObjectOptions): void {
-    options.objects.forEach((object) => {
-        if (isRectangleShape(object.shape)) {
-            _drawRectangle(object.shape, options);
-            _drawLabel(object.shape.x, object.shape.y + object.shape.height + 10, object.type, options);
-        } else if (isCircleShape(object.shape)) {
-            _drawCircle(object.shape, options);
-            _drawLabel(object.shape.x, object.shape.y + object.shape.radius + 10, object.type, options);
-        } else if (isLineShape(object.shape)) {
-            _drawLine(object.shape, options);
+    const { nodes } = options;
+
+    nodes.forEach((node) => {
+        const objects = node.getTile()?.markers;
+        if (objects) {
+            objects.forEach((object) => {
+                if (!object.shape) {
+                    return;
+                }
+
+                if (isRectangleShape(object.shape)) {
+                    _drawRectangle(object.shape, options);
+                    _drawLabel(object.shape.x, object.shape.y + object.shape.height + 10, object.type, options);
+                } else if (isCircleShape(object.shape)) {
+                    _drawCircle(object.shape, options);
+                    _drawLabel(object.shape.x, object.shape.y + object.shape.radius + 10, object.type, options);
+                } else if (isLineShape(object.shape)) {
+                    _drawLine(object.shape, options);
+                }
+            });
         }
     });
 }

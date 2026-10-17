@@ -34,7 +34,7 @@ function _hydrateSubTiles(parent: QuadNode): void {
     }
 
     quadrants.forEach((quadNode) => {
-        if (quadNode && !quadNode?.hasTile()) {
+        if (quadNode && !quadNode.hasTile() && quadNode.canHydrate()) {
             quadNode.setTileData({});
             //quadNode.tile = new Tile();
         }
@@ -172,7 +172,7 @@ function _setRoadVectorsBetweenQuadNodes(quadNode1: QuadNode, quadNode2: QuadNod
     const v1 = quadNode1.getTile()?.getVectorsByType('road').find((vector) => vector.direction.x === delta1.x && vector.direction.y === delta1.y);
     const v2 = quadNode2.getTile()?.getVectorsByType('road').find((vector) => vector.direction.x === delta2.x && vector.direction.y === delta2.y);
 
-    if (!v1) {
+    if (!v1 && quadNode1.canHydrate()) {
         quadNode1.setTileData({
             vectors: [{
                 direction: { x: delta1.x, y: delta1.y },
@@ -188,7 +188,7 @@ function _setRoadVectorsBetweenQuadNodes(quadNode1: QuadNode, quadNode2: QuadNod
         });*/
     }
 
-    if (!v2) {
+    if (!v2 && quadNode2.canHydrate()) {
         quadNode2.setTileData({
             vectors: [{
                 direction: { x: delta2.x, y: delta2.y },
@@ -207,7 +207,7 @@ function _setRoadVectorsBetweenQuadNodes(quadNode1: QuadNode, quadNode2: QuadNod
 
 function _setOuterRoadVectors(quadNode: QuadNode, value: number): void {
     //if (0.25 > value) {
-    if (0.1 > value) {
+    if (0.1 > value || !quadNode.canHydrate()) {
         return;
     }
 

@@ -13,7 +13,7 @@ import { PaletteEditorMarkerMetaModal } from './marker-meta-modal/PalettEditorMa
 import { Avatar } from '../../components/avatar/Avatar';
 import { PalettEditorGenerateMarkersPromtModal } from './generate-markers-promt-modal/PalettEditorGenerateMarkersPromtModal';
 
-import { Tag, Button } from '@dashalundqvist/editor_ui_poc';
+import { Tag, Button, TableRow, Cell, TextField, RangeField, Dropdown, TagList } from '@dashalundqvist/editor_ui_poc';
 
 type PendingUpdate = {
     id: number;
@@ -201,38 +201,81 @@ export function PaletteEditorMarkers() {
         if (!paletteData) return [];
 
         return paletteData.markers?.map((markerData) => {
-            if (!editableRows.includes(markerData.id)) {
-                const tags =
-                    <div className={styles.tagGroup}>
-                        {markerData.tags?.map((tagName, i) =>
-                            <Tag key={i} objectName={tagName} label={tagName} removable={false} color={getTagColorByName(tagName)}></Tag>
+            //if (!editableRows.includes(markerData.id)) {
+            /*const tags =
+                <div className={styles.tagGroup}>
+                    {markerData.tags?.map((tagName, i) =>
+                        <Tag key={i} objectName={tagName} label={tagName} removable={false} color={getTagColorByName(tagName)}></Tag>
 
-                            //<Chip key={i} text={tagName} color={getTagColorByName(tagName)} size="small"></Chip>
-                        )}
-                    </div>
-                    ;
+                        //<Chip key={i} text={tagName} color={getTagColorByName(tagName)} size="small"></Chip>
+                    )}
+                </div>
+                ;*/
 
-                const meta =
-                    <div className={styles.tagGroup}>
-                        {markerData.meta?.color ? <Chip text="color" size="small" leading={<Avatar size="xSmall" bgColor={markerData.meta?.color}></Avatar>}></Chip> : null}
-                    </div>
-                    ;
-
+            const tags = markerData.tags?.map((tagName, i) => {
                 return {
-                    id: markerData.id,
-                    cells: [
-                        { text: markerData.name },
-                        { text: markerData.category },
-                        { text: `${markerData.attention?.min || 0}..${markerData.attention?.max || 0}` },
-                        { text: tags },
-                        { text: meta },
-                        { text: <Button size="compact" onClick={() => handleEdit(markerData.id)}>Edit</Button> },
-                        { text: <Button size="compact" onClick={() => handleDelete(markerData.id)}>Delete</Button> }
-                    ],
+                    label: tagName,
+                    color: getTagColorByName(tagName),
                 };
-            }
+            });
 
-            const pendingData = pendingUpdates.find((update) => update.id === markerData.id);
+
+
+            const meta =
+                <div className={styles.tagGroup}>
+                    {markerData.meta?.color ? <Chip text="color" size="small" leading={<Avatar size="xSmall" bgColor={markerData.meta?.color}></Avatar>}></Chip> : null}
+                </div>
+                ;
+
+            const categoryOptions = Object.entries(MARKER_CATEGORIES).map(([key, value]) => {
+                return {
+                    label: value,
+                    value: value,
+                };
+            });
+
+            return {
+                id: markerData.id,
+                state: editableRows.includes(markerData.id) ? 'editing' : 'default',
+                actionsWidth: 120,
+                editLabel: 'Edit',
+                deleteLabel: 'Delete',
+                onEdit: () => handleEdit(markerData.id),
+                onDelete: () => handleDelete(markerData.id),
+                onSave: () => handleSave(markerData.id),
+
+                cells: [
+                    { text: markerData.name },
+                    {
+                        value: markerData.category,
+                        options: categoryOptions,
+                        //error?: string
+                        onChange: (value: string) => updateCell(markerData.id, 'category', value)
+                    },
+                    //{ text: markerData.category },
+                    {
+                        min: markerData.attention?.min || 0,
+                        max: markerData.attention?.max || 0,
+                        //onMinChange?: (value: number | undefined) => void,
+                        //onMaxChange ?: (value: number | undefined) => void
+                    },
+                    //{ text: markerData.category },
+                    //{ text: `${markerData.attention?.min || 0}..${markerData.attention?.max || 0}` },
+                    {
+                        tags: tags,
+                        objectName: markerData.id, // ???
+                        onRemove: (index: number) => handleClearTag(markerData.id, tags![index].label),
+                        disabled: false,
+                    },
+                    //{ text: tags },
+                    { text: meta },
+                    //{ text: <Button size="compact" onClick={() => handleEdit(markerData.id)}>Edit</Button> },
+                    //{ text: <Button size="compact" onClick={() => handleDelete(markerData.id)}>Delete</Button> }
+                ],
+            };
+            //}
+
+            /*const pendingData = pendingUpdates.find((update) => update.id === markerData.id);
             const currentMarkerData = {
                 ...markerData,
                 ...pendingData,
@@ -292,7 +335,7 @@ export function PaletteEditorMarkers() {
                     { text: <Button size="compact" onClick={() => handleSave(markerData.id)}>Save</Button> },
                     { text: <Button size="compact" onClick={() => handleCancel(markerData.id)}>Cancel</Button> }
                 ],
-            };
+            };*/
         });
     }
 
@@ -314,10 +357,65 @@ export function PaletteEditorMarkers() {
                 </ToolbarButtonGroup>
             </Toolbar>
 
-            <Table colgroupData={colgroupData} theadData={theadData} tbodyData={getMarkerTBodyData()}></Table>
+            <div>
+                {getMarkerTBodyData().map((row, i) =>
+                    <TableRow key={row.id} {...row}>
+                        <Cell width={280}>
+                            <TextField value={row.cells[0].text} />
+                        </Cell>
+                        <Cell width={150}>
+                            <Dropdown {...row.cells[1]} />
+                        </Cell>
+                        <Cell width={170}>
+                            <RangeField {...row.cells[2]} />
+                        </Cell>
+                        <Cell width={280}>
+                            <TagList {...row.cells[3]} />
+                        </Cell>
+                        <Cell width={100}>{row.cells[4].text}</Cell>
+                    </TableRow>
+                )}
+            </div>
+
             <PalettEditorGenerateMarkersPromtModal isOpen={isGenerateMarkersPromtModalOpen} marker={activeMarker} onClose={handleGenerateMarkersModalClose}></PalettEditorGenerateMarkersPromtModal>
             <PaletteEditorMarkerTagModal isOpen={isTagModalOpen} marker={activeMarker} onClose={handleTagModalClose}></PaletteEditorMarkerTagModal>
             <PaletteEditorMarkerMetaModal isOpen={isMetaModalOpen} marker={activeMarker} onClose={handleMetaModalClose}></PaletteEditorMarkerMetaModal>
         </div>
     );
+
+    // {row.cells[3].text}
+
+    // <TextField value={row.cells[1].text} />
+    /*
+    
+                        <Cell width={100}>
+                            <TextField value={row.cells[2].text} />
+                        </Cell>
+    <Table colgroupData={colgroupData} theadData={theadData} tbodyData={getMarkerTBodyData()}></Table>
+
+            
+    
+    return (
+        <div className={styles.tabPanel}>
+            <Toolbar>
+                <ToolbarButtonGroup>
+                    <Button onClick={handleAddMarker}>Add marker</Button>
+                    <Button onClick={onGenerateMarkers}>Generate markers</Button>
+                </ToolbarButtonGroup>
+                <ToolbarButtonGroup>
+                    <Button onClick={handleEditAll}>Edit all</Button>
+                    <Button onClick={handleSaveAll}>Save all</Button>
+                </ToolbarButtonGroup>
+            </Toolbar>
+
+            <Table colgroupData={colgroupData} theadData={theadData} tbodyData={getMarkerTBodyData()}></Table>
+            <PalettEditorGenerateMarkersPromtModal isOpen={isGenerateMarkersPromtModalOpen} marker={activeMarker} onClose={handleGenerateMarkersModalClose}></PalettEditorGenerateMarkersPromtModal>
+            <PaletteEditorMarkerTagModal isOpen={isTagModalOpen} marker={activeMarker} onClose={handleTagModalClose}></PaletteEditorMarkerTagModal>
+            <PaletteEditorMarkerMetaModal isOpen={isMetaModalOpen} marker={activeMarker} onClose={handleMetaModalClose}></PaletteEditorMarkerMetaModal>
+        </div>
+    );*/
 }
+
+/*
+
+                    */

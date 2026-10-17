@@ -2,18 +2,18 @@
 import { useState } from 'react';
 import { config } from '../../../../engine/config/config';
 import { Chip } from '../../../components/chip/Chip';
-import { SelectedEntity, useEditorStore } from '../../../store/editorStore';
+import { useEditorStore } from '../../../store/editorStore';
 import { MarkerConfig } from '../../../../engine/config/type';
 
 export function MarkerTab() {
     const selectedTerrain = useEditorStore((state) => state.selectedTerrain);
     const [tagFilters, setTagFilters] = useState<string[]>([]);
 
-    function handleSelectMarker(entity: SelectedEntity): void {
+    function handleSelectMarker(entity: MarkerConfig): void {
         useEditorStore.getState().selectTerrain(entity);
     }
 
-    function renderTerrainOption(entity: SelectedEntity) {
+    function renderTerrainOption(entity: MarkerConfig) {
         const classes = ['editor-palett--option'];
         if (selectedTerrain?.name === entity.name) {
             classes.push('editor-palett--option--selected');
@@ -21,7 +21,7 @@ export function MarkerTab() {
 
         return (
             <button className={classes.join(' ')} onClick={() => handleSelectMarker(entity)}>
-                <span style={{ backgroundColor: entity.meta.color }} className="editor-palett--option-color"></span>
+                <span style={{ backgroundColor: entity.meta?.color }} className="editor-palett--option-color"></span>
                 <span>{entity.name}</span>
             </button>
         );
@@ -52,7 +52,8 @@ export function MarkerTab() {
         }));
 
     //const markers = markersJSON.markers.filter((marker) => marker.name !== 'player-start')
-    const markers = config.getMarkersByFilter({ category: 'landmark' })
+
+    const markers: MarkerConfig[] = config.getMarkersByFilter({ category: 'landmark' })
         .filter(markerFilter)
         .map((marker) => ({
             ...marker,

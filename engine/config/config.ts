@@ -82,15 +82,20 @@ function getMarker(name: string): MarkerConfig | undefined {
 }
 
 function getMarkersByFilter(filter: MarkerConfigFilter): MarkerConfig[] {
-
     const tagFilter = filter.tags?.filter((name) => name === 'urban') as any;
     const markers: MarkerConfig[] = [];
     for (const markerConfig of markerMap.values()) {
+
+
+
         //const matchTags = filter.tags ? markerConfig.tags.some((tag) => filter.tags!.includes(tag)) : true;
-        const matchTags = tagFilter ? markerConfig.tags.some((tag) => tag !== 'elevation' && tagFilter?.includes(tag)) : true;
+        const matchTags = tagFilter ? markerConfig.tags.some((tag) => tagFilter?.includes(tag)) : true;
         const matchCategory = filter.category ? markerConfig.category === filter.category : true;
         //const matchScale = filter.scale !== undefined ? markerConfig.scale === filter.scale : true;
-        const matchScale = isMarkerMatchingScale(filter.scale, markerConfig);
+
+        const matchScale = filter.scale ? isMarkerMatchingScale(filter.scale, markerConfig) : true;
+
+
 
         //console.log('S', markerConfig.name, matchScale, filter.scale);
 

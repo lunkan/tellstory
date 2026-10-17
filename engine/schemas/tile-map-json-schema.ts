@@ -51,6 +51,7 @@ export const TileMapSchema = z.object({
     }).describe("The map is a rectangle whose origin is at coordinate (x,y). These values define its physical width and height in meters."),
     objects: z.array(
         z.object({
+            id: z.string().describe("The unique identifier for the specific object."),
             type: z.string().describe("The semantic type of the object, describing what the object represents."),
             attention: z.number().int().min(0).max(10).describe("The importance or attention level of the object on a scale from 0 to 10. 0 means no particular attention is required; 10 means the object is extremely important and should receive the highest attention."),
             description: z.string().describe("A concise description of what the object represents and any relevant visual or semantic characteristics."),

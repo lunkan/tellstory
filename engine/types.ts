@@ -14,7 +14,7 @@
 
 import { MarkerConfigData, TileConfigData, VectorConfigData } from "./config/type";
 import { GameEvent } from "./core/events/game-event.interface";
-import { TileMap } from "./schemas/tile-map-json-schema";
+import { TileMap, TileMapObject } from "./schemas/tile-map-json-schema";
 //import { Marker } from "./world/markers";
 
 export interface IGameObserver {
@@ -79,10 +79,10 @@ export type VectorSetting = {
     },
 }
 
-export type MarkerSetting = {
-    point: QuadNodes2DPoint; // Not used
+export type MarkerSetting = Partial<TileMapObject> & {
+    point?: QuadNodes2DPoint; // Not used
     type: string;
-    attention?: number;
+    attention?: number; // Not to be used
     id: string;
 };
 
@@ -98,7 +98,7 @@ export type TileData = {
     vectors: VectorSetting[];
     terrain: TerrainSetting[];
     markers: MarkerSetting[];
-    mapData?: TileMap;
+    // mapData?: TileMap; // No map data ????
 }
 
 export type TileDataEntry = TileData & {

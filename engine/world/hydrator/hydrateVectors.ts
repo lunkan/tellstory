@@ -36,7 +36,7 @@ function _hydrateSubTiles(parent: QuadNode): void {
     })*/
 
     quadrants.forEach((quadNode) => {
-        if (quadNode && !quadNode?.hasTile()) {
+        if (quadNode && !quadNode.hasTile() && quadNode.canHydrate()) {
             quadNode.setTileData({});
             //quadNode.tile = new Tile();
         }
@@ -55,6 +55,8 @@ function _hydrateSubTiles(parent: QuadNode): void {
         const vQuadrant = xQuadrants.find((quadrant) => yQuadrants.indexOf(quadrant) !== -1);
         if (!vQuadrant) {
             console.log('FAIL');
+            return;
+        } else if (!vQuadrant.canHydrate()) {
             return;
         }
 

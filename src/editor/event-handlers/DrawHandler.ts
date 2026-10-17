@@ -33,16 +33,17 @@ export class DrawHandler extends CanvasEventHandler {
 
         this._currentNode = node;
 
-        if (!node.hasTile()) {
+        /*if (!node.hasTile()) {
             //node.tile = new Tile();
             node.setTileData({});
-        }
+        }*/
 
         node.detach();
         node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
 
         let value = this._value;
 
+        // Hm, maybe calc value from detached Leafs ?
         node.setTileData({
             terrain: [{
                 type: this._type,
@@ -55,26 +56,31 @@ export class DrawHandler extends CanvasEventHandler {
             value,
         });*/
 
-        let parentNode = node.parent;
+        /*let parentNode = node.parent;
         while (parentNode && this.renderer.minDepth <= parentNode.depth) {
             value = value * 0.25;
             // The root can't hydrate, so an ancestor may legitimately have no tile.
-            if (parentNode.hasTile()) {
-                parentNode.updateTileData({
-                    terrain: [{
-                        type: this._type,
-                        value,
-                    }],
-                })
 
-                /*parentNode.tile.applyTerrain({
+            /*if (!parentNode.hasTile()) {
+                console.log('Has no tile! but child detached');
+            }*
+
+            //if (parentNode.hasTile()) {
+            parentNode.updateTileData({
+                terrain: [{
                     type: this._type,
                     value,
-                });*/
-            }
+                }],
+            })
+
+            /*parentNode.tile.applyTerrain({
+                type: this._type,
+                value,
+            });*
+            // }
 
             parentNode = parentNode.parent;
-        }
+        }*/
 
         //this.renderer.refresh();
     }

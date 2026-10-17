@@ -7,6 +7,7 @@
     },
     "objects": [
         {
+            "id": "test:a",
             "type": "Post office",
             "attention": 3,
             "description": "Old post office",
@@ -20,6 +21,7 @@
             }
         },
         {
+            "id": "test:b",
             "type": "Resident building",
             "attention": 1,
             "description": "Blue resident building 3 floors",
@@ -33,6 +35,7 @@
             }
         },
         {
+            "id": "test:c",
             "type": "Resident building",
             "attention": 1,
             "description": "Big red resident building 8 floors",
@@ -46,6 +49,7 @@
             }
         },
         {
+            "id": "test:d",
             "type": "Street",
             "attention": 1,
             "description": "Street with sidewalk",
@@ -63,6 +67,7 @@
             }
         },
         {
+            "id": "test:e",
             "type": "Street",
             "attention": 1,
             "description": "Street with sidewalk",
@@ -80,6 +85,7 @@
             }
         },
         {
+            "id": "test:f",
             "type": "Street lamp",
             "attention": 0,
             "description": "3 meter tall street lamp",
@@ -91,6 +97,7 @@
             }
         },
         {
+            "id": "test:g",
             "type": "Street lamp",
             "attention": 0,
             "description": "3 meter tall street lamp",
@@ -102,6 +109,7 @@
             }
         },
         {
+            "id": "test:h",
             "type": "Oak tree",
             "attention": 0,
             "description": "Big old oak tree",

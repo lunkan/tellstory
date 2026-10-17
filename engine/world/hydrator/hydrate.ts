@@ -10,7 +10,7 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
         return node; // Can't hydrate undefined or locked
     } else if (node.hasTile()) {
         return node; // Already hydrated
-    } else if (!node.parent) {
+    } else if (!node.parent || node.parent.isLocked()) {
         return node; // Root nodes can't hydrate
     }
 
@@ -51,7 +51,7 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
 export function dehydrate(node: QuadNode | undefined): QuadNode | undefined {
     if (!node) {
         return node; // Can't hydrate undefined
-    } else if (!node.isGenerated()) {
+    } else if (node.state !== QuadNode.STATE_HYDRATED) { //(!node.isGenerated()) {
         return node; // Not hydrated
     }
 

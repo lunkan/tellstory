@@ -6,6 +6,8 @@ import { worldRepository } from "../repositories/worldRepository";
 import { paletteRepository } from "../repositories/paletteRepository";
 import { QuadNode } from "../../engine/world/quad-node";
 import { TileData } from "../../engine/types";
+import { TileMapObject } from "../../engine/schemas/tile-map-json-schema";
+import { MarkerConfig } from "../../engine/config/type";
 //import { Tile } from "../../engine/world/tile";
 //import { Marker } from "../../engine/world/markers";
 
@@ -27,14 +29,14 @@ interface EditorStore {
     //quadtree: QuadNode | null;
     //markers: Marker[];
     //startingLocations: Marker[];
-    selectedTerrain: SelectedEntity | null;
+    selectedTerrain: SelectedEntity | MarkerConfig | null;
     selectedNode: QuadNode | null;
     paintValue: number;
     editState: EditState;
     newWorld: (name: string, size: number, palette: number) => Promise<boolean>;
     setWorldId: (worldId: number) => Promise<void>;
     save: () => Promise<void>;
-    selectTerrain: (entity: SelectedEntity) => void;
+    selectTerrain: (entity: SelectedEntity | MarkerConfig) => void;
     selectNode: (node: QuadNode | null) => void;
     setPaintValue: (value: number) => void;
     setEditState: (state: EditState) => void;
@@ -130,6 +132,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         }));
     },
     generateMap: async (node) => {
+        const world = get().world;
+        if (!world) {
+            return;
+        }
 
         // Only Some of these
         const ancestorMarkers = node.getAncestors()
@@ -153,9 +159,52 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         const tileMap = await worldRepository.generateMapByNode(tileData);
         //node.tile?.setMap(tileMap);
 
-        node.setTileData({
+        // find nodes by attention level - and apply to correct level
+
+        const groupedObjects = tileMap.objects.reduce((groups, object) => {
+            const nodeDepth = world.getDepthFromScale(object.attention);
+            const group = groups.get(nodeDepth) || [];
+            group.push(object);
+            groups.set(nodeDepth, group);
+            return groups;
+        }, new Map<number, TileMapObject[]>());
+
+        console.log('groupedObjects', groupedObjects);
+
+
+        let currentNode: QuadNode | undefined = node;
+        while (currentNode) {
+            const objectsMatchingDepth = groupedObjects.get(currentNode.depth);
+            const tile = currentNode.getTile();
+            console.log('*', currentNode.depth, objectsMatchingDepth?.length, tile);
+            if (objectsMatchingDepth && tile) {
+                const mutatedMarkers = tile.markers.map((marker) => {
+                    const matchingObjectIndex = objectsMatchingDepth.findIndex((object) => object.id === marker.id);
+                    if (matchingObjectIndex !== -1) {
+                        const matchingObject = objectsMatchingDepth.splice(matchingObjectIndex, 1)[0];
+                        return {
+                            ...marker,
+                            ...matchingObject,
+                        };
+                    }
+
+                    return marker;
+                });
+
+                // New objects = remaining objectsMatchingDepth
+                console.log('markers', [...mutatedMarkers, ...objectsMatchingDepth]);
+                currentNode.setTileData({
+                    markers: [...mutatedMarkers, ...objectsMatchingDepth],
+                });
+            }
+
+            currentNode = currentNode.parent;
+        }
+
+
+        /*node.setTileData({
             mapData: tileMap,
-        });
+        });*/
 
         /*
         const world = get().world.updateNode(nodeId, {

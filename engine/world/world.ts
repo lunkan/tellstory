@@ -26,6 +26,14 @@ export class World {
         return Math.max(0, this.quadtree.maxDepth - MAX_ZOOM_OUT);
     }
 
+    /**
+     * Depth a node of the given scale sits at in this world (inverse of QuadNode.scale).
+     * Scales larger than this world's root clamp to the root (depth 0).
+     */
+    public getDepthFromScale(scale: number): number {
+        return Math.min(this.maxZoomDepth, Math.max(0, this.maxZoomDepth - scale));
+    }
+
     constructor(worldData: WorldData, PaletteData: PaletteData) {
         config.set(PaletteData);
 
@@ -130,7 +138,7 @@ export class World {
         const y = node.bounds.y - size;
 
         return this.quadtree
-            .findByRect({ x, y, z: node.depth, width: size * 3, height: size * 3 }, true)
+            .findByRect({ x, y, z: node.depth, width: size * 3, height: size * 3 }, { createIfMissing: true })
             .filter((adjacentNode) => adjacentNode !== node)
             //.map((adjacentNode) => this._hydrator.hydrate(adjacentNode)!);
             .map((adjacentNode) => hydrate(adjacentNode)!);

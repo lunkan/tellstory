@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
-import { useEditorStore } from "../../store/editorStore";
+import { SelectedEntity, useEditorStore } from "../../store/editorStore";
 import { DrawHandler } from "../event-handlers/DrawHandler";
 import { MoveHandler } from "../event-handlers/MoveHandler";
 import { SelectHandler } from "../event-handlers/SelectHandler";
@@ -10,6 +10,7 @@ import { MarkerHandler } from '../event-handlers/MarkerHandler';
 import { EditorMapZoomLevel } from './zoom-level/EditorMapZoomLevel';
 
 import styles from "./EditorMap.module.css";
+import { MarkerConfig } from "../../../engine/config/type";
 
 export function EditorMap() {
     //const quadtree = useEditorStore((state) => state.quadtree);
@@ -74,11 +75,16 @@ export function EditorMap() {
                 if (!selectedTerrain) {
                     return;
                 } else if (selectedTerrain.category === 'marker') {
-                    new MarkerHandler(selectedTerrain, rendererRef.current, point, e.button === 2);
+                    if (!world) {
+                        return;
+                    }
+                    const markerConfig = selectedTerrain as MarkerConfig;
+                    const insertDepth = world.getDepthFromScale(markerConfig.attention?.max || 0); // Needs setting
+                    new MarkerHandler(insertDepth, markerConfig, rendererRef.current, point, e.button === 2);
                 } else if (selectedTerrain.category === 'vector') {
-                    new DrawLineHandler(selectedTerrain, paintValue, rendererRef.current, point, e.button === 2);
+                    new DrawLineHandler(selectedTerrain as SelectedEntity, paintValue, rendererRef.current, point, e.button === 2);
                 } else {
-                    new DrawHandler(selectedTerrain, paintValue, rendererRef.current, point);
+                    new DrawHandler(selectedTerrain as SelectedEntity, paintValue, rendererRef.current, point);
                 }
         }
     }

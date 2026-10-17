@@ -33,8 +33,7 @@ export function drawTiles(options: DrawTilesOptions): void {
     const { ctx, nodes, tileSize } = options;
 
     for (const node of nodes) {
-        if (node && node.hasTile()) {
-
+        if (node && node.state !== QuadNode.STATE_EMPTY) { //node.hasTile()) {
             _drawTile(node.getTile()!, {
                 x: node.bounds.x,
                 y: node.bounds.y,
@@ -50,19 +49,23 @@ function _drawTile(tile: Tile, gridRect: GridRect, ctx: CanvasRenderingContext2D
         return;
     }
 
-    if (tile.mapData) {
-        /*ctx.fillStyle = '#ddd';
+    /*if (tile.isResolved) {
+        ctx.fillStyle = '#ddd';
         ctx.beginPath();
         ctx.rect(gridRect.x, gridRect.y, gridRect.width, gridRect.height);
-        ctx.fill();*/
+        ctx.fill();
         return;
-    }
+    }*/
 
     const elevationConfig = tile.getTerrain('elevation');
 
-    //if (waterConfig) {
-    if (tile.hasTag('water')) {
-        _drawWater(gridRect, ctx);
+    // Water (ocean, lake) is all or nothing - the dominant water type fills the tile if above 0.5, otherwise it's ignored
+    const waterConfig = tile.terrain
+        .filter(_isWater)
+        .sort((a, b) => b.value - a.value)[0];
+
+    if (waterConfig && waterConfig.value > 0.5) {
+        _drawWater(waterConfig.type, gridRect, ctx);
     } else if (elevationConfig) {
         _drawTypography(elevationConfig.value || 0, gridRect, ctx);
     }
@@ -70,12 +73,16 @@ function _drawTile(tile: Tile, gridRect: GridRect, ctx: CanvasRenderingContext2D
     const vectorTypes = tile.vectors.filter((vectorConfig) => config.getTile(vectorConfig.type)?.category === 'vector');
     _drawVectors(vectorTypes, gridRect, ctx);
 
-    const basicTerrainTypes = tile.terrain.filter((terrainConfig) => terrainConfig.type !== 'water' && terrainConfig.type !== 'elevation');
+    const basicTerrainTypes = tile.terrain.filter((terrainConfig) => !_isWater(terrainConfig) && terrainConfig.type !== 'elevation');
     _drawTerrain(basicTerrainTypes, gridRect, ctx);
 }
 
-function _drawWater(gridRect: GridRect, ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = '#1A91FC';
+function _isWater(terrainSetting: TerrainSetting): boolean {
+    return !!config.getTile(terrainSetting.type)?.tags.includes('water');
+}
+
+function _drawWater(type: string, gridRect: GridRect, ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = _getColorByTerrainType(type);
     ctx.beginPath();
     ctx.rect(gridRect.x, gridRect.y, gridRect.width, gridRect.height);
     ctx.fill();
