@@ -19,7 +19,6 @@ export async function createNewPalette(
 ) {
     try {
         const { name } = req.body;
-        console.log('Creating new palette');
 
         const paletteId = await paletteRepository.createPalette({
             id: -1,

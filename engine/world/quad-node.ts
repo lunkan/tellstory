@@ -514,8 +514,6 @@ export class QuadNode {
             return;
         }
 
-        console.log('Being detached');
-
         this._detached = true;
         this._locked = true;
 

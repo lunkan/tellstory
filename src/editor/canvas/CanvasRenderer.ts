@@ -11,6 +11,8 @@ import { drawSelectedTile } from "./commands/drawSelectedTile";
 //import { TileMapObject } from "../../../engine/schemas/tile-map-json-schema";
 import { drawObjects } from "./commands/drawObjects";
 import { LEAF_SIZE_METER } from "../../../engine/world/scale";
+import { drawElevation } from "./commands/drawElevation";
+import { drawTerrain } from "./commands/drawTerrain";
 
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
@@ -52,6 +54,7 @@ export class CanvasRenderer {
 
         this._ctx = ctx;
 
+        this._layers.set('elevation', document.createElement("canvas"));
         this._layers.set('grid', document.createElement("canvas"));
         this._layers.set('lockedTiles', document.createElement("canvas"));
         this._layers.set('editableLeafTiles', document.createElement("canvas"));
@@ -184,7 +187,7 @@ export class CanvasRenderer {
 
         const visibleNodes = this._getVisibleNodes(gridBounds);
 
-        let lockedLayer, editableLeafLayer, generatedLayer;
+        let elevationLayer, lockedLayer, editableLeafLayer, generatedLayer;
 
         if (this.getScale() <= 1) {
             // Paint all white
@@ -196,7 +199,24 @@ export class CanvasRenderer {
                 ctx.fill();
             }
         } else {
+            elevationLayer = this._layers.get('elevation')!;
+            drawElevation({
+                ctx: elevationLayer.getContext('2d')!,
+                gridBounds,
+                tileSize,
+                nodes: visibleNodes,
+            });
+
             lockedLayer = this._layers.get('lockedTiles')!;
+            drawTerrain({
+                ctx: lockedLayer.getContext('2d')!,
+                gridBounds,
+                scale: this._matrix.scale,
+                nodes: visibleNodes, //visibleNodes.filter((node) => node.state & QuadNode.STATE_LOCKED),
+                tileSize
+            });
+
+            /*lockedLayer = this._layers.get('lockedTiles')!;
             drawTiles({
                 ctx: lockedLayer.getContext('2d')!,
                 nodes: visibleNodes.filter((node) => node.state & QuadNode.STATE_LOCKED),
@@ -215,7 +235,7 @@ export class CanvasRenderer {
                 ctx: generatedLayer.getContext('2d')!,
                 nodes: visibleNodes.filter((node) => node.state === QuadNode.STATE_HYDRATED), //node.isGenerated()),
                 tileSize
-            });
+            });*/
         }
 
         const gridLayer = this._layers.get('grid')!;
@@ -276,6 +296,10 @@ export class CanvasRenderer {
             selectedTile: this._activeTile,
             tileSize,
         });
+
+        if (elevationLayer) {
+            this._ctx.drawImage(elevationLayer, 0, 0);
+        }
 
         if (editableLeafLayer) {
             this._ctx.drawImage(editableLeafLayer, 0, 0);

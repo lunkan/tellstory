@@ -17,6 +17,7 @@
         "@dashalundqvist/editor_ui_poc": "^0.0.0-43d4c04",
         "@elevenlabs/elevenlabs-js": "^2.56.0",
         "cors": "^2.8.6",
+        "d3-contour": "^4.0.2",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",
         "js-quadtree": "^3.3.6",
@@ -31,6 +32,7 @@
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",
+        "@types/d3-contour": "^3.0.6",
         "@types/express": "^5.0.0",
         "@types/node": "^22.19.19",
         "@types/react": "^18.3.12",

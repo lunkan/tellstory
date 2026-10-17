@@ -1,6 +1,5 @@
 import { dehydrate } from "../../../engine/world/hydrator/hydrate";
 import { QuadNode } from "../../../engine/world/quad-node";
-import { Tile } from "../../../engine/world/tile";
 import { SelectedEntity } from "../../store/editorStore";
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
