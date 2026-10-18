@@ -20,6 +20,7 @@ export function EditorMap() {
     const paintValue = useEditorStore((state) => state.paintValue);
     const selectedTerrain = useEditorStore((state) => state.selectedTerrain);
     const selectedNode = useEditorStore((state) => state.selectNode);
+    const mapMode = useEditorStore((state) => state.mapMode);
     const viewportRef = useRef<HTMLDivElement>(null);
     const viewportSizeObserver = useRef<ResizeObserver | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,6 +38,7 @@ export function EditorMap() {
             rendererRef.current.zoom(initalZoom, 0, 0);
             const depth = Math.floor(Math.sqrt(rendererRef.current.scale)) + rendererRef.current.minDepth;
             rendererRef.current.setDepth(depth);
+            rendererRef.current.setRenderMode(mapMode);
             setDepth(rendererRef.current.getDepth());
         }
     }, []);
@@ -56,6 +58,14 @@ export function EditorMap() {
             viewportSizeObserver.current.observe(viewportRef.current);
         }
     }, []);
+
+    useEffect(() => {
+        console.log('EF', mapMode, rendererRef.current);
+        if (rendererRef.current) {
+            rendererRef.current.setRenderMode(mapMode);
+        }
+
+    }, [mapMode])
 
     function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
         if (!canvasRef.current || !rendererRef.current || !viewportRef.current) {

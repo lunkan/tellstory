@@ -20,6 +20,7 @@ export interface SelectedEntity {
 }
 
 export type EditState = 'draw' | 'erase' | 'transform' | 'select' | null;
+export type MapMode = 'plain' | 'map';
 
 interface EditorStore {
     worldId: number;
@@ -33,6 +34,7 @@ interface EditorStore {
     selectedNode: QuadNode | null;
     paintValue: number;
     editState: EditState;
+    mapMode: MapMode;
     newWorld: (name: string, size: number, palette: number) => Promise<boolean>;
     setWorldId: (worldId: number) => Promise<void>;
     save: () => Promise<void>;
@@ -40,6 +42,7 @@ interface EditorStore {
     selectNode: (node: QuadNode | null) => void;
     setPaintValue: (value: number) => void;
     setEditState: (state: EditState) => void;
+    setMapMode: (value: MapMode) => void;
     generateMap: (node: QuadNode) => void;
 }
 
@@ -55,6 +58,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     selectedNode: null,
     paintValue: 0.5,
     editState: 'select',
+    mapMode: 'map',
     newWorld: async (name: string, size: number, palette: number) => {
         const worldId = await worldRepository.create(name, size, palette);
         if (!worldId) {
@@ -73,15 +77,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
 
         /*const quadtree = new QuadNode();
-
+ 
         for (const tileEntry of worldData.tiles) {
             const tile = new Tile();
             tileEntry.terrain.forEach((terrainSetting) => tile.setTerrain(terrainSetting));
             tileEntry.vectors.forEach((vectorSetting) => tile.setVector(vectorSetting));
-
+ 
             const nodeKey = QuadNodeKey.fromId(tileEntry.nodeId);
             const node = quadtree.findByKey(nodeKey, true);
-
+ 
             if (node) {
                 node.detach();
                 node.tile = tile;
@@ -129,6 +133,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     setEditState: (state) => {
         set(() => ({
             editState: state,
+        }));
+    },
+    setMapMode: (value) => {
+        set(() => ({
+            mapMode: value,
         }));
     },
     generateMap: async (node) => {
@@ -210,7 +219,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         const world = get().world.updateNode(nodeId, {
             mapDate: tileMap,
         });
-
+ 
         set(() => ({
             world,
         }));*/

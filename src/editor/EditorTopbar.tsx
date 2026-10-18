@@ -1,16 +1,22 @@
 import { useNavigate } from "react-router-dom";
-import { EditState, useEditorStore } from "../store/editorStore";
+import { EditState, MapMode, useEditorStore } from "../store/editorStore";
 import { useState } from "react";
 import { PressureControl } from "./topbar/PressureControl";
 
 export function EditorTopbar() {
     const editState = useEditorStore((state) => state.editState);
     const worldName = useEditorStore((state) => state.worldName);
-    const [pressureDialogOpen, setPressureDialogOpen] = useState(false);
+    const setMapMode = useEditorStore((state) => state.setMapMode);
+    const mapMode = useEditorStore((state) => state.mapMode);
+    //const [pressureDialogOpen, setPressureDialogOpen] = useState(false);
     const navigate = useNavigate();
 
     function handleSelectTerrain(editState: EditState): void {
         useEditorStore.getState().setEditState(editState);
+    }
+
+    function handleSelectMapMode(mapMode: MapMode): void {
+        setMapMode(mapMode);
     }
 
     function handleQuit(): void {
@@ -37,6 +43,10 @@ export function EditorTopbar() {
             </div>
             <div className="editor-topbar--group">
                 <PressureControl></PressureControl>
+            </div>
+            <div className="editor-topbar--group">
+                <button className={mapMode === 'plain' ? 'editor-topbar--btn--selected' : 'editor-topbar--btn'} onClick={() => handleSelectMapMode('plain')}>Plain Mode</button>
+                <button className={mapMode === 'map' ? 'editor-topbar--btn--selected' : 'editor-topbar--btn'} onClick={() => handleSelectMapMode('map')}>Map Mode</button>
             </div>
             <div className="editor-topbar--group">
                 <button className={editState === 'erase' ? 'editor-topbar--btn--selected' : 'editor-topbar--btn'} onClick={() => handleSelectTerrain('erase')}>Erase</button>

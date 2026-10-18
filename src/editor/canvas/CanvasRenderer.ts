@@ -2,17 +2,18 @@ import { QuadNode, QuadNodeEventData } from "../../../engine/world/quad-node";
 import { OverlayRenderer } from "./OverlayRenderer";
 import { World } from '../../../engine/world/world';
 import { hydrate } from "../../../engine/world/hydrator/hydrate";
-import { drawTiles } from "./commands/drawTiles";
 import { drawMarkers } from "./commands/drawMarkers";
 import { GridBounds, GridPoint, TileCoordinate } from "./types";
 import { drawGrid } from "./commands/drawGrid";
 import { CanvasMatrix } from "./CanvasMatrix";
 import { drawSelectedTile } from "./commands/drawSelectedTile";
-//import { TileMapObject } from "../../../engine/schemas/tile-map-json-schema";
 import { drawObjects } from "./commands/drawObjects";
 import { LEAF_SIZE_METER } from "../../../engine/world/scale";
 import { drawElevation } from "./commands/drawElevation";
 import { drawTerrain } from "./commands/drawTerrain";
+import { drawPlainTiles } from "./commands/drawPlainTiles";
+
+export type RenderMode = 'plain' | 'map';
 
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
@@ -35,6 +36,7 @@ export class CanvasRenderer {
         return this._matrix.height;
     }
 
+    private _renderMode: RenderMode = 'map';
     private _matrix: CanvasMatrix;
     private _layers: Map<string, HTMLCanvasElement> = new Map();
     private _ctx: CanvasRenderingContext2D;
@@ -61,6 +63,11 @@ export class CanvasRenderer {
         this._layers.set('generatedTiles', document.createElement("canvas"));
         this._layers.set('markers', document.createElement("canvas"));
         this._layers.set('selectedTile', document.createElement("canvas"));
+    }
+
+    public setRenderMode(renderMode: RenderMode): void {
+        this._renderMode = renderMode;
+        this._invalidatTransform();
     }
 
     public getDepth(): number {
@@ -189,7 +196,16 @@ export class CanvasRenderer {
 
         let elevationLayer, lockedLayer, editableLeafLayer, generatedLayer;
 
-        if (this.getScale() <= 1) {
+        if (this._renderMode === 'plain') {
+            // Paint all white
+            elevationLayer = this._layers.get('elevation')!;
+            drawPlainTiles({
+                ctx: elevationLayer.getContext('2d')!,
+                tileSize,
+                nodes: visibleNodes,
+            });
+
+        } else if (this.getScale() <= 1) {
             // Paint all white
             const ctx = this.canvas.getContext('2d');
             if (ctx) {
@@ -199,6 +215,8 @@ export class CanvasRenderer {
                 ctx.fill();
             }
         } else {
+            //drawPlainTiles
+
             elevationLayer = this._layers.get('elevation')!;
             drawElevation({
                 ctx: elevationLayer.getContext('2d')!,
@@ -321,10 +339,7 @@ export class CanvasRenderer {
 
         this._ctx.drawImage(markerLayer, 0, 0);
         this._ctx.drawImage(gridLayer, 0, 0);
-
         this._ctx.drawImage(selectedTileLayer, 0, 0);
-
-
     }
 
     private _getAllVisibleNodes(gridBounds: GridBounds): QuadNode[] {
