@@ -12,6 +12,7 @@ import { LEAF_SIZE_METER } from "../../../engine/world/scale";
 import { drawElevation } from "./commands/drawElevation";
 import { drawTerrain } from "./commands/drawTerrain";
 import { drawPlainTiles } from "./commands/drawPlainTiles";
+import { drawShapes } from "./commands/drawShapes";
 
 export type RenderMode = 'plain' | 'map';
 
@@ -278,7 +279,7 @@ export class CanvasRenderer {
 
         if (this.getScale() <= 1) {
             // The layer ctx draws in grid units (1 unit = 1 leaf), the transform handles zoom.
-            drawObjects({
+            drawShapes({
                 ctx: markerLayer.getContext('2d')!,
                 nodes: allVisibleNodes,
                 scale: 1 / LEAF_SIZE_METER,
@@ -300,11 +301,18 @@ export class CanvasRenderer {
                 depth--;
             }*/
 
-            drawMarkers({
+            /*drawMarkers({
                 ctx: markerLayer.getContext('2d')!,
                 nodes: allVisibleNodes,
                 scale: 1 / LEAF_SIZE_METER,
                 //nodes,
+            });*/
+
+            console.log('DRAW OBJECTS', allVisibleNodes.length);
+            drawObjects({
+                ctx: markerLayer.getContext('2d')!,
+                nodes: allVisibleNodes,
+                scale: 1 / LEAF_SIZE_METER,
             });
         }
 
@@ -337,8 +345,8 @@ export class CanvasRenderer {
             this._ctx.restore();
         }
 
-        this._ctx.drawImage(markerLayer, 0, 0);
         this._ctx.drawImage(gridLayer, 0, 0);
+        this._ctx.drawImage(markerLayer, 0, 0);
         this._ctx.drawImage(selectedTileLayer, 0, 0);
     }
 

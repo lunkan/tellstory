@@ -77,6 +77,9 @@ export class MarkerHandler extends CanvasEventHandler {
             }],
         });
 
+
+        console.log('DRawMAeker', depth, ' * ', currentNode, markerConfig.attention);
+
         return;
         //}
 

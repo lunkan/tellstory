@@ -89,7 +89,7 @@ export function EditorMap() {
                         return;
                     }
                     const markerConfig = selectedTerrain as MarkerConfig;
-                    const insertDepth = world.getDepthFromScale(markerConfig.attention?.max || 0); // Needs setting
+                    const insertDepth = world.getDepthFromScale(markerConfig.attention?.min || 0); // Needs setting
                     new MarkerHandler(insertDepth, markerConfig, rendererRef.current, point, e.button === 2);
                 } else if (selectedTerrain.category === 'vector') {
                     new DrawLineHandler(selectedTerrain as SelectedEntity, paintValue, rendererRef.current, point, e.button === 2);
