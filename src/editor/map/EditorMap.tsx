@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
+import { HydrationScheduler } from "../canvas/HydrationScheduler";
 import { SelectedEntity, useEditorStore } from "../../store/editorStore";
 import { DrawHandler } from "../event-handlers/DrawHandler";
 import { MoveHandler } from "../event-handlers/MoveHandler";
@@ -26,12 +27,14 @@ export function EditorMap() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const overlayRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<CanvasRenderer | null>(null);
+    const schedulerRef = useRef<HydrationScheduler | null>(null);
     const [depth, setDepth] = useState<number>(0);
     const maxDepth = world?.quadtree.maxDepth ?? 0;
 
     useEffect(() => {
         if (world && canvasRef.current && overlayRef.current && !rendererRef.current) {
             rendererRef.current = new CanvasRenderer(world, canvasRef.current, overlayRef.current);
+            schedulerRef.current = new HydrationScheduler(rendererRef.current);
             rendererRef.current.clear();
 
             const initalZoom = Math.floor(Math.sqrt(world.maxZoomDepth));

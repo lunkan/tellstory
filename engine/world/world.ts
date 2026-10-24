@@ -5,7 +5,6 @@ import { config } from "../config/config";
 import { TileMapObject } from "../schemas/tile-map-json-schema";
 //import { MarkerConfigData, TileConfigData } from '../config/type';
 import { MarkerSetting, PaletteData, QuadNodeDelta, QuadNodePoint, QuadNodesRect, WorldData } from "../types";
-import { hydrate } from "./hydrator/hydrate";
 //import { Hydrator } from "./hydrator";
 //import { Marker, Markers } from "./markers";
 import { QuadNode } from "./quad-node";
@@ -99,14 +98,12 @@ export class World {
 
     public findNodeBykey(key: QuadNodeKey): QuadNode | undefined {
         const node = this.quadtree.findByKey(key);
-        //return node ? this._hydrator.hydrate(node) : undefined;
-        return node ? hydrate(node) : undefined;
+        return node;
     }
 
     public findNodeByPoint(point: QuadNodePoint): QuadNode | undefined {
         const node = this.quadtree.findByPoint(point, true);
-        //return node ? this._hydrator.hydrate(node) : undefined;
-        return node ? hydrate(node) : undefined;
+        return node;
     }
 
     public findNodesByRect(rect: QuadNodesRect): QuadNode[] {
@@ -123,8 +120,7 @@ export class World {
         const y = refNode.bounds.y + deltaY * refNode.bounds.size;
 
         const neighbourNode = this.quadtree.findByPoint({ x, y, z: refNode.depth }, true);
-        //return this._hydrator.hydrate(neighbourNode);
-        return hydrate(neighbourNode);
+        return neighbourNode;
     }
 
     public findAdjacentNodes(key: QuadNodeKey): QuadNode[] {
@@ -139,9 +135,7 @@ export class World {
 
         return this.quadtree
             .findByRect({ x, y, z: node.depth, width: size * 3, height: size * 3 }, { createIfMissing: true })
-            .filter((adjacentNode) => adjacentNode !== node)
-            //.map((adjacentNode) => this._hydrator.hydrate(adjacentNode)!);
-            .map((adjacentNode) => hydrate(adjacentNode)!);
+            .filter((adjacentNode) => adjacentNode !== node);
     }
 
     public findQuadrantNodes(key: QuadNodeKey): QuadNode[] {
@@ -150,9 +144,7 @@ export class World {
             return [];
         }
 
-        const quadrantNodes = node.getQuadrants(true);
-        //return quadrantNodes.map((quadrantNode) => this._hydrator.hydrate(quadrantNode)!);
-        return quadrantNodes.map((quadrantNode) => hydrate(quadrantNode)!);
+        return node.getQuadrants(true);
     }
 
     public findQuadrantNode(key: QuadNodeKey, x: 1 | 0, y: 1 | 0): QuadNode | undefined {
@@ -161,16 +153,13 @@ export class World {
             return;
         }
 
-        const quadrantNode = node.getQuadrantAt(x, y, true);
-        //return this._hydrator.hydrate(quadrantNode);
-        return hydrate(quadrantNode);
+        return node.getQuadrantAt(x, y, true);
     }
 
     public findParentNode(key: QuadNodeKey): QuadNode | undefined {
         const parentKey = key.createParentKey();
         const parentNode = this.quadtree.findByKey(parentKey);
-        //return this._hydrator.hydrate(parentNode);
-        return hydrate(parentNode);
+        return parentNode;
     }
 
     public findMapObjectsByRect(rect: QuadNodesRect): TileMapObject[] {

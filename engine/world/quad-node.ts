@@ -47,7 +47,7 @@
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
-import { QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileBounds, TileData, TileDataEntry } from "../types";
+import { MarkerSetting, QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileBounds, TileData, TileDataEntry } from "../types";
 //import { hydrate } from "./hydrator/hydrate";
 import { TileMapObject } from "../schemas/tile-map-json-schema";
 import { getTileSizeMeter, LEAF_SIZE_METER } from "./scale";
@@ -443,6 +443,24 @@ export class QuadNode {
         return true;
     }
 
+    /** Markers held by this node's own tile. Unlike getTile() this is never calculated, so locked nodes keep theirs. */
+    public getOwnMarkers(): readonly MarkerSetting[] {
+        return this._tile?.markers ?? [];
+    }
+
+    /**
+     * Narrows markers' placement (keys are indexes into getOwnMarkers()). Placement is a hydration
+     * cache, not user data, so this is allowed on detached and locked nodes where hydration may not write.
+     */
+    public setMarkerPlacements(placements: Map<number, string>): void {
+        if (!this._tile || !placements.size) {
+            return;
+        }
+
+        this._tile = this._tile.withMarkerPlacements(placements);
+        this.dispatch({ type: QuadNode.EVENT_DATA_CHANGE, target: this });
+    }
+
     public getTile(): Tile | undefined {
         if (this._locked) {
             return this.getFlatTile();
@@ -465,6 +483,8 @@ export class QuadNode {
         const tileData: TileDataEntry = {
             nodeId: this.key.id,
             ...this._tile,
+            // placement is a hydration cache, rebuilt on load - never saved
+            markers: this._tile.markers.map(({ placement: _placement, ...marker }) => marker),
             //terrain: this._tile.terrain,
             //vectors: this._tile.vectors,
             //markers: this._tile.markers

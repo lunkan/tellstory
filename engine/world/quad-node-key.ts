@@ -57,6 +57,16 @@ export class QuadNodeKey {
         return new QuadNodeKey(parentHash, this.depth - 1);
     }
 
+    /** The key of the ancestor at `depth` (or this key if it is already there). */
+    public getKeyAtDepth(depth: number): QuadNodeKey {
+        if (depth >= this.depth) {
+            return this;
+        }
+
+        const shift = BigInt((this.depth - depth) * QuadNodeKey.QUADRANT_BIT_Length);
+        return new QuadNodeKey(this.hash >> shift, depth);
+    }
+
     public createChildKey(quadrant: QuadNodeChildIndex): QuadNodeKey {
         const childHash = (this.hash << 2n) | BigInt(quadrant);
         return new QuadNodeKey(childHash, this.depth + 1);

@@ -1,5 +1,6 @@
 import { MarkerConfig } from "../../../engine/config/type";
 import { QuadNode } from "../../../engine/world/quad-node";
+import { placeMarkers } from "../../../engine/world/hydrator/placeMarkers";
 import { LEAF_SIZE_METER } from "../../../engine/world/scale";
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
@@ -67,6 +68,8 @@ export class MarkerHandler extends CanvasEventHandler {
                 type: markerConfig.name,
                 id: `marker@${markerIncrementor}`,
                 attention: markerConfig.attention?.min || 0,
+                // The clicked node, which can be deeper than the host the marker is stored on
+                placement: node!.key.id,
                 shape: {
                     type: 'circle',
                     // grid units are leaves, the shape is in meters from the map origin
@@ -77,8 +80,7 @@ export class MarkerHandler extends CanvasEventHandler {
             }],
         });
 
-
-        console.log('DRawMAeker', depth, ' * ', currentNode, markerConfig.attention);
+        placeMarkers(currentNode); // Children may already be generated, so nothing else would place it
 
         return;
         //}

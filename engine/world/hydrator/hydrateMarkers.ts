@@ -1,14 +1,7 @@
 //import markersJSON from '../../config/markers.json' with { type: 'json' };
 import { config } from '../../config/config';
-import { QuadNodes2DPoint } from '../../types';
 import { getRandFromSeeds } from '../../util/number-generator';
 import { QuadNode } from '../quad-node';
-
-type MarkerConfigEntry = {
-    name: string;
-    tags: string[];
-    scale: number;
-};
 
 export function hydrateMarkers(node: QuadNode): void {
     if (!node?.parent) {
@@ -49,7 +42,7 @@ function _hydrateSubTile(node: QuadNode): void {
 
                 node.updateTileData({
                     markers: [{
-                        point: _findMarkerPoint(marker, node),
+                        placement: node.key.id,
                         attention: node.scale,
                         type: marker.name,
                         id: 'hydrated',
@@ -88,27 +81,6 @@ function _hydrateSubTile(node: QuadNode): void {
     });*/
 
     //return node;
-}
-
-function _findMarkerPoint(_marker: MarkerConfigEntry, node: QuadNode): QuadNodes2DPoint {
-    return {
-        x: (node.bounds.size * 0.5) + node.bounds.x,
-        y: (node.bounds.size * 0.5) + node.bounds.y,
-    };
-
-    /*const markerNode = [...node.getQuadrants()].sort((a, b) => {
-        const valueA = _getNodeMarkerWeight(marker, a);
-        const valueB = _getNodeMarkerWeight(marker, b);
-        return valueB - valueA;
-    })[0] || node; // Self if no quadrant nodes
-
-    const randX = getRandFromSeeds(BigInt(101), markerNode.key.hash);
-    const randY = getRandFromSeeds(BigInt(102), markerNode.key.hash);
-
-    return {
-        x: markerNode.bounds.size * randX + markerNode.bounds.x,
-        y: markerNode.bounds.size * randY + markerNode.bounds.y,
-    };*/
 }
 
 /*function _getNodeMarkerWeight(marker: MarkerConfigEntry, node: QuadNode): number {

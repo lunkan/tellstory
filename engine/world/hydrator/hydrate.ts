@@ -4,6 +4,7 @@ import { hydrateTile } from './hydrateTile';
 import { hydrateMarkers } from './hydrateMarkers';
 import { hydrateVectors } from './hydrateVectors';
 import { hydrateRoads } from './hydrateRoads';
+import { placeMarkers } from './placeMarkers';
 
 export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     if (!node || node.isLocked()) {
@@ -39,6 +40,7 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     for (const quadNode of quadNodes) {
         console.log('*', quadNode?.tile?.terrain);*/
     hydrateMarkers(node);
+    placeMarkers(node.parent);
     /*}
 
     if (quadrantA?.tile?.terrain?.some((terrainConfig) => terrainConfig.type === 'urban')) {

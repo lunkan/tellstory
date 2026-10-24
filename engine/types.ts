@@ -81,6 +81,13 @@ export type VectorSetting = {
 
 export type MarkerSetting = Partial<TileMapObject> & {
     point?: QuadNodes2DPoint; // Not used
+    /**
+     * Coarse position: the id (QuadNodeKey.id) of the node the marker currently sits in.
+     * Starts as the host node and is narrowed to a descendant during hydration. Never an exact
+     * position - that is `shape`, which only exists once the map has been generated. Not saved.
+     * A string, not a QuadNodeKey, so marker data stays JSON serializable.
+     */
+    placement?: string;
     type: string;
     attention?: number; // Not to be used
     id: string;

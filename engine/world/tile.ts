@@ -121,6 +121,18 @@ export class Tile {
     }
 
 
+    /** Same tile with only the given markers' `placement` changed. Keys are indexes into `markers`. */
+    public withMarkerPlacements(placements: Map<number, string>): Tile {
+        return new Tile(this.bounds, {
+            terrain: this.terrain,
+            vectors: this.vectors,
+            markers: this.markers.map((marker, index) => {
+                const placement = placements.get(index);
+                return placement === undefined ? marker : { ...marker, placement };
+            }),
+        });
+    }
+
     /*public setMap(tileMapData: TileMap): void {
         this._mapData = tileMapData;
     }

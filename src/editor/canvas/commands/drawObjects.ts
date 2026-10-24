@@ -1,44 +1,81 @@
 import { QuadNode } from "../../../../engine/world/quad-node";
 import { QuadNodeBounds } from "../../../../engine/world/quad-node-bounds";
+import { QuadNodeKey } from "../../../../engine/world/quad-node-key";
+import { getMarkerPlacement } from "../../../../engine/world/marker-placement";
+import { MarkerSetting } from "../../../../engine/types";
 
 
 type DrawObjectOptions = {
     ctx: CanvasRenderingContext2D;
+    /** Visible nodes at every depth from the root down to `depth`. */
     nodes: QuadNode[]; //TileMapObject[];
+    /** Depth being rendered. */
+    depth: number;
     scale: number;
 }
 
 export function drawObjects(options: DrawObjectOptions): void {
-    const { ctx, nodes, scale } = options;
+    const { ctx, nodes, depth, scale } = options;
 
+    const cells = new Map<string, QuadNode>();
     nodes.forEach((node) => {
-        const objects = node.getTile()?.markers;
-        if (objects && objects.length) {
-            console.log('*', objects?.length, node.bounds);
-
-            const objectPoints = _getObjectPoints(node.bounds, objects.length);
-            objects.forEach((object, i) => {
-                const [x, y] = objectPoints[i];
-                const radius = 5 * (object.attention ?? 1);
-
-                ctx.fillStyle = '#000000';
-                ctx.beginPath();
-                ctx.arc(x, y, radius * scale, 0, Math.PI * 2);
-                ctx.fill();
-
-                _drawLabel(x, y, radius, object.type, options);
-
-                /*if (isRectangleShape(object.shape)) {
-                    _drawRectangle(object.shape, options);
-                    _drawLabel(object.shape.x, object.shape.y + object.shape.height + 10, object.type, options);
-                } else if (isCircleShape(object.shape)) {
-                    _drawCircle(object.shape, options);
-                    _drawLabel(object.shape.x, object.shape.y + object.shape.radius + 10, object.type, options);
-                } else if (isLineShape(object.shape)) {
-                    _drawLine(object.shape, options);
-                }*/
-            });
+        if (node.depth === depth) {
+            cells.set(node.key.id, node);
         }
+    });
+
+    // A marker stays on the node that holds it. Where it is drawn comes from its placement.
+    const markersByCell = new Map<string, MarkerSetting[]>();
+    nodes.forEach((host) => {
+
+        if (host.getOwnMarkers().length || host.getTile()?.markers.length) {
+            console.log('M', host.depth, host.getOwnMarkers().length, host.getTile()?.markers.length);
+        }
+
+        host.getOwnMarkers().forEach((marker) => {
+            const placement = QuadNodeKey.fromId(getMarkerPlacement(marker, host));
+            if (placement.depth < depth) {
+                console.log('D', placement);
+                return; // Not narrowed this deep yet - drawn once hydration has placed it
+            }
+
+            const cellId = placement.getKeyAtDepth(depth).id;
+            if (!cells.has(cellId)) {
+                console.log('O', cellId);
+                return; // Outside the viewport
+            }
+
+            const cellMarkers = markersByCell.get(cellId) ?? [];
+            cellMarkers.push(marker);
+            markersByCell.set(cellId, cellMarkers);
+        });
+    });
+
+    markersByCell.forEach((objects, cellId) => {
+        console.log('markersByCell', objects.length);
+        const bounds = cells.get(cellId)!.bounds;
+        const objectPoints = _getObjectPoints(bounds, objects.length);
+        objects.forEach((object, i) => {
+            const [x, y] = objectPoints[i];
+            const radius = 5 * (object.attention ?? 1);
+
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(x, y, radius * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            _drawLabel(x, y, radius, object.type, options);
+
+            /*if (isRectangleShape(object.shape)) {
+                _drawRectangle(object.shape, options);
+                _drawLabel(object.shape.x, object.shape.y + object.shape.height + 10, object.type, options);
+            } else if (isCircleShape(object.shape)) {
+                _drawCircle(object.shape, options);
+                _drawLabel(object.shape.x, object.shape.y + object.shape.radius + 10, object.type, options);
+            } else if (isLineShape(object.shape)) {
+                _drawLine(object.shape, options);
+            }*/
+        });
     });
 }
 
