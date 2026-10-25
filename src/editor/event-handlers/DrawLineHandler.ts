@@ -1,6 +1,5 @@
-import { dehydrate } from "../../../engine/world/hydrator/hydrate";
+import { connectNodes } from "../../../engine/world/connect-nodes";
 import { QuadNode } from "../../../engine/world/quad-node";
-import { Tile } from "../../../engine/world/tile";
 import { SelectedEntity } from '../../store/editorStore';
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
@@ -46,14 +45,8 @@ export class DrawLineHandler extends CanvasEventHandler {
         }
 
         const vectorValue = Math.max(0, Math.min(1, this._value));
+        connectNodes(previousNode, node, this._type, vectorValue); // Existing connections are ignored
 
-        this._setLineSegment(previousNode, node, vectorValue);
-        this._setLineSegment(node, previousNode, vectorValue);
-
-        this._updateParentLineSegment(previousNode, node, vectorValue);
-
-
-        //this.renderer.refresh();
         previousNode = node;
         this.finish();
         return;
@@ -69,9 +62,9 @@ export class DrawLineHandler extends CanvasEventHandler {
         const validTarget = hoveredNode ? this._isValidTarget(hoveredNode) : false;
 
         const p1 = this.renderer.getViewPointFromNode(previousNode);
-        const p2 = super.toViewportPoint(point);
-        const dash = validTarget ? [] : [5, 15];
-        this.renderer.setLine('vector', p1, p2, this._lineColor, dash);
+        // A valid target snaps the end dot to its centre. Otherwise it follows the pointer and no line is drawn
+        const p2 = hoveredNode && validTarget ? this.renderer.getViewPointFromNode(hoveredNode) : viewportPoint;
+        this.renderer.setLine('vector', p1, p2, this._lineColor, [5, 10], validTarget, this.renderer.getViewSizeFromNode(previousNode) / 4);
         return true;
     }
 
@@ -90,93 +83,5 @@ export class DrawLineHandler extends CanvasEventHandler {
         }
 
         return previousNode.isAdjacent(node);
-    }
-
-    private _setLineSegment(node: QuadNode, targetNode: QuadNode, value: number): boolean {
-        const vector = node.getNormalizedRelativePosition(targetNode);
-        if (!vector) {
-            return false;
-        }
-
-        if (!node.hasTile()) {
-            //node.tile = new Tile();
-            node.setTileData({}); // Probably not needed after update 
-        }
-
-        node.detach();
-        node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
-
-        node.setTileData({
-            vectors: [{
-                type: this._type,
-                value: value,
-                direction: vector,
-            }],
-        });
-
-        /*node.tile.setVector({
-            type: this._type,
-            value: value,
-            direction: vector,
-        });*/
-
-        return true;
-    }
-
-    private _updateParentLineSegment(node: QuadNode, targetNode: QuadNode, value: number): void {
-        const nodeParent: QuadNode | undefined = node.parent;
-        const targetNodeParent: QuadNode | undefined = targetNode.parent;
-        if (!nodeParent || !targetNodeParent || nodeParent === targetNodeParent) {
-            return;
-        }
-
-        const delta1 = nodeParent.getNormalizedRelativePosition(targetNodeParent);
-        const delta2 = targetNodeParent.getNormalizedRelativePosition(nodeParent);
-
-        if (!delta1 || !delta2) {
-            return;
-        }
-
-        nodeParent.updateTileData({
-            vectors: [{
-                type: this._type,
-                value: value,
-                direction: { x: delta1.x, y: delta1.y },
-            }],
-        });
-
-        targetNodeParent.updateTileData({
-            vectors: [{
-                type: this._type,
-                value: value,
-                direction: { x: delta2.x, y: delta2.y },
-            }],
-        });
-
-        /*nodeParent.tile?.applyVector({
-            type: this._type,
-            value: value,
-            direction: { x: delta1.x, y: delta1.y },
-        });
-
-        targetNodeParent.tile?.applyVector({
-            type: this._type,
-            value: value,
-            direction: { x: delta2.x, y: delta2.y },
-        });*/
-
-        this._updateParentLineSegment(nodeParent, targetNodeParent, value);
-
-        /*let parentNode = node.parent;
-        while (parentNode && 5 <= parentNode.depth) {
-            value = value * 0.25;
-            parentNode.tile!.applyVector({
-                type: this._type,
-                value: value,
-                direction: vector,
-            });
-
-            parentNode = parentNode.parent;
-        }*/
     }
 }

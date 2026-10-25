@@ -6,6 +6,7 @@ import { drawGrid } from "./commands/drawGrid";
 import { CanvasMatrix } from "./CanvasMatrix";
 import { drawSelectedTile } from "./commands/drawSelectedTile";
 import { drawObjects } from "./commands/drawObjects";
+import { drawVectors } from "./commands/drawVectors";
 import { LEAF_SIZE_METER } from "../../../engine/world/scale";
 import { drawElevation } from "./commands/drawElevation";
 import { drawTerrain } from "./commands/drawTerrain";
@@ -74,6 +75,8 @@ export class CanvasRenderer {
         this._layers.set('editableLeafTiles', document.createElement("canvas"));
         this._layers.set('generatedTiles', document.createElement("canvas"));
         this._layers.set('markers', document.createElement("canvas"));
+        this._layers.set('vectors', document.createElement("canvas"));
+        this._layers.set('sea', document.createElement("canvas"));
         this._layers.set('selectedTile', document.createElement("canvas"));
     }
 
@@ -109,8 +112,8 @@ export class CanvasRenderer {
         this._invalidatTransform('depth');
     }
 
-    public setLine(lineId: string, p1: DOMPoint, p2: DOMPoint, color: string, dash: number[]): void {
-        this.overlay.setLine(lineId, p1, p2, color, dash);
+    public setLine(lineId: string, p1: DOMPoint, p2: DOMPoint, color: string, dash: number[], showLine: boolean = true, radius: number = 5): void {
+        this.overlay.setLine(lineId, p1, p2, color, dash, showLine, radius);
     }
 
     public clearLine(lineId: string): void {
@@ -130,6 +133,10 @@ export class CanvasRenderer {
         }
 
         this._invalidatTransform();
+    }
+
+    public getViewSizeFromNode(node: QuadNode): number {
+        return node.bounds.size * this._matrix.transformMtx.a;
     }
 
     public getViewPointFromNode(node: QuadNode): DOMPoint {
@@ -225,7 +232,7 @@ export class CanvasRenderer {
                 nodes: visibleNodes,
             });
 
-        } else if (this.getScale() <= 1) {
+        } /*else if (this.getScale() <= 1) {
             // Paint all white
             const ctx = this.canvas.getContext('2d');
             if (ctx) {
@@ -234,12 +241,13 @@ export class CanvasRenderer {
                 ctx.rect(0, 0, this._matrix.width, this._matrix.height);
                 ctx.fill();
             }
-        } else {
+        }*/ else {
             //drawPlainTiles
 
             elevationLayer = this._layers.get('elevation')!;
             drawElevation({
                 ctx: elevationLayer.getContext('2d')!,
+                seaCtx: this._layers.get('sea')!.getContext('2d')!,
                 gridBounds,
                 tileSize,
                 nodes: visibleNodes,
@@ -296,6 +304,12 @@ export class CanvasRenderer {
         //const visibleObjects =  this._getVisibleMapObjects(gridBounds);
         const allVisibleNodes = this._getAllVisibleNodes(gridBounds);
 
+        drawVectors({
+            ctx: this._layers.get('vectors')!.getContext('2d')!,
+            nodes: allVisibleNodes,
+            depth: this._matrix.depth,
+        });
+
         if (this.getScale() <= 1) {
             // The layer ctx draws in grid units (1 unit = 1 leaf), the transform handles zoom.
             drawShapes({
@@ -327,7 +341,6 @@ export class CanvasRenderer {
                 //nodes,
             });*/
 
-            console.log('DRAW OBJECTS', allVisibleNodes.length);
             drawObjects({
                 ctx: markerLayer.getContext('2d')!,
                 nodes: allVisibleNodes,
@@ -365,6 +378,9 @@ export class CanvasRenderer {
             this._ctx.restore();
         }
 
+        // Vectors are under the sea, so they stop at the shore. Grid and markers stay on top.
+        this._ctx.drawImage(this._layers.get('vectors')!, 0, 0);
+        this._ctx.drawImage(this._layers.get('sea')!, 0, 0);
         this._ctx.drawImage(gridLayer, 0, 0);
         this._ctx.drawImage(markerLayer, 0, 0);
         this._ctx.drawImage(selectedTileLayer, 0, 0);

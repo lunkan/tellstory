@@ -27,21 +27,14 @@ export function drawObjects(options: DrawObjectOptions): void {
     // A marker stays on the node that holds it. Where it is drawn comes from its placement.
     const markersByCell = new Map<string, MarkerSetting[]>();
     nodes.forEach((host) => {
-
-        if (host.getOwnMarkers().length || host.getTile()?.markers.length) {
-            console.log('M', host.depth, host.getOwnMarkers().length, host.getTile()?.markers.length);
-        }
-
         host.getOwnMarkers().forEach((marker) => {
             const placement = QuadNodeKey.fromId(getMarkerPlacement(marker, host));
             if (placement.depth < depth) {
-                console.log('D', placement);
                 return; // Not narrowed this deep yet - drawn once hydration has placed it
             }
 
             const cellId = placement.getKeyAtDepth(depth).id;
             if (!cells.has(cellId)) {
-                console.log('O', cellId);
                 return; // Outside the viewport
             }
 
@@ -52,7 +45,6 @@ export function drawObjects(options: DrawObjectOptions): void {
     });
 
     markersByCell.forEach((objects, cellId) => {
-        console.log('markersByCell', objects.length);
         const bounds = cells.get(cellId)!.bounds;
         const objectPoints = _getObjectPoints(bounds, objects.length);
         objects.forEach((object, i) => {

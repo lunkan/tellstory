@@ -114,7 +114,7 @@ export function EditorMap() {
     }
 
     return (
-        <div className={styles.map} style={{ position: 'relative' }} ref={viewportRef} onPointerDown={(e) => handlePointerDown(e)} onWheel={(e) => handleWheel(e)}>
+        <div className={styles.map} style={{ position: 'relative' }} ref={viewportRef} onPointerDown={(e) => handlePointerDown(e)} onWheel={(e) => handleWheel(e)} onContextMenu={(e) => e.preventDefault()}>
             <canvas width="1000" height="1000" ref={canvasRef}></canvas>
             <canvas style={{ position: 'absolute', top: 0, left: 0 }} width="1000" height="1000" ref={overlayRef}></canvas>
             <EditorMapZoomLevel depth={depth} scale={maxDepth - depth}></EditorMapZoomLevel>

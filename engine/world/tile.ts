@@ -69,7 +69,7 @@ export class Tile {
         const mutatedVectors = [...this.vectors];
         tileData.vectors?.forEach((vector) => {
             const index = mutatedVectors.findIndex((v) => v.type === vector.type && v.direction.x === vector.direction.x && v.direction.y === vector.direction.y);
-            if (index) {
+            if (index !== -1) {
                 mutatedVectors[index] = vector;
             } else {
                 mutatedVectors.push(vector);
@@ -79,7 +79,7 @@ export class Tile {
         return new Tile(this.bounds, {
             terrain: mutatedTerrain,
             vectors: mutatedVectors,
-            markers: tileData.markers,
+            markers: tileData.markers ?? this.markers,
             //mapData: tileData.mapData
         });
     }
@@ -102,7 +102,7 @@ export class Tile {
         const mutatedVectors = [...this.vectors];
         tileData.vectors?.forEach((vector) => {
             const index = mutatedVectors.findIndex((v) => v.type === vector.type && v.direction.x === vector.direction.x && v.direction.y === vector.direction.y);
-            if (index) {
+            if (index !== -1) {
                 mutatedVectors[index] = {
                     ...mutatedVectors[index],
                     ...vector
@@ -120,6 +120,18 @@ export class Tile {
         });
     }
 
+
+    /** Same tile with only the given vectors' `placement` changed. Keys are indexes into `vectors`. */
+    public withVectorPlacements(placements: Map<number, number[]>): Tile {
+        return new Tile(this.bounds, {
+            terrain: this.terrain,
+            vectors: this.vectors.map((vector, index) => {
+                const placement = placements.get(index);
+                return placement === undefined ? vector : { ...vector, placement };
+            }),
+            markers: this.markers,
+        });
+    }
 
     /** Same tile with only the given markers' `placement` changed. Keys are indexes into `markers`. */
     public withMarkerPlacements(placements: Map<number, string>): Tile {

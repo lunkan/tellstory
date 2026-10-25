@@ -21,4 +21,8 @@ The creator edits the world map here: draws terrain and places objects (markers)
 - Do not persist generated (`hydrated`/`empty`) data. Only detached, creator-drawn nodes are saved.
 - Editing a generated node detaches it and locks its parents. Go through the engine's API for this instead of mutating tiles directly.
 - Never put randomness in rendering or generation (see determinism rules). Visual variation must derive from seeds.
+- The renderer does not generate data. It emits `RenderRequest`s via `subscribe()`, and `HydrationScheduler` hydrates the viewport in time-sliced passes. Missing tiles draw blank.
+- `drawObjects` draws markers by `placement`: collect markers from all visible nodes (`getOwnMarkers()`), resolve the cell at the current depth with `getKeyAtDepth`, and skip markers not yet narrowed to that depth.
+- When the user adds a marker, set its `placement` to the clicked node (at the view depth), store it on the host node at the attention depth, then call `placeMarkers` on the host.
+- Known gaps: handlers may write an empty tile if clicked before hydration; edits to hydrated nodes do not yet reset placements below them.
 - Keep rendering cheap: draw only what is visible at the current scale and viewport.

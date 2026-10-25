@@ -2,9 +2,8 @@ import { QuadNode } from '../quad-node';
 
 import { hydrateTile } from './hydrateTile';
 import { hydrateMarkers } from './hydrateMarkers';
-import { hydrateVectors } from './hydrateVectors';
-import { hydrateRoads } from './hydrateRoads';
 import { placeMarkers } from './placeMarkers';
+import { placeVectors } from './placeVectors';
 
 export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     if (!node || node.isLocked()) {
@@ -23,8 +22,6 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     // Subtiles
 
     hydrateTile(node);
-    hydrateVectors(node);
-    hydrateRoads(node);
 
     /*const quadrantA = node.getQuadrantAt(0, 0, true);
     const quadrantB = node.getQuadrantAt(1, 0, true);
@@ -41,6 +38,7 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
         console.log('*', quadNode?.tile?.terrain);*/
     hydrateMarkers(node);
     placeMarkers(node.parent);
+    placeVectors(node.parent);
     /*}
 
     if (quadrantA?.tile?.terrain?.some((terrainConfig) => terrainConfig.type === 'urban')) {

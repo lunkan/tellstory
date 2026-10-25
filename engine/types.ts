@@ -77,6 +77,12 @@ export type VectorSetting = {
         x: QuadNodeDelta,
         y: QuadNodeDelta,
     },
+    /**
+     * Child index (0-3) the vector passes through at each depth below its host: entry 0 is the child of
+     * the host, entry 1 its child, and so on. Hydration appends one entry per depth. The cell at the
+     * other end is mirrored across the border, so it is not stored. Hydration cache - never saved.
+     */
+    placement?: number[];
 }
 
 export type MarkerSetting = Partial<TileMapObject> & {

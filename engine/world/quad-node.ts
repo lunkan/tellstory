@@ -47,7 +47,7 @@
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
-import { MarkerSetting, QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileBounds, TileData, TileDataEntry } from "../types";
+import { MarkerSetting, QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileBounds, TileData, TileDataEntry, VectorSetting } from "../types";
 //import { hydrate } from "./hydrator/hydrate";
 import { TileMapObject } from "../schemas/tile-map-json-schema";
 import { getTileSizeMeter, LEAF_SIZE_METER } from "./scale";
@@ -461,6 +461,21 @@ export class QuadNode {
         this.dispatch({ type: QuadNode.EVENT_DATA_CHANGE, target: this });
     }
 
+    /** Vectors held by this node's own tile. Never calculated, so locked nodes keep theirs. */
+    public getOwnVectors(): readonly VectorSetting[] {
+        return this._tile?.vectors ?? [];
+    }
+
+    /** Narrows vectors' placement (keys are indexes into getOwnVectors()). A hydration cache, like marker placement. */
+    public setVectorPlacements(placements: Map<number, number[]>): void {
+        if (!this._tile || !placements.size) {
+            return;
+        }
+
+        this._tile = this._tile.withVectorPlacements(placements);
+        this.dispatch({ type: QuadNode.EVENT_DATA_CHANGE, target: this });
+    }
+
     public getTile(): Tile | undefined {
         if (this._locked) {
             return this.getFlatTile();
@@ -485,9 +500,7 @@ export class QuadNode {
             ...this._tile,
             // placement is a hydration cache, rebuilt on load - never saved
             markers: this._tile.markers.map(({ placement: _placement, ...marker }) => marker),
-            //terrain: this._tile.terrain,
-            //vectors: this._tile.vectors,
-            //markers: this._tile.markers
+            vectors: this._tile.vectors.map(({ placement: _placement, ...vector }) => vector),
         };
 
         return [tileData, ...quadrantTiles];

@@ -24,9 +24,19 @@ export function TileTab() {
     }
 
     const typography = config.getTilesByFilter({ category: 'typography' });
-    const vectors = config.getTilesByFilter({ category: 'vector' });
+    //const vectors = config.getTilesByFilter({ category: 'vector' });
     const biome = config.getTilesByFilter({ category: 'biome' });
     const urban = config.getTilesByFilter({ category: 'urban' });
+
+    /*
+    
+                <h3 className="editor-palett--options-heading">Vectors</h3>
+                <ul className="editor-palett--options-list">
+                    {vectors.map((tileConfig, i) => (
+                        <li key={i}>{renderTerrainOption(tileConfig)}</li>
+                    ))}
+                </ul>
+    */
 
     return (
         <div className="tab-panel">
@@ -34,12 +44,6 @@ export function TileTab() {
                 <h3 className="editor-palett--options-heading">Typography</h3>
                 <ul className="editor-palett--options-list">
                     {typography.map((tileConfig, i) => (
-                        <li key={i}>{renderTerrainOption(tileConfig)}</li>
-                    ))}
-                </ul>
-                <h3 className="editor-palett--options-heading">Vectors</h3>
-                <ul className="editor-palett--options-list">
-                    {vectors.map((tileConfig, i) => (
                         <li key={i}>{renderTerrainOption(tileConfig)}</li>
                     ))}
                 </ul>

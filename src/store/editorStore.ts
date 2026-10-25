@@ -7,7 +7,7 @@ import { paletteRepository } from "../repositories/paletteRepository";
 import { QuadNode } from "../../engine/world/quad-node";
 import { TileData } from "../../engine/types";
 import { TileMapObject } from "../../engine/schemas/tile-map-json-schema";
-import { MarkerConfig } from "../../engine/config/type";
+import { MarkerConfig, VectorConfig } from "../../engine/config/type";
 //import { Tile } from "../../engine/world/tile";
 //import { Marker } from "../../engine/world/markers";
 
@@ -30,7 +30,7 @@ interface EditorStore {
     //quadtree: QuadNode | null;
     //markers: Marker[];
     //startingLocations: Marker[];
-    selectedTerrain: SelectedEntity | MarkerConfig | null;
+    selectedTerrain: SelectedEntity | VectorConfig | MarkerConfig | null;
     selectedNode: QuadNode | null;
     paintValue: number;
     editState: EditState;
@@ -38,7 +38,7 @@ interface EditorStore {
     newWorld: (name: string, size: number, palette: number) => Promise<boolean>;
     setWorldId: (worldId: number) => Promise<void>;
     save: () => Promise<void>;
-    selectTerrain: (entity: SelectedEntity | MarkerConfig) => void;
+    selectTerrain: (entity: SelectedEntity | VectorConfig | MarkerConfig) => void;
     selectNode: (node: QuadNode | null) => void;
     setPaintValue: (value: number) => void;
     setEditState: (state: EditState) => void;

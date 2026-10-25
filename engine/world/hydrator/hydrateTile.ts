@@ -1,6 +1,5 @@
 //import tilesJSON from '../../config/tiles.json' with { type: 'json' };
 import { config } from '../../config/config';
-import { QuadNodeDelta } from '../../types';
 import { getRandFromSeeds, mergeSeeds } from '../../util/number-generator';
 import { QuadNode } from '../quad-node';
 
@@ -91,62 +90,6 @@ function _hydrateSubTiles(parent: QuadNode): void {
                 value: quadrantValues[i],
             });*/
         });
-    });
-
-    function xQuadrantsFromVector(vx: QuadNodeDelta) {
-        if (vx === -1) {
-            return [quadrantA, quadrantC];
-        } else if (vx === 1) {
-            return [quadrantB, quadrantD];
-        } else {
-            return parent.bounds.x % 2 ? [quadrantA, quadrantC] : [quadrantB, quadrantD];
-        }
-    }
-
-    function yQuadrantsFromVector(vy: QuadNodeDelta) {
-        if (vy === -1) {
-            return [quadrantA, quadrantB];
-        } else if (vy === 1) {
-            return [quadrantC, quadrantD];
-        } else {
-            return parent.bounds.y % 2 ? [quadrantA, quadrantB] : [quadrantC, quadrantD];
-        }
-    }
-
-    parentTile.vectors.forEach((vector) => {
-        const xQuadrants = xQuadrantsFromVector(vector.direction.x);
-        const yQuadrants = yQuadrantsFromVector(vector.direction.y);
-        const vQuadrant = xQuadrants.find((quadrant) => yQuadrants.indexOf(quadrant) !== -1);
-        if (!vQuadrant) {
-            console.log('FAIL');
-            return;
-        } else if (!vQuadrant.canHydrate()) {
-            return;
-        }
-
-        vQuadrant.setTileData({
-            vectors: [{
-                direction: vQuadrant.getNormalizedRelativePosition(parent)!,
-                value: vector.value,
-                type: vector.type,
-            }, {
-                direction: vector.direction,
-                value: vector.value,
-                type: vector.type,
-            }],
-        });
-
-        /*vQuadrant.tile?.setVector({
-            direction: vQuadrant.getNormalizedRelativePosition(parent)!,
-            value: vector.value,
-            type: vector.type,
-        });
-
-        vQuadrant.tile?.setVector({
-            direction: vector.direction,
-            value: vector.value,
-            type: vector.type,
-        });*/
     });
 }
 

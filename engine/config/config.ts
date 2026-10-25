@@ -1,5 +1,5 @@
 import { PaletteData } from '../types';
-import { TileConfig, MarkerConfig } from './type';
+import { TileConfig, MarkerConfig, VectorConfig } from './type';
 
 type TileConfigFilter = {
     category: string;
@@ -16,6 +16,7 @@ type MarkerConfigFilter = {
 };
 
 const tileMap: Map<string, TileConfig> = new Map();
+const vectorMap: Map<string, VectorConfig> = new Map();
 const markerMap: Map<string, MarkerConfig> = new Map();
 const markerTags: string[] = [];
 
@@ -39,6 +40,15 @@ function set(paletteData: PaletteData): void {
         };
 
         tileMap.set(tileConfig.name, tileConfig);
+    });
+
+    paletteData.vectors.forEach((vectorConfigData) => {
+        const vectorConfig = {
+            ...vectorConfigData,
+            tags: vectorConfigData.tags || [],
+        };
+
+        vectorMap.set(vectorConfig.name, vectorConfig);
     });
 
     paletteData.markers.forEach((markerConfigData) => {
@@ -135,11 +145,21 @@ function isMarkerMatchingScale(scale: number = 0, marker: MarkerConfig): boolean
     return (marker.attention?.max || 0) >= scale;
 }
 
+function getVectors(): VectorConfig[] {
+    return [...vectorMap.values()];
+}
+
+function getVector(name: string): VectorConfig | undefined {
+    return vectorMap.get(name);
+}
+
 export const config = {
     isInitilized,
     set,
     getTile,
     getTilesByFilter,
+    getVectors,
+    getVector,
     getMarker,
     getMarkersByFilter,
     getMarkerTags,

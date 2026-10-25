@@ -1,5 +1,6 @@
 import { hydrate } from "../../../engine/world/hydrator/hydrate";
 import { findNodesToHydrate } from "../../../engine/world/hydrator/findNodesToHydrate";
+import { getVectorHosts, hydrateVectorPaths } from "../../../engine/world/hydrator/hydrateVectorPaths";
 import { QuadNode } from "../../../engine/world/quad-node";
 import { CanvasRenderer, RenderRequest } from "./CanvasRenderer";
 
@@ -42,13 +43,23 @@ export class HydrationScheduler {
         const tileSize = root.bounds.size / Math.pow(2, request.depth);
         const { gridBounds } = request;
 
-        this._queue = findNodesToHydrate(root, {
+        const rect = {
             x: gridBounds.x * tileSize,
             y: gridBounds.y * tileSize,
             width: gridBounds.xSize * tileSize,
             height: gridBounds.ySize * tileSize,
             z: request.depth,
-        });
+        };
+
+        this._hydrating = true;
+        try {
+            // A road must stay complete when part of it lies outside the viewport
+            hydrateVectorPaths(getVectorHosts(root.findByRect(rect, { selectAllDepth: true }), request.depth), request.depth);
+        } finally {
+            this._hydrating = false;
+        }
+
+        this._queue = findNodesToHydrate(root, rect);
 
         this._run();
     }

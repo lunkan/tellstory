@@ -16,6 +16,16 @@ export function mergeSeeds(a: bigint, b: bigint = 0n, c: bigint = 0n): bigint {
     return mix(a ^ rotl(b, 17n) ^ (c * 0x9e3779b97f4a7c15n));
 }
 
+/** Stable seed from a string (FNV-1a), so names can take part in deterministic generation. */
+export function seedFromString(text: string): bigint {
+    let hash = 0xcbf29ce484222325n;
+    for (let i = 0; i < text.length; i++) {
+        hash = ((hash ^ BigInt(text.charCodeAt(i))) * 0x100000001b3n) & 0xffffffffffffffffn;
+    }
+
+    return hash;
+}
+
 function bigintToSeed(x: bigint): number {
   return Number(x & 0xffffffffn);
 }

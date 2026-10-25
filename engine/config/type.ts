@@ -20,11 +20,21 @@ export type TileConfig = TileConfigData & {
     tags: TileTag[],
 }
 
+export type VectorMetaConfig = TileMetaConfig & {
+    /** Scales the drawn width of the vector. Defaults to 1. */
+    widthMultiplier?: number;
+}
+
 export type VectorConfigData = {
     id: number;
     name: string;
     attentionValue: number;
-    meta: TileMetaConfig;
+    meta: VectorMetaConfig;
+    tags: string[] | undefined,
+}
+
+export type VectorConfig = VectorConfigData & {
+    tags: TileTag[],
 }
 
 export type MarkerMetaConfig = {

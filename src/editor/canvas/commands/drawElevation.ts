@@ -16,13 +16,15 @@ const COLORS = [
 
 type DrawElevationOptions = {
     ctx: CanvasRenderingContext2D;
+    /** Optional layer that gets only the sea, to paint over what is drawn on land (roads, rivers). */
+    seaCtx?: CanvasRenderingContext2D;
     gridBounds: GridBounds;
     tileSize: number;
     nodes: QuadNode[];
 }
 
 export function drawElevation(options: DrawElevationOptions): void {
-    const { ctx, gridBounds, tileSize, nodes } = options;
+    const { ctx, seaCtx, gridBounds, tileSize, nodes } = options;
     const { xSize, ySize } = gridBounds;
     const originX = gridBounds.x * tileSize;
     const originY = gridBounds.y * tileSize;
@@ -65,6 +67,31 @@ export function drawElevation(options: DrawElevationOptions): void {
         ctx.fillStyle = COLORS[i];
         ctx.fill("evenodd");
     });
+
+    if (seaCtx) {
+        // Band 1 is everything above sea level. The sea is the area outside it, so the outer
+        // rectangle plus the land rings, filled even-odd, leaves exactly the water.
+        const land = bands[1];
+        seaCtx.beginPath();
+        seaCtx.rect(originX, originY, xSize * tileSize, ySize * tileSize);
+
+        for (const polygon of land?.coordinates ?? []) {
+            for (const ring of polygon) {
+                ring.forEach(([x, y], j) => {
+                    const gridX = originX + x * tileSize;
+                    const gridY = originY + y * tileSize;
+
+                    if (j === 0) seaCtx.moveTo(gridX, gridY);
+                    else seaCtx.lineTo(gridX, gridY);
+                });
+
+                seaCtx.closePath();
+            }
+        }
+
+        seaCtx.fillStyle = COLORS[0];
+        seaCtx.fill("evenodd");
+    }
 }
 
 // https://d3js.org/d3-contour?utm_source=chatgpt.com

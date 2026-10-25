@@ -4,7 +4,13 @@ type OverlayLine = {
     p2: DOMPoint;
     color: string;
     dash: number[];
+    /** Draw the line itself. When false only the end dots are drawn. */
+    showLine: boolean;
+    /** Radius in view pixels of the circles at both ends. */
+    radius: number;
 };
+
+const END_DOT_RADIUS = 5;
 
 export class OverlayRenderer {
     public readonly overlay: HTMLCanvasElement;
@@ -40,13 +46,15 @@ export class OverlayRenderer {
         this._transformMtx = transformMtx;
     }*/
 
-    public setLine(lineId: string, p1: DOMPoint, p2: DOMPoint, color: string, dash: number[]): void {
+    public setLine(lineId: string, p1: DOMPoint, p2: DOMPoint, color: string, dash: number[],     showLine: boolean = true, radius: number = 5): void {
         const line = this._lines.find((line) => line.id === lineId);
         if (line) {
+                line.radius = radius;
             line.p1 = p1;
             line.p2 = p2;
             line.color = color;
             line.dash = dash;
+            line.showLine = showLine;
         } else {
             this._lines.push({
                 id: lineId,
@@ -54,6 +62,8 @@ export class OverlayRenderer {
                 p2,
                 color,
                 dash,
+                showLine,
+                radius,
             })
         }
 
@@ -94,12 +104,35 @@ export class OverlayRenderer {
         }
 
         this._lines.forEach((line) => {
+            const r = line.radius;
             ctx.strokeStyle = line.color;
             ctx.lineWidth = 2;
             ctx.setLineDash(line.dash);
+
+            const dx = line.p2.x - line.p1.x;
+            const dy = line.p2.y - line.p1.y;
+            const dist = Math.hypot(dx, dy);
+            // The line runs from the edge of the start circle to the end dot
+            if (line.showLine && dist > r) {
+                const ux = dx / dist;
+                const uy = dy / dist;
+                ctx.beginPath();
+                ctx.moveTo(line.p1.x + ux * r, line.p1.y + uy * r);
+                ctx.lineTo(line.p2.x, line.p2.y);
+                ctx.stroke();
+            }
+
             ctx.beginPath();
-            ctx.moveTo(line.p1.x, line.p1.y);
-            ctx.lineTo(line.p2.x, line.p2.y);
+            ctx.arc(line.p1.x, line.p1.y, r, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#ffffff';
+            ctx.fillStyle = line.color;
+            ctx.beginPath();
+            ctx.arc(line.p2.x, line.p2.y, END_DOT_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
             ctx.stroke();
         });
     }
