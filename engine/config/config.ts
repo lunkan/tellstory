@@ -52,9 +52,19 @@ function set(paletteData: PaletteData): void {
     });
 
     paletteData.markers.forEach((markerConfigData) => {
+        const tags = markerConfigData.tags || [];
+        const color = tags.map((tag) => {
+            const matchingTile = tileMap.get(tag);
+            return matchingTile?.meta?.color;
+        }).find((color) => !!color);
+
+        // Set default colors by matching tile/ terrain
+        const meta = markerConfigData.meta || {};
+        meta.color = color || '#000'; //meta.color || color;
         const markerConfig = {
             ...markerConfigData,
-            tags: markerConfigData.tags || [],
+            tags,
+            meta,
         };
 
         markerMap.set(markerConfig.name, markerConfig);

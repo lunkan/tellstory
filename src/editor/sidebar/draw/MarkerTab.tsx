@@ -4,26 +4,38 @@ import { config } from '../../../../engine/config/config';
 import { Chip } from '../../../components/chip/Chip';
 import { useEditorStore } from '../../../store/editorStore';
 import { MarkerConfig } from '../../../../engine/config/type';
+import styles from './Sidebardraw.module.css';
 
 export function MarkerTab() {
     const selectedTerrain = useEditorStore((state) => state.selectedTerrain);
+    const nodeDepth = useEditorStore((state) => state.nodeDepth);
     const [tagFilters, setTagFilters] = useState<string[]>([]);
 
     function handleSelectMarker(entity: MarkerConfig): void {
         useEditorStore.getState().selectTerrain(entity);
     }
 
+    function toggleMarkerLayer(entity: MarkerConfig, checked: boolean): void {
+        console.log('entity', entity, checked);
+        //useEditorStore.getState().selectTerrain(entity);
+    }
+
     function renderTerrainOption(entity: MarkerConfig) {
-        const classes = ['editor-palett--option'];
+        const rowClasses = [styles.row];
         if (selectedTerrain?.name === entity.name) {
-            classes.push('editor-palett--option--selected');
+            rowClasses.push(styles.selected);
         }
 
+        // <button className={styles.rowToggle} onClick={() => toggleMarkerLayer(entity)}></button>
         return (
-            <button className={classes.join(' ')} onClick={() => handleSelectMarker(entity)}>
-                <span style={{ backgroundColor: entity.meta?.color }} className="editor-palett--option-color"></span>
-                <span>{entity.name}</span>
-            </button>
+            <div className={rowClasses.join(' ')}>
+                <input type="checkbox" defaultChecked={true} onChange={(e) => toggleMarkerLayer(entity, e.target.checked)} />
+                <button className={styles.rowContent} onClick={() => handleSelectMarker(entity)}>
+                    <span className={styles.rowColor} style={{ backgroundColor: entity.meta?.color }}></span>
+                    <span className={styles.rowLabel} >{entity.name}</span>
+                    <span className={styles.rowDepthLabel} >{entity.attention?.min}</span>
+                </button>
+            </div>
         );
     }
 
@@ -36,7 +48,9 @@ export function MarkerTab() {
     }
 
     function markerFilter(marker: MarkerConfig): boolean {
+        if (marker.attention?.min && marker.attention.min > nodeDepth) return false;
         if (!tagFilters.length) return true;
+
         return marker.tags.some((tagName) => tagFilters.includes(tagName));
     }
 
@@ -54,14 +68,14 @@ export function MarkerTab() {
     //const markers = markersJSON.markers.filter((marker) => marker.name !== 'player-start')
 
     const markers: MarkerConfig[] = config.getMarkersByFilter({ category: 'landmark' })
-        .filter(markerFilter)
-        .map((marker) => ({
-            ...marker,
-            category: 'marker',
-            meta: {
-                "color": "#000000"
-            }
-        }));
+        .filter(markerFilter);
+    /*.map((marker) => ({
+        ...marker,
+        category: 'marker',
+        meta: {
+            "color": "#000000"
+        }
+    }));*/
 
     const tagFilterData = config.getMarkerTags().map((tagFilter) => {
         return {

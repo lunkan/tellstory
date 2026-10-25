@@ -8,6 +8,7 @@ import { QuadNode } from "../../engine/world/quad-node";
 import { TileData } from "../../engine/types";
 import { TileMapObject } from "../../engine/schemas/tile-map-json-schema";
 import { MarkerConfig, VectorConfig } from "../../engine/config/type";
+import { MAX_ZOOM_OUT } from "../../engine/world/scale";
 //import { Tile } from "../../engine/world/tile";
 //import { Marker } from "../../engine/world/markers";
 
@@ -27,6 +28,9 @@ interface EditorStore {
     loading: boolean;
     worldName: string | 'untitled';
     world: World | null;
+    maxDepth: number | null;
+    minDepth: number | null;
+    mapScale: number | null;
     //quadtree: QuadNode | null;
     //markers: Marker[];
     //startingLocations: Marker[];
@@ -34,6 +38,7 @@ interface EditorStore {
     selectedNode: QuadNode | null;
     paintValue: number;
     editState: EditState;
+    nodeDepth: number;
     mapMode: MapMode;
     newWorld: (name: string, size: number, palette: number) => Promise<boolean>;
     setWorldId: (worldId: number) => Promise<void>;
@@ -42,6 +47,7 @@ interface EditorStore {
     selectNode: (node: QuadNode | null) => void;
     setPaintValue: (value: number) => void;
     setEditState: (state: EditState) => void;
+    setNodeDepth: (depth: number) => void;
     setMapMode: (value: MapMode) => void;
     generateMap: (node: QuadNode) => void;
 }
@@ -51,6 +57,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     loading: false,
     worldName: 'untitled',
     world: null,
+    maxDepth: null,
+    minDepth: null,
+    mapScale: null,
     //quadtree: null,
     //markers: [],
     //startingLocations: [],
@@ -58,6 +67,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     selectedNode: null,
     paintValue: 0.5,
     editState: 'select',
+    nodeDepth: 2,
     mapMode: 'map',
     newWorld: async (name: string, size: number, palette: number) => {
         const worldId = await worldRepository.create(name, size, palette);
@@ -74,6 +84,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         const worldData = await worldRepository.load(worldId);
         const paletteData = await paletteRepository.load(worldData.palette);
         const world = new World(worldData, paletteData);
+
+        const maxDepth = world?.quadtree.maxDepth ?? null;
+        const minDepth = Math.max(0, maxDepth - MAX_ZOOM_OUT);
+
 
 
         /*const quadtree = new QuadNode();
@@ -94,6 +108,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
         set(() => ({
             world,
+            maxDepth,
+            minDepth,
             //quadtree: quadtree,
             //markers: worldData.markers,
             worldName: worldData.name,
@@ -134,6 +150,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         set(() => ({
             editState: state,
         }));
+    },
+    setNodeDepth: (depth: number) => {
+        const maxDepth = get().maxDepth;
+        const minDepth = get().minDepth;
+        if (maxDepth && minDepth) {
+            const nodeDepth = Math.max(minDepth, Math.min(depth, maxDepth));
+
+            set(() => ({
+                nodeDepth,
+                mapScale: maxDepth - nodeDepth,
+            }));
+        }
     },
     setMapMode: (value) => {
         set(() => ({

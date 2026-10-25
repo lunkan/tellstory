@@ -27,6 +27,14 @@ export type RenderRequest = {
 
 export type RenderSubscriber = (request: RenderRequest) => void;
 
+type CanvasRendererOptions = {
+    world: World;
+    canvas: HTMLCanvasElement;
+    overlay: HTMLCanvasElement;
+    renderMode: RenderMode;
+    initalZoom: number;
+}
+
 export class CanvasRenderer {
     public readonly canvas: HTMLCanvasElement;
     public readonly overlay: OverlayRenderer;
@@ -49,16 +57,21 @@ export class CanvasRenderer {
         return this._matrix.height;
     }
 
-    private _renderMode: RenderMode = 'map';
+    private _renderMode: RenderMode; // = 'map';
     private _matrix: CanvasMatrix;
     private _layers: Map<string, HTMLCanvasElement> = new Map();
     private _ctx: CanvasRenderingContext2D;
 
-    constructor(world: World, canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
+    constructor(options: CanvasRendererOptions) { //world: World, canvas: HTMLCanvasElement, overlay: HTMLCanvasElement) {
+        const { world, canvas, overlay, renderMode, initalZoom } = options;
+
         this.world = world;
         this.world.quadtree.subscribe(QuadNode.EVENT_DATA_CHANGE, this._onQuadTreeChange.bind(this));
 
+        this._renderMode = renderMode || 'map';
         this._matrix = new CanvasMatrix(world.quadtree.maxDepth);
+        this._matrix.zoom(initalZoom, 0, 0);
+
         this.canvas = canvas;
         this.overlay = new OverlayRenderer(overlay);
 
@@ -78,6 +91,10 @@ export class CanvasRenderer {
         this._layers.set('vectors', document.createElement("canvas"));
         this._layers.set('sea', document.createElement("canvas"));
         this._layers.set('selectedTile', document.createElement("canvas"));
+    }
+
+    public dispose(): void {
+        // Cleanup on destroy - implement later
     }
 
     /** Called whenever the visible area or its data changes. Returns an unsubscribe function. */

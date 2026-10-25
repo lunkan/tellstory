@@ -14,10 +14,10 @@ import styles from "./EditorMap.module.css";
 import { MarkerConfig } from "../../../engine/config/type";
 
 export function EditorMap() {
-    //const quadtree = useEditorStore((state) => state.quadtree);
-    //const markers = useEditorStore((state) => state.markers);
     const world = useEditorStore((state) => state.world);
     const editState = useEditorStore((state) => state.editState);
+    const nodeDepth = useEditorStore((state) => state.nodeDepth);
+    const setNodeDepth = useEditorStore((state) => state.setNodeDepth);
     const paintValue = useEditorStore((state) => state.paintValue);
     const selectedTerrain = useEditorStore((state) => state.selectedTerrain);
     const selectedNode = useEditorStore((state) => state.selectNode);
@@ -28,23 +28,41 @@ export function EditorMap() {
     const overlayRef = useRef<HTMLCanvasElement>(null);
     const rendererRef = useRef<CanvasRenderer | null>(null);
     const schedulerRef = useRef<HydrationScheduler | null>(null);
-    const [depth, setDepth] = useState<number>(0);
-    const maxDepth = world?.quadtree.maxDepth ?? 0;
 
     useEffect(() => {
         if (world && canvasRef.current && overlayRef.current && !rendererRef.current) {
-            rendererRef.current = new CanvasRenderer(world, canvasRef.current, overlayRef.current);
-            schedulerRef.current = new HydrationScheduler(rendererRef.current);
-            rendererRef.current.clear();
 
             const initalZoom = Math.floor(Math.sqrt(world.maxZoomDepth));
-            rendererRef.current.zoom(initalZoom, 0, 0);
-            const depth = Math.floor(Math.sqrt(rendererRef.current.scale)) + rendererRef.current.minDepth;
-            rendererRef.current.setDepth(depth);
-            rendererRef.current.setRenderMode(mapMode);
-            setDepth(rendererRef.current.getDepth());
+            const canvasRenderer = new CanvasRenderer({
+                world,
+                initalZoom,
+                canvas: canvasRef.current,
+                overlay: overlayRef.current,
+                renderMode: mapMode,
+            });
+
+            const hydrationScheduler = new HydrationScheduler(canvasRenderer);
+            const unsubscribe = canvasRenderer.subscribe((request) => {
+                if (request.trigger === 'zoom') {
+                    const depth = Math.floor(Math.sqrt(canvasRenderer.scale)) + canvasRenderer.minDepth;
+                    setNodeDepth(depth);
+                }
+            });
+
+            rendererRef.current = canvasRenderer;
+            schedulerRef.current = hydrationScheduler;
+            canvasRenderer.clear();
+
+            return () => {
+                unsubscribe();
+                hydrationScheduler.dispose?.();
+                canvasRenderer.dispose?.();
+
+                rendererRef.current = null;
+                schedulerRef.current = null;
+            }
         }
-    }, []);
+    }, [world, mapMode, setNodeDepth]);
 
     useEffect(() => {
         if (viewportRef.current && !viewportSizeObserver.current) {
@@ -63,12 +81,18 @@ export function EditorMap() {
     }, []);
 
     useEffect(() => {
-        console.log('EF', mapMode, rendererRef.current);
         if (rendererRef.current) {
             rendererRef.current.setRenderMode(mapMode);
         }
 
-    }, [mapMode])
+    }, [mapMode]);
+
+    useEffect(() => {
+        if (rendererRef.current) {
+            rendererRef.current.setDepth(nodeDepth);
+        }
+
+    }, [nodeDepth]);
 
     function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
         if (!canvasRef.current || !rendererRef.current || !viewportRef.current) {
@@ -106,10 +130,6 @@ export function EditorMap() {
         if (rendererRef.current) {
             const wheelDelta = (e.nativeEvent as any).wheelDelta;
             new ZoomHandler(rendererRef.current).onWheel(wheelDelta, new DOMPoint(e.clientX, e.clientY));
-
-            const depth = Math.floor(Math.sqrt(rendererRef.current.scale)) + rendererRef.current.minDepth;
-            rendererRef.current.setDepth(depth);
-            setDepth(rendererRef.current.getDepth());
         }
     }
 
@@ -117,7 +137,7 @@ export function EditorMap() {
         <div className={styles.map} style={{ position: 'relative' }} ref={viewportRef} onPointerDown={(e) => handlePointerDown(e)} onWheel={(e) => handleWheel(e)} onContextMenu={(e) => e.preventDefault()}>
             <canvas width="1000" height="1000" ref={canvasRef}></canvas>
             <canvas style={{ position: 'absolute', top: 0, left: 0 }} width="1000" height="1000" ref={overlayRef}></canvas>
-            <EditorMapZoomLevel depth={depth} scale={maxDepth - depth}></EditorMapZoomLevel>
+            <EditorMapZoomLevel></EditorMapZoomLevel>
         </div>
     );
 }

@@ -1,11 +1,6 @@
 import { getTileSizeMeter } from "../../../../engine/world/scale";
+import { useEditorStore } from "../../../store/editorStore";
 import styles from "./EditorMapZoomLevel.module.css";
-
-type EditorMapZoomLevelProps = {
-    depth: number;
-    /** Levels above the leaf. Decides the physical size, which depth alone can't. */
-    scale: number;
-};
 
 // 0 -  320km   -
 // 1 -  160km   -
@@ -21,12 +16,19 @@ type EditorMapZoomLevelProps = {
 // 11 - 177m    # Immediate surroundings
 // 12 - 89m     -
 
-export function EditorMapZoomLevel({ depth, scale }: EditorMapZoomLevelProps) {
+export function EditorMapZoomLevel() {
+    const nodeDepth = useEditorStore((state) => state.nodeDepth);
+    const mapScale = useEditorStore((state) => state.mapScale);
+
+    if (!nodeDepth || !mapScale) {
+        return;
+    }
+
     return (
         <div className={styles.zoomLevel}>
-            <div className={styles.depth}>{depth}</div>
+            <div className={styles.depth}>{nodeDepth}</div>
             <div className={styles.depthLabel}>Depth</div>
-            <div className={styles.depthSquareSize}>{getSquareWidth(scale)}</div>
+            <div className={styles.depthSquareSize}>{getSquareWidth(mapScale)}</div>
         </div>
     );
 }
