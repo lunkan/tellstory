@@ -66,7 +66,19 @@ export function drawVectors(options: DrawVectorsOptions): void {
 
     links.forEach(({ points, type, value, scale }) => {
         for (let i = 1; i < points.length; i++) {
-            group(type, value, scale).segments.push([points[i - 1], points[i]]);
+            // One piece per cell, so long runs get the wobble too instead of being ruler-straight.
+            // Runs are straight or diagonal and cell sizes are powers of two, so the steps are exact.
+            const a = points[i - 1];
+            const b = points[i];
+            const steps = Math.max(1, Math.round(Math.max(Math.abs(b.x - a.x), Math.abs(b.y - a.y)) / size));
+            const sx = Math.sign(b.x - a.x);
+            const sy = Math.sign(b.y - a.y);
+            let from = a;
+            for (let step = 1; step <= steps; step++) {
+                const to = step === steps ? b : { x: a.x + sx * step * size, y: a.y + sy * step * size };
+                group(type, value, scale).segments.push([from, to]);
+                from = to;
+            }
         }
     });
 

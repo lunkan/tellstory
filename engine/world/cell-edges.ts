@@ -195,34 +195,43 @@ export function getCellEdges(depth: number, hosts: readonly QuadNode[], visibleC
 
 /**
  * The junction cell of a meeting at `depth`. It starts as the meeting cell, and each level down it
- * is the child, of the previous junction, that holds most of the network's vectors (ties go to the
- * lowest key). So it is always a child of the previous junction, and it is on a road that really
- * passes there, near where the roads actually join.
+ * is the child, of the previous junction, closest to the vectors that joined at the meeting (ties go
+ * to the lowest key). So it is always a child of the previous junction and stays near where the
+ * roads really join, which keeps the links short.
  */
 function _findJunction(items: Item[], meeting: Meeting, depth: number): QuadNode | undefined {
     let hub = meeting.cell;
     for (let d = meeting.depth + 1; d <= depth; d++) {
-        const counts = new Map<string, { cell: QuadNode, count: number }>();
+        const cells: QuadNode[] = [];
         let unresolved = false;
 
-        meeting.all.forEach((index) => {
+        meeting.members.forEach((index) => {
             const { vector, host } = items[index];
             const cell = getVectorCell(vector, host, d);
-            if (!cell) {
+            if (cell) {
+                cells.push(cell);
+            } else {
                 unresolved = true;
-            } else if (cell.parent === hub) {
-                const entry = counts.get(cell.key.id) ?? { cell, count: 0 };
-                entry.count++;
-                counts.set(cell.key.id, entry);
             }
         });
 
-        if (unresolved || !counts.size) {
+        const candidates = hub.getQuadrants().filter(Boolean);
+        if (unresolved || !cells.length || !candidates.length) {
             return; // Not narrowed this deep yet
         }
 
-        hub = [...counts.values()]
-            .sort((a, b) => b.count - a.count || (a.cell.key.hash < b.cell.key.hash ? -1 : a.cell.key.hash > b.cell.key.hash ? 1 : 0))[0].cell;
+        // The child closest to where the joined roads actually are. Ties go to the lowest key.
+        const score = (candidate: QuadNode) => {
+            const c = candidate.getCenterPoint();
+            return cells.reduce((sum, cell) => {
+                const p = cell.getCenterPoint();
+                return sum + Math.hypot(p.x - c.x, p.y - c.y);
+            }, 0);
+        };
+
+        hub = candidates
+            .map((candidate) => ({ candidate, score: score(candidate) }))
+            .sort((a, b) => a.score - b.score || (a.candidate.key.hash < b.candidate.key.hash ? -1 : a.candidate.key.hash > b.candidate.key.hash ? 1 : 0))[0].candidate;
     }
 
     return hub;
