@@ -48,10 +48,27 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     return node; // Hydration complete
 }
 
-export function dehydrate(node: QuadNode | undefined): QuadNode | undefined {
+export type DehydrateOptions = {
+    /** Clear generated vectors only; terrain and markers remain. */
+    vectors: true;
+};
+
+export function dehydrate(node: QuadNode | undefined, options?: DehydrateOptions): QuadNode | undefined {
     if (!node) {
         return node; // Can't hydrate undefined
-    } else if (node.state !== QuadNode.STATE_HYDRATED) { //(!node.isGenerated()) {
+    }
+
+    if (options?.vectors) {
+        if (node.canHydrate()) {
+            for (const type of new Set(node.getOwnVectors().map((vector) => vector.type))) {
+                node.clearGeneratedVectors(type);
+            }
+        }
+        node.getQuadrants().forEach((child) => dehydrate(child, options));
+        return node;
+    }
+
+    if (node.state !== QuadNode.STATE_HYDRATED) { //(!node.isGenerated()) {
         return node; // Not hydrated
     }
 

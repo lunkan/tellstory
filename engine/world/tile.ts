@@ -133,6 +133,15 @@ export class Tile {
         });
     }
 
+    /** Same tile without vectors of the given type. */
+    public withoutVectors(type: string): Tile {
+        return new Tile(this.bounds, {
+            terrain: this.terrain,
+            vectors: this.vectors.filter((vector) => vector.type !== type),
+            markers: this.markers,
+        });
+    }
+
     /** Same tile with only the given markers' `placement` changed. Keys are indexes into `markers`. */
     public withMarkerPlacements(placements: Map<number, string>): Tile {
         return new Tile(this.bounds, {

@@ -1,5 +1,6 @@
 import { dehydrate } from "../../../engine/world/hydrator/hydrate";
 import { QuadNode } from "../../../engine/world/quad-node";
+import { invalidateNearbyVectors } from "../../../engine/world/vector-generation/invalidate-nearby-vectors";
 import { SelectedEntity } from "../../store/editorStore";
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
@@ -39,6 +40,7 @@ export class DrawHandler extends CanvasEventHandler {
 
         node.detach();
         node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
+        invalidateNearbyVectors(node);
 
         let value = this._value;
 

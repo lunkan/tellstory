@@ -466,6 +466,17 @@ export class QuadNode {
         return this._tile?.vectors ?? [];
     }
 
+    /** Clears generated vectors of one type without modifying protected nodes or other tile data. */
+    public clearGeneratedVectors(type: string): boolean {
+        if (!this.canHydrate() || !this._tile || !this._tile.vectors.some((vector) => vector.type === type)) {
+            return false;
+        }
+
+        this._tile = this._tile.withoutVectors(type);
+        this.dispatch({ type: QuadNode.EVENT_DATA_CHANGE, target: this });
+        return true;
+    }
+
     /** Narrows vectors' placement (keys are indexes into getOwnVectors()). A hydration cache, like marker placement. */
     public setVectorPlacements(placements: Map<number, number[]>): void {
         if (!this._tile || !placements.size) {

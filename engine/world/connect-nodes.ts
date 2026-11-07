@@ -8,40 +8,92 @@ import { QuadNode } from "./quad-node";
  * Returns false when the nodes can't be connected or the connection already exists.
  */
 export function connectNodes(from: QuadNode, to: QuadNode, type: string, value: number): boolean {
-    if (from === to || from.isLocked() || to.isLocked() || !from.isAdjacent(to)) {
+    if (from.isLocked() || to.isLocked()) {
         return false;
     }
 
-    const forward = from.getNormalizedRelativePosition(to);
-    const backward = to.getNormalizedRelativePosition(from);
-    if (!forward || !backward) {
+    const edges = _connectionEdges(from, to, type, value);
+    if (!edges) {
         return false;
     }
 
-    const forwardVector: VectorSetting = { type, value, direction: { x: forward.x, y: forward.y } };
-    const backwardVector: VectorSetting = { type, value, direction: { x: backward.x, y: backward.y } };
+    const [forwardVector, backwardVector] = edges;
 
-    if (_hasVector(from, forwardVector) && _hasVector(to, backwardVector)) {
+    if (from.isDetached() && to.isDetached() && _hasVector(from, forwardVector) && _hasVector(to, backwardVector)) {
         return false;
     }
 
-    _addVector(from, forwardVector);
-    _addVector(to, backwardVector);
+    _addAuthoredVector(from, forwardVector);
+    _addAuthoredVector(to, backwardVector);
     return true;
 }
 
-function _hasVector(node: QuadNode, vector: VectorSetting): boolean {
-    return !!node.getTile()?.vectors.some((v) => _isSameEdge(v, vector));
+export type GeneratedConnectionResult = 'connected' | 'already-connected' | 'protected' | 'missing-tile';
+
+/**
+ * Adds transient edges only to hydrated, editable nodes. A protected endpoint is left unchanged;
+ * the other endpoint may still hold its half of the connection. Missing editable tiles are not
+ * created, so terrain hydration stays separate from vector generation.
+ */
+export function connectGeneratedNodes(
+    from: QuadNode, to: QuadNode, type: string, value: number,
+    hasExistingVector?: (node: QuadNode, vector: VectorSetting) => boolean,
+): GeneratedConnectionResult {
+    const edges = _connectionEdges(from, to, type, value);
+    if (!edges) {
+        throw new Error('Generated vector endpoints must be adjacent nodes in the same world');
+    }
+
+    const endpoints = [{ node: from, vector: edges[0] }, { node: to, vector: edges[1] }]
+        .filter(({ node }) => node.canHydrate());
+    if (!endpoints.length) {
+        return 'protected';
+    }
+    if (endpoints.some(({ node }) => !node.hasTile())) {
+        return 'missing-tile';
+    }
+
+    const missing = endpoints.filter(({ node, vector }) => !_hasVector(node, vector) && !hasExistingVector?.(node, vector));
+    if (!missing.length) {
+        return 'already-connected';
+    }
+    missing.forEach(({ node, vector }) => node.setTileData({ vectors: [vector] }));
+    return 'connected';
 }
 
-function _addVector(node: QuadNode, vector: VectorSetting): void {
-    if (_hasVector(node, vector)) {
+function _connectionEdges(from: QuadNode, to: QuadNode, type: string, value: number): [VectorSetting, VectorSetting] | undefined {
+    const fromRoot = from.getAncestors().at(-1) ?? from;
+    const toRoot = to.getAncestors().at(-1) ?? to;
+    if (from === to || fromRoot !== toRoot || !from.isAdjacent(to)) {
+        return;
+    }
+    const forward = from.getNormalizedRelativePosition(to);
+    const backward = to.getNormalizedRelativePosition(from);
+    if (!forward || !backward) {
+        return;
+    }
+    return [
+        { type, value, direction: { x: forward.x, y: forward.y } },
+        { type, value, direction: { x: backward.x, y: backward.y } },
+    ];
+}
+
+function _hasVector(node: QuadNode, vector: VectorSetting): boolean {
+    return node.getOwnVectors().some((v) => _isSameEdge(v, vector));
+}
+
+function _addAuthoredVector(node: QuadNode, vector: VectorSetting): void {
+    if (node.isDetached() && _hasVector(node, vector)) {
         return;
     }
 
     node.detach();
     node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
-    node.setTileData({ vectors: [vector] });
+    if (!_hasVector(node, vector)) {
+        node.setTileData({ vectors: [vector] });
+    } else {
+        node.dispatch({ type: QuadNode.EVENT_DATA_CHANGE, target: node });
+    }
 }
 
 function _isSameEdge(a: VectorSetting, b: VectorSetting): boolean {
