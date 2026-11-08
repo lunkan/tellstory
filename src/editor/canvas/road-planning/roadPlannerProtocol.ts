@@ -9,6 +9,8 @@ export type RoadPlanningRequest = Omit<RoadPlanOptions, 'bounds' | 'terrainAt' |
     blocked?: number[];
     /** Existing directions on protected cells, indexed relative to bounds. */
     protectedCells?: { index: number; directions: RoadCell[] }[];
+    /** Existing same-depth editable road directions. */
+    generatedCells?: { index: number; directions: RoadCell[] }[];
     /** Resolved directions from shallower road hosts at the planning depth. */
     inheritedCells?: { index: number; directions: RoadCell[] }[];
 };
@@ -18,7 +20,7 @@ export type RoadPlanningResponse =
     | { status: 'error'; message: string };
 
 export function planRoadSnapshot(request: RoadPlanningRequest): RoadPlan {
-    const { bounds, terrain, blocked = [], protectedCells = [], inheritedCells = [], ...options } = request;
+    const { bounds, terrain, blocked = [], protectedCells = [], generatedCells = [], inheritedCells = [], ...options } = request;
     if (!Number.isSafeInteger(bounds.width) || !Number.isSafeInteger(bounds.height)
         || bounds.width <= 0 || bounds.height <= 0
         || !Number.isSafeInteger(bounds.width * bounds.height)
@@ -43,9 +45,11 @@ export function planRoadSnapshot(request: RoadPlanningRequest): RoadPlan {
         return result;
     };
     const protectedDirections = readDirections(protectedCells, 'protected');
+    const generatedDirections = readDirections(generatedCells, 'generated');
     const inheritedDirections = readDirections(inheritedCells, 'inherited');
     const hasDirection = (index: number, direction: string): boolean =>
-        !!protectedDirections.get(index)?.has(direction) || !!inheritedDirections.get(index)?.has(direction);
+        !!protectedDirections.get(index)?.has(direction) || !!generatedDirections.get(index)?.has(direction)
+        || !!inheritedDirections.get(index)?.has(direction);
 
     const indexOf = ({ x, y }: RoadCell): number => (y - bounds.y) * bounds.width + x - bounds.x;
     const canConnect = (from: RoadCell, to: RoadCell): boolean => {
@@ -58,7 +62,7 @@ export function planRoadSnapshot(request: RoadPlanningRequest): RoadPlan {
     };
     const existingEdges: [RoadCell, RoadCell][] = [];
     const existingDirections = new Map<number, Set<string>>();
-    for (const entries of [protectedDirections, inheritedDirections]) {
+    for (const entries of [protectedDirections, generatedDirections, inheritedDirections]) {
         for (const [index, directions] of entries) {
             const combined = existingDirections.get(index) ?? new Set<string>();
             directions.forEach((direction) => combined.add(direction));

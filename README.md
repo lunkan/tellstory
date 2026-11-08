@@ -16,20 +16,25 @@
   Generated vector edges are ordinary vectors on hydrated tiles. Like generated
   terrain, they are saved when their tile is detached, including when a child
   edit locks the ancestor. They use the normal placement at deeper depths.
-  Generation leaves locked and already-detached endpoints untouched, so a
-  connection to one of them is represented only on the editable side and ends
-  at the shared boundary. Dehydrating a generated tile removes its terrain and
+  Generation excludes non-locked detached tiles from new routes. Locked endpoints remain
+  untouched, so a connection to one can be represented only on the editable
+  side and end at the shared boundary. Dehydrating a generated tile removes its terrain and
   vectors together. Saved vectors remain when terrain changes. Road planning
   uses a finite terrain region and plans routes for urban
   pairs within up to four tiles in any direction, including diagonals. A tile is
   urban for road planning when its urban value is at least 0.1. The urban
   threshold, maximum pair distance and elevation cost are constants in the
-  vector generation files. The endpoint-value product sets the connection range:
-  below 0.06 no connection, 0.06 to below 0.12 one tile, 0.12 to below 0.18
-  two tiles, 0.18 to below 0.24 three tiles, and 0.24 or more four tiles.
+  vector generation files. A pair's score must reach 0.06, 0.12, 0.18 or
+  0.24 for distances one through four respectively. For two urban tiles the
+  score is `urbanA * urbanB * (1 + bonus * min(urbanA, urbanB))`, with
+  distance bonuses of 0, 0, 2 and 4. This favours denser urban pairs at
+  longer distances without changing nearby connections. The bonus constants
+  are configurable in the road planner.
   A shallower-road target has value 0.3; a tile that is also urban can
-  participate as either type. Eligible pairs are planned in distance order,
-  with row-major tie-breaking. Route selection discounts the elevation-weighted
+  participate as either type, using the higher score. Urban-to-road-joint
+  scores remain the urban value multiplied by 0.3, without the density bonus.
+  Eligible pairs are planned in distance order, with context-only pairs first
+  within each distance and row-major tie-breaking. Route selection discounts the elevation-weighted
   cost of complete existing road segments by 50% (configurable via
   `EXISTING_ROAD_DISCOUNT`), encouraging reuse rather than always selecting the
   fastest route for travel. The reported travel time remains undiscounted.
@@ -39,31 +44,33 @@
   tiles do not form new pairs with one another unless they are urban.
   A cancellable worker accepts a row-major terrain snapshot; replacing
   a request terminates the prior worker and errors are reported to its caller.
-  Complete routes can pass through locked or detached cells only along their
-  existing road directions; matching protected half-edges count as existing
+  Complete routes can pass through locked cells only along their existing road
+  directions; matching protected half-edges count as existing
   network connections. An urban protected cell may receive boundary-only
   connections: the editable half ends at its border without
   claiming network connectivity through the protected cell.
   Result application verifies terrain and protected edges have not changed,
   and validates planned edges before writing to hydrated tiles.
-  Terrain painting invalidates generated vectors within the maximum pair
-  distance and on existing deeper descendants, without clearing terrain,
+  Terrain painting and vector drawing invalidate generated vectors within the
+  maximum pair distance and on existing deeper descendants, without clearing terrain,
   markers or protected data. The editor hydrates the viewport plus a margin
   equal to the maximum pair distance, clipped to the world. A snapshot can
   report unavailable terrain rather
   than guessing flat terrain. Explicitly unavailable snapshot cells are
   impassable to the planner, so they do not prevent planning in other areas.
-  Once hydration finishes, the editor plans roads in a cancellable worker and
-  applies only results for the current view and unchanged snapshot. A new
-  plan replaces editable road vectors at that depth across the existing tree;
-  detached and locked tiles and vectors of other types are preserved.
+  The editor plans parent depths before the current depth in a cancellable
+  worker, using existing roads and a viewport margin as context. It applies
+  routes with a viewport endpoint, including their required margin segments,
+  only for the current view and unchanged snapshot. Existing generated roads
+  are preserved during pan and zoom. Detached and locked tiles and vectors of
+  other types are preserved.
   Worker and application failures are reported in the browser console.
   TODO: A four-tile endpoint distance does not bound detours or their
-  dependencies. Earlier routes also influence later route choices. Edits can
+  dependencies. Earlier routes also influence later route choices, so results
+  can depend on visit order. Edits can
   affect routes outside the invalidation margin, and
   viewport-dependent planning can produce different results after panning.
-  Snapshot creation and plan application also run synchronously, and clearing
-  existing roads visits the existing tree at the active depth. Dense snapshots
+  Snapshot creation and plan application also run synchronously. Dense snapshots
   can be slow to plan because each eligible pair runs a separate route search.
 
   

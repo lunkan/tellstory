@@ -35,7 +35,7 @@ test('applies complete plans to hydrated nodes without detaching or saving', () 
     assert.deepEqual(nodes.map((node) => node.getOwnVectors().length), [1, 2, 2, 1]);
     assert.ok(nodes.every((node) => !node.isDetached()));
     assert.ok(root.getDetachedTiles().every((tile) => tile.vectors.length === 0));
-    assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'applied');
+    assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'stale');
     assert.deepEqual(nodes.map((node) => node.getOwnVectors().length), [1, 2, 2, 1]);
 });
 
@@ -165,7 +165,7 @@ test('a generated road joins a resolved shallower road without changing terrain'
     assert.ok(root.getDetachedTiles().every((tile) => tile.vectors.length === 0));
 });
 
-test('a protected tile may use an inherited road without being modified', () => {
+test('a detached tile is excluded even when it has an inherited road', () => {
     const root = QuadNode.createRoot(2);
     root.setTileData({});
     root.detach();
@@ -179,10 +179,10 @@ test('a protected tile may use an inherited road without being modified', () => 
     const before = structuredClone(root.getDetachedTiles());
     const request = createRoadPlanningSnapshot(root, 2, { x: 1, y: 0, width: 2, height: 1 }).request;
     const plan = planRoadSnapshot(request);
-    assert.equal(plan.connections[0]?.kind, 'road');
+    assert.deepEqual(plan.connections, []);
     assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'applied');
     assert.deepEqual(root.getDetachedTiles(), before);
-    assert.deepEqual(to.getOwnVectors().map((vector) => vector.direction), [{ x: -1, y: 0 }]);
+    assert.deepEqual(to.getOwnVectors(), []);
 });
 
 test('rejects a plan if inherited roads change while planning', () => {
@@ -212,6 +212,25 @@ test('rejects stale terrain and protection changes without writing', () => {
     }
 });
 
+test('rejects a plan if same-depth generated roads change after the snapshot', () => {
+    const { root, nodes } = setup();
+    const request = snapshot(root);
+    const plan = planRoadSnapshot(request);
+    assert.equal(connectGeneratedNodes(nodes[1], nodes[2], 'road', 1), 'connected');
+    assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'stale');
+    assert.deepEqual(nodes.map((node) => node.getOwnVectors().length), [0, 1, 1, 0]);
+});
+
+test('applies complete viewport routes including context-only segments without duplicates', () => {
+    const { root, nodes } = setup();
+    nodes.slice(0, 3).forEach((node) => node.setTileData({ terrain: [{ type: 'urban', value: 1 }] }));
+    nodes[3].setTileData({ terrain: [{ type: 'urban', value: 0 }] });
+    const request = { ...snapshot(root), commitBounds: { x: 0, y: 0, width: 1, height: 1 } };
+    const plan = planRoadSnapshot(request);
+    assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'applied');
+    assert.deepEqual(nodes.map((node) => node.getOwnVectors().length), [1, 2, 1, 0]);
+});
+
 test('validates every connection before writing any edge', () => {
     const { root, nodes } = setup();
     const request = snapshot(root);
@@ -226,19 +245,19 @@ test('validates every connection before writing any edge', () => {
     assert.ok(nodes.every((node) => node.getOwnVectors().length === 0));
 });
 
-test('applies a boundary route without modifying its protected endpoint', () => {
+test('detached endpoints do not receive new boundary routes', () => {
     const { root, nodes } = setup();
     nodes[3].detach();
     const request = snapshot(root);
     const plan = planRoadSnapshot(request);
-    assert.equal(plan.connections[0]?.kind, 'boundary');
+    assert.deepEqual(plan.connections, []);
     const protectedBefore = structuredClone(nodes[3].getOwnVectors());
     assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'applied');
     assert.deepEqual(nodes[3].getOwnVectors(), protectedBefore);
-    assert.deepEqual(nodes.map((node) => node.getOwnVectors().length), [1, 2, 2, 0]);
+    assert.deepEqual(nodes.map((node) => node.getOwnVectors().length), [0, 0, 0, 0]);
 });
 
-test('preserves existing protected roads while applying adjoining generated edges', () => {
+test('does not route through existing roads on detached tiles', () => {
     const { root, nodes } = setup();
     for (const node of [nodes[1], nodes[2]]) {
         node.setTileData({ vectors: [
@@ -252,20 +271,20 @@ test('preserves existing protected roads while applying adjoining generated edge
     const plan = planRoadSnapshot(request);
     assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'applied');
     assert.deepEqual(root.getDetachedTiles(), before);
-    assert.deepEqual(nodes.map((node) => node.getOwnVectors().length), [1, 2, 2, 1]);
+    assert.deepEqual(nodes.map((node) => node.getOwnVectors().length), [0, 2, 2, 0]);
 });
 
-test('rejects a plan when a protected road changes after its snapshot', () => {
+test('changes to an excluded detached road do not invalidate the snapshot', () => {
     const { root, nodes } = setup();
     nodes[3].detach();
     const request = snapshot(root);
     const plan = planRoadSnapshot(request);
     nodes[3].setTileData({ vectors: [{ type: 'road', value: 1, direction: { x: -1, y: 0 } }] });
-    assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'stale');
+    assert.equal(applyRoadPlan(root, 2, request, plan, 'road', 1), 'applied');
     assert.ok(nodes.slice(0, 3).every((node) => node.getOwnVectors().length === 0));
 });
 
-test('refuses forged paths through protected tiles', () => {
+test('refuses forged paths through detached tiles', () => {
     const { root, nodes } = setup();
     nodes[1].detach();
     const request = snapshot(root);
@@ -277,7 +296,7 @@ test('refuses forged paths through protected tiles', () => {
             travelTime: 2,
         }],
     };
-    assert.throws(() => applyRoadPlan(root, 2, request, forged, 'road', 1), /protected tile/);
+    assert.throws(() => applyRoadPlan(root, 2, request, forged, 'road', 1), /without terrain/);
     assert.ok(nodes.every((node) => node.getOwnVectors().length === 0));
 });
 

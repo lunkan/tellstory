@@ -138,6 +138,27 @@ test('existing protected roads count as connected only when both half-edges exis
     assert.equal(incomplete.components.length, 2);
 });
 
+test('complete same-depth generated roads influence routing, but isolated halves do not', () => {
+    const base: RoadPlanningRequest = {
+        bounds: { x: 0, y: 0, width: 4, height: 2 },
+        terrain: Array.from({ length: 8 }, (_, index) => ({
+            urban: index === 0 || index === 3 ? 1 : 0, elevation: 0,
+        })),
+        generatedCells: [
+            { index: 0, directions: [{ x: 1, y: 1 }] },
+            { index: 5, directions: [{ x: -1, y: -1 }, { x: 1, y: 0 }] },
+            { index: 6, directions: [{ x: -1, y: 0 }] },
+        ],
+    };
+    assert.deepEqual(planRoadSnapshot(base).connections[0].cells, [
+        { x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 0 },
+    ]);
+    const incomplete = { ...base, generatedCells: base.generatedCells!.filter(({ index }) => index !== 5) };
+    assert.deepEqual(planRoadSnapshot(incomplete).connections[0].cells, [
+        { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 },
+    ]);
+});
+
 test('inherited directions enable protected crossings and discount complete inherited routes', () => {
     const request: RoadPlanningRequest = {
         bounds: { x: 0, y: 0, width: 3, height: 2 },
@@ -248,16 +269,18 @@ test('protected inherited road targets receive boundary-only connections without
     assert.deepEqual(plan.components, [[{ x: 0, y: 0 }]]);
 });
 
-test('protected urban boundary pairs obey the same endpoint product tiers', () => {
+test('protected urban boundary pairs obey the same distance-dependent score', () => {
     for (const { urban, protectedUrban, distance, expected } of [
         { urban: 0.1, protectedUrban: 0.1, distance: 1, expected: false },
         { urban: 0.3, protectedUrban: 0.2, distance: 1, expected: true },
         { urban: 1, protectedUrban: 0.1199, distance: 2, expected: false },
         { urban: 1, protectedUrban: 0.12, distance: 2, expected: true },
-        { urban: 1, protectedUrban: 0.1799, distance: 3, expected: false },
-        { urban: 1, protectedUrban: 0.18, distance: 3, expected: true },
-        { urban: 1, protectedUrban: 0.2399, distance: 4, expected: false },
-        { urban: 1, protectedUrban: 0.24, distance: 4, expected: true },
+        { urban: 1, protectedUrban: 0.14, distance: 3, expected: false },
+        { urban: 1, protectedUrban: 0.141, distance: 3, expected: true },
+        { urban: 1, protectedUrban: 0.1499, distance: 4, expected: false },
+        { urban: 1, protectedUrban: 0.15, distance: 4, expected: true },
+        { urban: 0.4, protectedUrban: 0.4, distance: 3, expected: true },
+        { urban: 0.45, protectedUrban: 0.45, distance: 4, expected: true },
     ]) {
         const request: RoadPlanningRequest = {
             bounds: { x: 0, y: 0, width: distance + 1, height: 1 },

@@ -2,6 +2,7 @@ import { hydrate } from "../../../engine/world/hydrator/hydrate";
 import { findNodesToHydrate } from "../../../engine/world/hydrator/findNodesToHydrate";
 import { getVectorHosts, hydrateVectorPaths } from "../../../engine/world/hydrator/hydrateVectorPaths";
 import { QuadNode } from "../../../engine/world/quad-node";
+import { RoadSearchBounds } from "../../../engine/world/vector-generation/road-path";
 import { createRoadPlanningSnapshot, getRoadPlanningBounds } from "./road-planning/roadPlanningSnapshot";
 import { RoadPlannerWorker } from "./road-planning/RoadPlannerWorker";
 import { applyRoadPlan } from "./road-planning/applyRoadPlan";
@@ -10,6 +11,8 @@ import { CanvasRenderer, RenderRequest } from "./CanvasRenderer";
 const TIME_BUDGET_MS = 8;
 const GENERATED_ROAD_TYPE = 'road';
 const GENERATED_ROAD_VALUE = 1;
+
+type RoadStage = { depth: number; bounds: RoadSearchBounds; commitBounds: RoadSearchBounds };
 
 /**
  * Generates tiles for the viewport and road-planning margin. Work is split into slices so a pass never blocks
@@ -70,27 +73,75 @@ export class HydrationScheduler {
             this._hydrating = false;
         }
 
-        const visible = findNodesToHydrate(root, rect);
         const bounds = getRoadPlanningBounds(root, request.depth, gridBounds);
-        if (bounds) {
-            const marginRect = {
-                x: bounds.x * tileSize,
-                y: bounds.y * tileSize,
-                width: bounds.width * tileSize,
-                height: bounds.height * tileSize,
-                z: request.depth,
-            };
-            const visibleIds = new Set(visible.map((node) => node.key.id));
-            const margin = findNodesToHydrate(root, marginRect).filter((node) => !visibleIds.has(node.key.id));
-            this._queue = [...visible, ...margin];
-        } else {
-            this._queue = visible;
+        if (!bounds) {
+            return;
         }
-
-        this._run(request, bounds, this._generation);
+        const worldSize = 2 ** request.depth;
+        const x = Math.max(0, gridBounds.x);
+        const y = Math.max(0, gridBounds.y);
+        const right = Math.min(worldSize, gridBounds.x + gridBounds.xSize);
+        const bottom = Math.min(worldSize, gridBounds.y + gridBounds.ySize);
+        const stages: RoadStage[] = [{
+            depth: request.depth, bounds,
+            commitBounds: { x, y, width: right - x, height: bottom - y },
+        }];
+        for (let depth = request.depth - 1; depth >= 1; depth--) {
+            const child = stages[0].bounds;
+            const left = Math.floor(child.x / 2);
+            const top = Math.floor(child.y / 2);
+            const parentRight = Math.ceil((child.x + child.width) / 2);
+            const parentBottom = Math.ceil((child.y + child.height) / 2);
+            const commitBounds = { x: left, y: top, width: parentRight - left, height: parentBottom - top };
+            const parentBounds = getRoadPlanningBounds(root, depth, {
+                x: left, y: top, xSize: commitBounds.width, ySize: commitBounds.height,
+            });
+            if (!parentBounds) {
+                throw new Error('Parent road planning bounds are unavailable');
+            }
+            stages.unshift({ depth, bounds: parentBounds, commitBounds });
+        }
+        const marginRect = {
+            x: bounds.x * tileSize, y: bounds.y * tileSize,
+            width: bounds.width * tileSize, height: bounds.height * tileSize, z: request.depth,
+        };
+        const visible = findNodesToHydrate(root, rect);
+        const visibleIds = new Set(visible.map((node) => node.key.id));
+        this._queue = [...visible, ...findNodesToHydrate(root, marginRect).filter((node) => !visibleIds.has(node.key.id))];
+        this._hydrateViewport(request, stages, this._generation);
     }
 
-    private _run(request: RenderRequest, bounds: ReturnType<typeof getRoadPlanningBounds>, generation: number): void {
+    private _hydrateViewport(request: RenderRequest, stages: RoadStage[], generation: number): void {
+        const start = performance.now();
+        this._hydrating = true;
+        try {
+            while (this._queue.length && performance.now() - start < TIME_BUDGET_MS) {
+                hydrate(this._queue.shift());
+            }
+        } finally {
+            this._hydrating = false;
+        }
+        if (this._queue.length) {
+            this._timer = setTimeout(() => this._hydrateViewport(request, stages, generation), 0);
+        } else {
+            this._timer = undefined;
+            this._startStage(request, stages, 0, generation);
+        }
+    }
+
+    private _startStage(request: RenderRequest, stages: RoadStage[], index: number, generation: number): void {
+        const stage = stages[index];
+        const root = this._renderer.world.quadtree;
+        const tileSize = root.bounds.size / 2 ** stage.depth;
+        const { bounds } = stage;
+        this._queue = findNodesToHydrate(root, {
+            x: bounds.x * tileSize, y: bounds.y * tileSize,
+            width: bounds.width * tileSize, height: bounds.height * tileSize, z: stage.depth,
+        });
+        this._run(request, stages, index, generation);
+    }
+
+    private _run(request: RenderRequest, stages: RoadStage[], index: number, generation: number): void {
         const start = performance.now();
         this._hydrating = true;
 
@@ -103,43 +154,40 @@ export class HydrationScheduler {
         }
 
         if (this._queue.length) {
-            this._timer = setTimeout(() => this._run(request, bounds, generation), 0);
+            this._timer = setTimeout(() => this._run(request, stages, index, generation), 0);
         } else {
             this._timer = undefined;
-            if (bounds) {
-                this._planRoads(request, bounds, generation);
-            }
+            this._planRoads(request, stages, index, generation);
         }
     }
 
-    private _planRoads(request: RenderRequest, bounds: NonNullable<ReturnType<typeof getRoadPlanningBounds>>, generation: number): void {
+    private _planRoads(request: RenderRequest, stages: RoadStage[], index: number, generation: number): void {
+        const { depth, bounds, commitBounds } = stages[index];
         const root = this._renderer.world.quadtree;
-        const tileSize = root.bounds.size / 2 ** request.depth;
+        const tileSize = root.bounds.size / 2 ** depth;
         this._hydrating = true;
         try {
             const nodes = root.findByRect({
                 x: bounds.x * tileSize, y: bounds.y * tileSize,
-                width: bounds.width * tileSize, height: bounds.height * tileSize, z: request.depth,
+                width: bounds.width * tileSize, height: bounds.height * tileSize, z: depth,
             }, { selectAllDepth: true });
-            hydrateVectorPaths(getVectorHosts(nodes.filter((node) => node.depth < request.depth), request.depth), request.depth);
+            hydrateVectorPaths(getVectorHosts(nodes.filter((node) => node.depth < depth), depth), depth);
         } finally {
             this._hydrating = false;
         }
-        const snapshot = createRoadPlanningSnapshot(root, request.depth, bounds, GENERATED_ROAD_TYPE).request;
+        const snapshot = { ...createRoadPlanningSnapshot(root, depth, bounds, GENERATED_ROAD_TYPE).request, commitBounds };
         void this._roadPlanner.plan(snapshot).then((result) => {
             if (result.status !== 'completed' || this._disposed || generation !== this._generation) {
                 return;
             }
             this._hydrating = true;
             try {
-                const applied = applyRoadPlan(root, request.depth, snapshot, result.plan, GENERATED_ROAD_TYPE, GENERATED_ROAD_VALUE, () => {
-                    const size = root.bounds.size;
-                    root.findByRect({ x: 0, y: 0, width: size, height: size, z: request.depth })
-                        .forEach((node) => node.clearGeneratedVectors(GENERATED_ROAD_TYPE));
-                });
+                const applied = applyRoadPlan(root, depth, snapshot, result.plan, GENERATED_ROAD_TYPE, GENERATED_ROAD_VALUE);
                 if (applied === 'stale') {
                     this._cancel();
                     this._timer = setTimeout(() => this._plan(request), 0);
+                } else if (index + 1 < stages.length) {
+                    this._timer = setTimeout(() => this._startStage(request, stages, index + 1, generation), 0);
                 }
             } finally {
                 this._hydrating = false;

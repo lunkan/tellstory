@@ -19,8 +19,8 @@ export function applyRoadPlan(
     beforeApply?: () => void,
 ): 'applied' | 'stale' {
     const current = createRoadPlanningSnapshot(root, depth, request.bounds, roadType).request;
-    if (JSON.stringify([request.terrain, request.blocked ?? [], request.protectedCells ?? [], request.inheritedCells ?? []])
-        !== JSON.stringify([current.terrain, current.blocked ?? [], current.protectedCells ?? [], current.inheritedCells ?? []])) {
+    if (JSON.stringify([request.terrain, request.blocked ?? [], request.protectedCells ?? [], request.generatedCells ?? [], request.inheritedCells ?? []])
+        !== JSON.stringify([current.terrain, current.blocked ?? [], current.protectedCells ?? [], current.generatedCells ?? [], current.inheritedCells ?? []])) {
         return 'stale';
     }
 
@@ -41,7 +41,7 @@ export function applyRoadPlan(
             throw new Error('Road plan contains a cell outside its snapshot');
         }
         const node = root.findByPoint({ x: x * tileSize, y: y * tileSize, z: depth });
-        if (!node || !node.getTile()) {
+        if (!node || !node.getTile() || (node.isDetached() && !node.isLocked())) {
             throw new Error('Road plan contains a cell without terrain');
         }
         return node;

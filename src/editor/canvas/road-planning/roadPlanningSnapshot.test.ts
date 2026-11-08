@@ -68,9 +68,9 @@ test('snapshot reports missing and blocked terrain without generating nodes or g
         throw new Error('Expected missing terrain');
     }
     assert.deepEqual(snapshot.cells, [{ x: 1, y: 0 }]);
-    assert.deepEqual(snapshot.request.blocked, [1]);
+    assert.deepEqual(snapshot.request.blocked, [0, 1]);
     assert.equal(snapshot.request.terrain[1], null);
-    assert.equal(planRoadSnapshot(snapshot.request).components.length, 1);
+    assert.equal(planRoadSnapshot(snapshot.request).components.length, 0);
     assert.equal(locked.isLocked(), true);
     assert.equal(root.findByPoint({ x: 1, y: 0, z: 2 })?.hasTile(), false);
 });
@@ -92,7 +92,7 @@ test('snapshot uses calculated terrain on locked nodes', () => {
     }
 });
 
-test('snapshot copies only the selected road directions from protected nodes', () => {
+test('snapshot excludes detached nodes regardless of their vector type', () => {
     const root = QuadNode.createRoot(2);
     const nodes = [0, 1, 2].map((x) => {
         const node = root.findByPoint({ x, y: 0, z: 2 }, true);
@@ -108,11 +108,10 @@ test('snapshot copies only the selected road directions from protected nodes', (
     nodes[1].detach();
     const before = structuredClone(nodes[1].getOwnVectors());
     const snapshot = createRoadPlanningSnapshot(root, 2, { x: 0, y: 0, width: 3, height: 1 });
-    assert.deepEqual(snapshot.request.protectedCells, [{
-        index: 1, directions: [{ x: -1, y: 0 }, { x: 1, y: 0 }],
-    }]);
+    assert.deepEqual(snapshot.request.blocked, [1]);
+    assert.deepEqual(snapshot.request.protectedCells, []);
     const plan = planRoadSnapshot(snapshot.request);
-    assert.equal(plan.components.length, 1);
+    assert.equal(plan.components.length, 2);
     for (const { cells } of plan.connections) {
         for (let i = 1; i < cells.length; i++) {
             assert.equal(connectGeneratedNodes(nodes[cells[i - 1].x], nodes[cells[i].x], 'road', 1), 'connected');
@@ -122,10 +121,10 @@ test('snapshot copies only the selected road directions from protected nodes', (
     assert.equal(nodes[0].isDetached(), false);
     assert.equal(nodes[2].isDetached(), false);
     const riverSnapshot = createRoadPlanningSnapshot(root, 2, { x: 0, y: 0, width: 3, height: 1 }, 'river');
-    assert.deepEqual(riverSnapshot.request.protectedCells, [{ index: 1, directions: [{ x: 0, y: 1 }] }]);
+    assert.deepEqual(riverSnapshot.request.blocked, [1]);
 });
 
-test('a plan can join and follow an existing protected road without modifying it', () => {
+test('a plan cannot join or follow roads on detached tiles', () => {
     const root = QuadNode.createRoot(2);
     const nodes = [0, 1, 2, 3].map((x) => {
         const node = root.findByPoint({ x, y: 0, z: 2 }, true);
@@ -143,15 +142,12 @@ test('a plan can join and follow an existing protected road without modifying it
     const before = nodes.slice(1, 3).map((node) => structuredClone(node.getOwnVectors()));
     const snapshot = createRoadPlanningSnapshot(root, 2, { x: 0, y: 0, width: 4, height: 1 });
     const plan = planRoadSnapshot({ ...snapshot.request, maxDistance: 3 });
-    assert.equal(plan.components.length, 1);
-    assert.equal(plan.connections.length, 1);
-    const results = plan.connections[0].cells.slice(1).map((cell, index) =>
-        connectGeneratedNodes(nodes[plan.connections[0].cells[index].x], nodes[cell.x], 'road', 1));
-    assert.deepEqual(results, ['connected', 'protected', 'connected']);
+    assert.equal(plan.components.length, 2);
+    assert.equal(plan.connections.length, 0);
     assert.deepEqual(nodes.slice(1, 3).map((node) => node.getOwnVectors()), before);
 });
 
-test('boundary plan writes only the editable half-edge and leaves the protected tile unchanged', () => {
+test('detached endpoints do not create boundary roads', () => {
     const root = QuadNode.createRoot(1);
     const left = root.findByPoint({ x: 0, y: 0, z: 1 }, true);
     const right = root.findByPoint({ x: 1, y: 0, z: 1 }, true);
@@ -162,14 +158,11 @@ test('boundary plan writes only the editable half-edge and leaves the protected 
     const before = structuredClone(right.getOwnVectors());
     const snapshot = createRoadPlanningSnapshot(root, 1, { x: 0, y: 0, width: 2, height: 1 });
     const plan = planRoadSnapshot(snapshot.request);
-    assert.deepEqual(plan.connections, [{
-        kind: 'boundary', cells: [{ x: 0, y: 0 }, { x: 1, y: 0 }], travelTime: 0.5,
-    }]);
-    assert.equal(connectGeneratedNodes(left, right, 'road', 1), 'connected');
-    assert.deepEqual(left.getOwnVectors()[0].direction, { x: 1, y: 0 });
+    assert.deepEqual(plan.connections, []);
+    assert.deepEqual(left.getOwnVectors(), []);
     assert.deepEqual(right.getOwnVectors(), before);
     assert.equal(left.isDetached(), false);
-    assert.equal(plan.components.length, 2);
+    assert.equal(plan.components.length, 1);
 });
 
 test('boundary planning preserves locked-node data', () => {
@@ -203,7 +196,7 @@ test('scheduler hydrates visible cells and their bounded margin, without hydrati
         },
     };
     const scheduler = new HydrationScheduler(renderer, {
-        plan: async () => ({ status: 'cancelled' }),
+        plan: async (planningRequest) => ({ status: 'completed', plan: planRoadSnapshot(planningRequest) }),
         cancel: () => {},
         dispose: () => {},
     });
@@ -219,7 +212,7 @@ test('scheduler hydrates visible cells and their bounded margin, without hydrati
     assert.equal(world.quadtree.findByPoint({ x: 20, y: 20, z: 6 })?.hasTile(), true);
     assert.equal(world.quadtree.findByPoint({ x: 16, y: 16, z: 6 })?.hasTile(), true);
     assert.equal(world.quadtree.findByPoint({ x: 24, y: 24, z: 6 })?.hasTile(), true);
-    assert.equal(world.quadtree.findByPoint({ x: 30, y: 30, z: 6 })?.hasTile() ?? false, false);
+    assert.equal(world.quadtree.findByPoint({ x: 50, y: 50, z: 6 })?.hasTile() ?? false, false);
     scheduler.dispose();
     assert.equal(subscriber, undefined);
 });

@@ -48,9 +48,15 @@ export function createRoadPlanningSnapshot(root: QuadNode, depth: number, bounds
     const missing: RoadCell[] = [];
     const blocked: number[] = [];
     const protectedCells: NonNullable<RoadPlanningRequest['protectedCells']> = [];
+    const generatedCells: NonNullable<RoadPlanningRequest['generatedCells']> = [];
     for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
         for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
             const node = root.findByPoint({ x: x * tileSize, y: y * tileSize, z: depth });
+            if (node?.isDetached() && !node.isLocked()) {
+                blocked.push(terrain.length);
+                terrain.push(null);
+                continue;
+            }
             const tile = node?.getTile();
             if (!tile) {
                 missing.push({ x, y });
@@ -65,6 +71,13 @@ export function createRoadPlanningSnapshot(root: QuadNode, depth: number, bounds
                         .filter((vector) => vector.type === roadType)
                         .map(({ direction }) => ({ ...direction })),
                 });
+            } else if (node) {
+                const directions = node.getOwnVectors()
+                    .filter((vector) => vector.type === roadType)
+                    .map(({ direction }) => ({ ...direction }));
+                if (directions.length) {
+                    generatedCells.push({ index: terrain.length, directions });
+                }
             }
             terrain.push({
                 urban: tile.terrain.find((item) => item.type === 'urban')?.value ?? 0,
@@ -124,6 +137,6 @@ export function createRoadPlanningSnapshot(root: QuadNode, depth: number, bounds
             return { x, y };
         }).sort((a, b) => a.y - b.y || a.x - b.x),
     }));
-    const request: RoadPlanningRequest = { bounds, terrain, blocked, protectedCells, inheritedCells };
+    const request: RoadPlanningRequest = { bounds, terrain, blocked, protectedCells, generatedCells, inheritedCells };
     return missing.length ? { status: 'missing-terrain', cells: missing, request } : { status: 'ready', request };
 }

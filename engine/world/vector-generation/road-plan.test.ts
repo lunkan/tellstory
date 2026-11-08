@@ -42,15 +42,14 @@ test('urban targets include the threshold but exclude lower values', () => {
     assert.deepEqual(plan.connections, []);
 });
 
-test('endpoint value product sets the maximum distance, including at each threshold', () => {
+test('endpoint value product sets the maximum distance for nearby pairs at each threshold', () => {
     const cases = [
         { product: 0.0599, max: 0 }, { product: 0.06, max: 1 }, { product: 0.1199, max: 1 },
-        { product: 0.12, max: 2 }, { product: 0.1799, max: 2 }, { product: 0.18, max: 3 },
-        { product: 0.2399, max: 3 }, { product: 0.24, max: 4 }, { product: 1, max: 4 },
+        { product: 0.12, max: 2 }, { product: 0.1799, max: 2 },
     ];
     for (const { product, max } of cases) {
         for (const diagonal of [false, true]) {
-            for (let distance = 1; distance <= 5; distance++) {
+            for (let distance = 1; distance <= 2; distance++) {
                 const end = { x: distance, y: diagonal ? distance : 0 };
                 const left = product < 0.1 ? 0.5 : 1;
                 const right = product / left;
@@ -78,18 +77,70 @@ test('urban tiles can use their actual value or their inherited road target valu
     assert.deepEqual(viaRoad.connections[0].cells, [{ x: 0, y: 0 }, { x: 1, y: 0 }]);
 });
 
-test('equal dense tiles qualify for four tiles but a sparse endpoint limits range', () => {
-    const makePlan = (a: number, b: number, distance: number) => planRoadNetwork({
-        bounds: { x: 0, y: 0, width: distance + 1, height: 1 },
-        terrainAt: ({ x }) => ({ urban: x === 0 ? a : x === distance ? b : 0, elevation: 0 }),
+test('distance bonuses favour denser urban pairs while respecting score boundaries', () => {
+    for (const { a, b, distance, expected } of [
+        { a: 0.4, b: 0.4, distance: 2, expected: true },
+        { a: 0.3, b: 0.3, distance: 2, expected: false },
+        { a: 0.4, b: 0.4, distance: 3, expected: true },
+        { a: 0.31, b: 0.31, distance: 3, expected: false },
+        { a: 0.33, b: 0.33, distance: 3, expected: true },
+        { a: 1, b: 0.14, distance: 3, expected: false },
+        { a: 1, b: 0.141, distance: 3, expected: true },
+        { a: 0.18 / (0.2 * 1.4), b: 0.2, distance: 3, expected: true },
+        { a: 0.45, b: 0.45, distance: 4, expected: true },
+        { a: 0.42, b: 0.42, distance: 4, expected: true },
+        { a: 0.32, b: 0.32, distance: 4, expected: false },
+        { a: 0.9, b: 0.15, distance: 4, expected: false },
+        { a: 1, b: 0.1499, distance: 4, expected: false },
+        { a: 1, b: 0.15, distance: 4, expected: true },
+        { a: 1, b: 1, distance: 5, expected: false },
+    ]) {
+        for (const diagonal of [false, true]) {
+            for (const [left, right] of [[a, b], [b, a]]) {
+                const end = { x: distance, y: diagonal ? distance : 0 };
+                const plan = planRoadNetwork({
+                    bounds: { x: 0, y: 0, width: distance + 1, height: end.y + 1 },
+                    terrainAt: ({ x, y }) => ({
+                        urban: x === 0 && y === 0 ? left : x === end.x && y === end.y ? right : 0,
+                        elevation: 0,
+                    }),
+                });
+                assert.equal(plan.connections.length > 0, expected,
+                    `values ${left}, ${right}, distance ${distance}, diagonal ${diagonal}`);
+            }
+        }
+    }
+});
+
+test('newly eligible urban pairs reuse complete existing road segments', () => {
+    const plan = planRoadNetwork({
+        bounds: { x: 0, y: 0, width: 4, height: 2 },
+        terrainAt: ({ x, y }) => ({
+            urban: y === 0 && (x === 0 || x === 3) ? 0.4 : 0,
+            elevation: 0,
+        }),
+        existingEdges: [
+            [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+            [{ x: 1, y: 1 }, { x: 2, y: 1 }],
+        ],
     });
-    assert.equal(makePlan(0.6, 0.6, 4).connections.length, 1);
-    assert.equal(makePlan(0.5, 0.479, 4).connections.length, 0);
-    assert.equal(makePlan(0.5, 0.48, 4).connections.length, 1);
-    assert.equal(makePlan(0.5, 0.5, 3).connections.length, 1);
-    assert.equal(makePlan(0.9, 0.2, 2).connections.length, 1);
-    assert.equal(makePlan(0.9, 0.199, 3).connections.length, 0);
-    assert.equal(makePlan(0.9, 0.2, 3).connections.length, 1);
+    assert.deepEqual(plan.connections[0].cells, [
+        { x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 0 },
+    ]);
+    assert.ok(Math.abs(plan.connections[0].travelTime - (1 + 2 * Math.SQRT2)) < 1e-12);
+});
+
+test('urban targets with inherited roads use the best urban or road-joint score', () => {
+    for (const { a, b, distance } of [
+        { a: 0.4, b: 0.4, distance: 3 },
+        { a: 0.8, b: 0.1, distance: 4 },
+    ]) {
+        const base: RoadPlanOptions = {
+            bounds: { x: 0, y: 0, width: distance + 1, height: 1 },
+            terrainAt: ({ x }) => ({ urban: x === 0 ? a : x === distance ? b : 0, elevation: 0 }),
+        };
+        assert.equal(planRoadNetwork({ ...base, roadTargets: [{ x: distance, y: 0 }] }).connections.length, 1);
+    }
 });
 
 test('adjacent urban cells form a network instead of collapsing into a single target', () => {
@@ -180,6 +231,34 @@ test('pairs are planned in distance order before longer connections', () => {
     assert.deepEqual(plan.connections.map(({ cells }) => [cells[0].x, cells[cells.length - 1].x]), [
         [0, 1], [1, 3], [3, 6], [6, 10],
     ]);
+});
+
+test('context-only roads influence visible routes without being emitted independently', () => {
+    const plan = planRoadNetwork({
+        ...options(['###']),
+        commitBounds: { x: 0, y: 0, width: 1, height: 1 },
+    });
+    assert.deepEqual(plan.connections.map(({ cells }) => cells), [
+        [{ x: 0, y: 0 }, { x: 1, y: 0 }],
+        [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }],
+    ]);
+});
+
+test('context-only pairs are considered before visible pairs at the same distance', () => {
+    const plan = planRoadNetwork({
+        ...options(['##', '.#']),
+        commitBounds: { x: 0, y: 0, width: 1, height: 1 },
+    });
+    assert.deepEqual(plan.connections.map(({ cells }) => cells), [
+        [{ x: 0, y: 0 }, { x: 1, y: 0 }],
+        [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }],
+    ]);
+});
+
+test('invalid commit bounds are rejected', () => {
+    assert.throws(() => planRoadNetwork({
+        ...options(['###']), commitBounds: { x: 1, y: 0, width: 3, height: 1 },
+    }), /commit bounds/);
 });
 
 test('a later distant pair reuses roads generated by earlier shorter pairs', () => {

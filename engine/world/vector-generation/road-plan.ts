@@ -12,13 +12,17 @@ import {
 export const MAX_ROAD_CONNECTION_DISTANCE = 4;
 /** Value contributed by a resolved shallower road when it is a target. */
 export const SHALLOW_ROAD_TARGET_VALUE = 0.3;
-/** Minimum endpoint products for distances of one through four tiles. */
+/** Minimum connection scores for distances of one through four tiles. */
 export const ROAD_CONNECTION_PRODUCT_THRESHOLDS = [0.06, 0.12, 0.18, 0.24] as const;
+/** Density bonus for urban-to-urban connections at each endpoint distance. */
+export const ROAD_URBAN_DISTANCE_BONUSES = [0, 0, 2, 4] as const; //[0, 0, 0.5, 1] as const;
 /** Discount applied to complete existing road segments when selecting a route. */
 export const EXISTING_ROAD_DISCOUNT = 0.5;
 
 export type RoadPlanOptions = {
     bounds: RoadSearchBounds;
+    /** Return routes with at least one endpoint in this rectangle, while planning the entire bounds. */
+    commitBounds?: RoadSearchBounds;
     terrainAt: (cell: RoadCell) => RoadTerrain | undefined;
     /** Explicitly unavailable cells are excluded from both routes and urban targets. */
     isBlocked?: (cell: RoadCell) => boolean;
@@ -79,6 +83,14 @@ export function planRoadNetwork(options: RoadPlanOptions): RoadPlan {
         || !Number.isSafeInteger(maxDistance) || maxDistance < 0) {
         throw new Error('Road planning cost and maximum distance must be non-negative');
     }
+    const commitBounds = options.commitBounds;
+    if (commitBounds && (![commitBounds.x, commitBounds.y, commitBounds.width, commitBounds.height].every(Number.isSafeInteger)
+        || commitBounds.width <= 0 || commitBounds.height <= 0
+        || commitBounds.x < bounds.x || commitBounds.y < bounds.y
+        || commitBounds.x + commitBounds.width > bounds.x + bounds.width
+        || commitBounds.y + commitBounds.height > bounds.y + bounds.height)) {
+        throw new Error('Road commit bounds must be a non-empty rectangle inside planning bounds');
+    }
 
     const terrain = new Map<string, RoadTerrain>();
     const urbanCells: RoadCell[] = [];
@@ -132,11 +144,10 @@ export function planRoadNetwork(options: RoadPlanOptions): RoadPlan {
         addEdge(from, to);
     }
 
-    const addPath = (path: RoadPath, kind: RoadConnection['kind']): void => {
+    const addPath = (path: RoadPath): void => {
         for (let i = 1; i < path.cells.length; i++) {
             addEdge(path.cells[i - 1], path.cells[i]);
         }
-        connections.push({ ...path, kind });
     };
 
     const urbanByKey = new Map(urbanCells.map((cell) => [cellKey(cell), cell]));
@@ -150,23 +161,26 @@ export function planRoadNetwork(options: RoadPlanOptions): RoadPlan {
         roadKeys.add(cellKey(cell));
     }
     const eligible = (a: RoadCell, b: RoadCell): boolean => {
+        const distance = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+        if (distance === 0 || distance > maxDistance || distance > ROAD_CONNECTION_PRODUCT_THRESHOLDS.length) {
+            return false;
+        }
         const aKey = cellKey(a);
         const bKey = cellKey(b);
         const aUrban = urbanByKey.has(aKey);
         const bUrban = urbanByKey.has(bKey);
         const aValue = terrainAt(a)!.urban;
         const bValue = terrainAt(b)!.urban;
-        let product = aUrban && bUrban ? aValue * bValue : 0;
+        let score = aUrban && bUrban
+            ? aValue * bValue * (1 + ROAD_URBAN_DISTANCE_BONUSES[distance - 1] * Math.min(aValue, bValue))
+            : 0;
         if (aUrban && roadKeys.has(bKey)) {
-            product = Math.max(product, aValue * SHALLOW_ROAD_TARGET_VALUE);
+            score = Math.max(score, aValue * SHALLOW_ROAD_TARGET_VALUE);
         }
         if (bUrban && roadKeys.has(aKey)) {
-            product = Math.max(product, bValue * SHALLOW_ROAD_TARGET_VALUE);
+            score = Math.max(score, bValue * SHALLOW_ROAD_TARGET_VALUE);
         }
-        const distance = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-        return distance > 0 && distance <= maxDistance
-            && distance <= ROAD_CONNECTION_PRODUCT_THRESHOLDS.length
-            && product >= ROAD_CONNECTION_PRODUCT_THRESHOLDS[distance - 1];
+        return score >= ROAD_CONNECTION_PRODUCT_THRESHOLDS[distance - 1];
     };
     const neighboursOf = (cell: RoadCell): RoadCell[] => {
         const neighbours: RoadCell[] = [];
@@ -210,16 +224,27 @@ export function planRoadNetwork(options: RoadPlanOptions): RoadPlan {
         }
     }
     const boundaryKeys = new Set((options.boundaryTargets ?? []).map(cellKey));
+    const inCommitBounds = (cell: RoadCell): boolean => !commitBounds
+        || (cell.x >= commitBounds.x && cell.x < commitBounds.x + commitBounds.width
+            && cell.y >= commitBounds.y && cell.y < commitBounds.y + commitBounds.height);
+    const isRelevant = (pair: { first: RoadCell; second: RoadCell }): boolean =>
+        inCommitBounds(pair.first) || inCommitBounds(pair.second);
     const orderedPairs = [...pairs.values()].sort((a, b) =>
-        a.distance - b.distance || compareCells(a.first, b.first) || compareCells(a.second, b.second));
+        a.distance - b.distance || Number(isRelevant(a)) - Number(isRelevant(b))
+        || compareCells(a.first, b.first) || compareCells(a.second, b.second));
     for (const { first, second } of orderedPairs) {
+        const relevant = inCommitBounds(first) || inCommitBounds(second);
         const path = findRoadPaths({
             start: first, bounds, terrainAt, elevationCost, unlimitedNonUrban: true,
             isBlocked: options.isBlocked, canConnect: options.canConnect, stepCost,
         }, [second]).get(cellKey(second));
         if (path) {
-            if (path.cells.some((cell, index) => index > 0 && !hasEdge(path.cells[index - 1], cell))) {
-                addPath({ cells: path.cells, travelTime: actualTravelTime(path.cells, false) }, 'road');
+            const hasNewEdge = path.cells.some((cell, index) => index > 0 && !hasEdge(path.cells[index - 1], cell));
+            if (hasNewEdge) {
+                addPath(path);
+            }
+            if (relevant && (hasNewEdge || commitBounds)) {
+                connections.push({ cells: path.cells, travelTime: actualTravelTime(path.cells, false), kind: 'road' });
             }
             continue;
         }
@@ -251,7 +276,9 @@ export function planRoadNetwork(options: RoadPlanOptions): RoadPlan {
                 for (let i = 1; i < cells.length - 1; i++) {
                     addEdge(cells[i - 1], cells[i]);
                 }
-                connections.push({ cells, travelTime: actualTravelTime(cells, true), kind: 'boundary' });
+                if (relevant) {
+                    connections.push({ cells, travelTime: actualTravelTime(cells, true), kind: 'boundary' });
+                }
             }
         }
     }
