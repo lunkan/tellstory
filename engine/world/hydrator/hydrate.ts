@@ -4,6 +4,7 @@ import { hydrateTile } from './hydrateTile';
 import { hydrateMarkers } from './hydrateMarkers';
 import { placeMarkers } from './placeMarkers';
 import { placeVectors } from './placeVectors';
+import { terrainNeighbours } from './terrain-neighbours';
 
 export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     if (!node || node.isLocked()) {
@@ -19,7 +20,9 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
         return node; // No tiles for any parent
     }
 
-    // Subtiles
+    // Neighbours at the parent's depth are resolved before its children, never from their peers.
+    terrainNeighbours(node.parent, true).forEach((neighbour) => hydrate(neighbour));
+    const newTiles = new Set(node.parent.getQuadrants().filter((child) => child.canHydrate() && !child.hasTile()));
 
     hydrateTile(node);
 
@@ -36,7 +39,7 @@ export function hydrate(node: QuadNode | undefined): QuadNode | undefined {
     /*console.log('**', quadNodes.length);
     for (const quadNode of quadNodes) {
         console.log('*', quadNode?.tile?.terrain);*/
-    hydrateMarkers(node);
+    hydrateMarkers(node, newTiles);
     placeMarkers(node.parent);
     placeVectors(node.parent);
     /*}

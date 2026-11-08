@@ -1,124 +1,80 @@
-//import tilesJSON from '../../config/tiles.json' with { type: 'json' };
 import { config } from '../../config/config';
-import { getRandFromSeeds, mergeSeeds } from '../../util/number-generator';
+import { mergeSeeds, seedFromString } from '../../util/number-generator';
 import { QuadNode } from '../quad-node';
+import { terrainNeighbours } from './terrain-neighbours';
+import { planTerrainChildren } from './terrain-planner';
 
-//import { Tile } from "../tile";
+/** Default share of quarter-cell interpolation towards parent-depth neighbours. */
+export const TERRAIN_NEIGHBOUR_INFLUENCE = 0.5;
+/** Strength of seeded variation, independent of clustering. */
+export const TERRAIN_VARIATION = 0.08;
+
+/** Overrides for known terrain names; all other terrain uses the default. */
+export const TERRAIN_SMOOTHNESS: ReadonlyMap<string, number> = new Map([
+    ['elevation', 0.7],
+    ['urban', 0.25],
+    ['forrest', 0.4],
+    ['forest', 0.4],
+]);
+/** Multipliers preserve each palette's cluster setting while favouring concentrated urban areas. */
+export const TERRAIN_CLUSTER_MULTIPLIERS: ReadonlyMap<string, number> = new Map([['urban', 1.6]]);
+export const DEFAULT_TERRAIN_CLUSTER = 0.5;
+/** Elevations at or below this value generate fully ocean-covered children. */
+export const OCEAN_FULL_ELEVATION = 0.05;
+/** Elevations at or above this value generate children without ocean coverage. */
+export const OCEAN_ZERO_ELEVATION = 0.15;
+
+export function oceanFromElevation(elevation: number): number {
+    return Math.max(0, Math.min(1, (OCEAN_ZERO_ELEVATION - elevation) / (OCEAN_ZERO_ELEVATION - OCEAN_FULL_ELEVATION)));
+}
 
 export function hydrateTile(node: QuadNode): QuadNode {
-    if (!node?.parent) {
+    const parent = node.parent;
+    const parentTile = parent?.getTile();
+    if (!parent || !parentTile) {
         return node;
     }
 
-    _hydrateSubTiles(node.parent);
-    return node; // Hydration complete
-}
-
-function _hydrateSubTiles(parent: QuadNode): void {
-    const parentTile = parent.getTile();
-    if (!parentTile) {
-        return;
+    const quadrants = [
+        parent.getQuadrantAt(0, 0, true), parent.getQuadrantAt(1, 0, true),
+        parent.getQuadrantAt(0, 1, true), parent.getQuadrantAt(1, 1, true),
+    ];
+    const targets = quadrants.filter((child): child is QuadNode => !!child && child.canHydrate() && !child.hasTile());
+    if (!targets.length) {
+        return node;
     }
 
-    const quadrantA = parent.getQuadrantAt(0, 0, true);
-    const quadrantB = parent.getQuadrantAt(1, 0, true);
-    const quadrantC = parent.getQuadrantAt(0, 1, true);
-    const quadrantD = parent.getQuadrantAt(1, 1, true);
-
-    if (!quadrantA || !quadrantB || !quadrantC || !quadrantD) {
-        return;
-    }
-
-    // Keep all 4 - quadrantValues are indexed by position. Skip protected nodes when writing.
-    const quadrants: QuadNode[] = [quadrantA, quadrantB, quadrantC, quadrantD];
-
-
-    /*.map((quadrant) => {
-        //quadrant.tile = new Tile();
-        quadrant.setTileData({});
-        return quadrant;
-    });*/
-
-    // Water (ocean, lake) - dominant water type above threshold makes all quadrants full water
     const waterTerrain = parentTile.terrain
-        .filter((terrain) => config.getTile(terrain.type)?.tags.includes('water'))
+        .filter((terrain) => terrain.type !== 'ocean' && config.getTile(terrain.type)?.tags.includes('water'))
         .sort((a, b) => b.value - a.value)[0];
-
     if (waterTerrain && waterTerrain.value > 0.5) {
-        quadrants.filter((quadrant) => quadrant.canHydrate()).forEach((quadrant) => {
-            quadrant.setTileData({
-                terrain: [{
-                    type: waterTerrain.type,
-                    value: 1,
-                }],
-            });
-        });
-
-        /*quadrants.forEach((quadrant) => {
-            quadrant.tile!.addTerrain({
-                type: 'ocean',
-                value: 1,
-            });
-        });*/
-
-        return;
+        targets.forEach((child) => child.setTileData({ terrain: [{ type: waterTerrain.type, value: 1 }] }));
+        return node;
     }
 
-    let seedIncrementor = 0;
-
-    parentTile.terrain.map((terrain) => {
-        const tileConfig = config.getTile(terrain.type);
-        //tilesJSON.tiles.find((tile) => tile.name === terrain.type);
-        const cluster = tileConfig?.cluster || 1;
-        const seed = mergeSeeds(BigInt(++seedIncrementor), parent.key.hash);
-        const quadrantValues = _getQuadrantValues(seed, terrain.value, cluster);
-
-        quadrants.forEach((quadrant, i) => {
-            if (!quadrant.canHydrate()) {
-                return;
-            }
-
-            quadrant.setTileData({
-                terrain: [{
-                    type: terrain.type,
-                    value: quadrantValues[i],
-                }],
-            });
-
-            /*quadrant.tile?.addTerrain({
-                type: terrain.type,
-                value: quadrantValues[i],
-            });*/
+    const neighbours = terrainNeighbours(parent).map((node) => ({ node, tile: node?.getTile() }));
+    const types = [...new Set([parentTile, ...neighbours.map(({ tile }) => tile)].flatMap((tile) => tile?.terrain.map(({ type }) => type) ?? []))]
+        .filter((type) => type !== 'ocean').sort();
+    const values = quadrants.map(() => [] as { type: string; value: number }[]);
+    for (const type of types) {
+        const centre = parentTile.terrain.find((terrain) => terrain.type === type)?.value ?? 0;
+        const surrounding = neighbours.map(({ node, tile }) => {
+            if (tile) return tile.terrain.find((terrain) => terrain.type === type)?.value ?? 0;
+            return node && type === 'elevation' ? 0 : centre;
         });
-    });
-}
-
-function _getQuadrantValues(seed: bigint, value: number, cluster: number): number[] {
-    const quadrants = [0, 1, 2, 3];
-
-    // A random priority per quadrant decides who wins the larger share.
-    const randoms = quadrants.map((i) => getRandFromSeeds(seed, BigInt(i)));
-
-    // "Winner-takes-all" allocation: pour the parent's total budget
-    // (value * 4) into the highest-priority quadrants first, filling each
-    // to 1 before moving on. Winners reach 1, losers drop to 0. Because we
-    // distribute exactly value * 4, this still averages to `value`.
-    // e.g. value 0.5 => [1, 1, 0, 0]; value 0.3 => [1, 0.2, 0, 0].
-    const order = [...quadrants].sort((a, b) => randoms[b] - randoms[a]);
-    let budget = value * quadrants.length;
-    const extreme = new Array<number>(quadrants.length).fill(0);
-    for (const i of order) {
-        const share = Math.min(1, budget);
-        extreme[i] = share;
-        budget -= share;
+        const cluster = (config.getTile(type)?.cluster ?? DEFAULT_TERRAIN_CLUSTER) * (TERRAIN_CLUSTER_MULTIPLIERS.get(type) ?? 1);
+        const seed = mergeSeeds(parent.key.hash, seedFromString(type));
+        const planned = planTerrainChildren(centre, surrounding, seed, {
+            smoothness: TERRAIN_SMOOTHNESS.get(type) ?? TERRAIN_NEIGHBOUR_INFLUENCE, variation: TERRAIN_VARIATION, cluster,
+        });
+        planned.forEach((value, index) => values[index].push({ type, value }));
     }
-
-    // Blend the even split (every quadrant = value) with the extreme split.
-    // Both endpoints average to `value` and lie in [0, 1], so any convex
-    // blend does too: cluster 0 => perfectly even, cluster 1 => winner-
-    // takes-all, in between => a proportional spread around `value`.
-    return quadrants.map((i) => {
-        const quadValue = value + cluster * (extreme[i] - value);
-        return Math.min(1, Math.max(0, quadValue)); // Guard against fp drift
+    quadrants.forEach((child, index) => {
+        if (child && targets.includes(child)) {
+            const elevation = values[index].find((terrain) => terrain.type === 'elevation')?.value ?? 0;
+            const ocean = oceanFromElevation(elevation);
+            child.setTileData({ terrain: [...values[index], { type: 'ocean', value: ocean }] });
+        }
     });
+    return node;
 }

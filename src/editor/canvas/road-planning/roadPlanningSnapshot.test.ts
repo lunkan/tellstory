@@ -80,9 +80,9 @@ test('snapshot uses calculated terrain on locked nodes', () => {
     root.setTileData({});
     root.detach();
     const locked = root.getQuadrants(true)[0];
-    locked.setTileData({ terrain: [{ type: 'urban', value: 0.4 }] });
+    locked.setTileData({ terrain: [{ type: 'urban', value: 0.4 }, { type: 'elevation', value: 0.5 }] });
     const child = locked.getQuadrants(true)[0];
-    child.setTileData({ terrain: [{ type: 'urban', value: 0.8 }] });
+    child.setTileData({ terrain: [{ type: 'urban', value: 0.8 }, { type: 'elevation', value: 0.5 }] });
     child.detach();
     const snapshot = createRoadPlanningSnapshot(root, 1, { x: 0, y: 0, width: 1, height: 1 });
     assert.equal(snapshot.status, 'ready');
@@ -92,12 +92,58 @@ test('snapshot uses calculated terrain on locked nodes', () => {
     }
 });
 
+test('snapshot uses resolved urban coverage and blocks fully ocean-covered cells', () => {
+    const root = QuadNode.createRoot(1);
+    const left = root.findByPoint({ x: 0, y: 0, z: 1 }, true)!;
+    const right = root.findByPoint({ x: 1, y: 0, z: 1 }, true)!;
+    left.setTileData({ terrain: [
+        { type: 'urban', value: 1 }, { type: 'forest', value: 1 }, { type: 'ocean', value: 0.7 },
+    ] });
+    right.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'ocean', value: 1 }] });
+    const snapshot = createRoadPlanningSnapshot(root, 1, { x: 0, y: 0, width: 2, height: 1 });
+    assert.ok(Math.abs(snapshot.request.terrain[0]!.urban - 0.15) < 1e-12);
+    assert.equal(snapshot.request.terrain[1], null);
+    assert.deepEqual(snapshot.request.blocked, [1]);
+    assert.equal(left.getTile()?.getTerrain('urban')?.value, 1);
+});
+
+test('snapshot blocks tiles whose missing elevation and ocean resolve to ocean', () => {
+    const root = QuadNode.createRoot(1);
+    const left = root.findByPoint({ x: 0, y: 0, z: 1 }, true)!;
+    const right = root.findByPoint({ x: 1, y: 0, z: 1 }, true)!;
+    left.setTileData({ terrain: [{ type: 'urban', value: 1 }] });
+    right.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'ocean', value: 0 }] });
+    const snapshot = createRoadPlanningSnapshot(root, 1, { x: 0, y: 0, width: 2, height: 1 });
+    assert.equal(snapshot.status, 'ready');
+    assert.deepEqual(snapshot.request.blocked, [0]);
+    assert.equal(snapshot.request.terrain[0], null);
+    assert.equal(snapshot.request.terrain[1]?.urban, 1);
+    assert.equal(left.getTile()?.getTerrain('urban')?.value, 1);
+});
+
+test('snapshot retains inherited link directions at the edge of its bounds', () => {
+    const root = QuadNode.createRoot(2);
+    const host = root.findByPoint({ x: 0, y: 0, z: 1 }, true)!;
+    host.setTileData({ vectors: [
+        { type: 'road', value: 1, direction: { x: 1, y: 0 }, placement: [2] },
+        { type: 'road', value: 1, direction: { x: 0, y: 1 }, placement: [1] },
+    ] });
+    const cell = root.findByPoint({ x: 1, y: 0, z: 2 }, true)!;
+    root.findByPoint({ x: 0, y: 1, z: 2 }, true)!;
+    cell.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'elevation', value: 0.5 }] });
+    const snapshot = createRoadPlanningSnapshot(root, 2, { x: 1, y: 0, width: 1, height: 1 });
+    assert.deepEqual(snapshot.request.inheritedCells, [{
+        index: 0,
+        directions: [{ x: 1, y: 0 }, { x: -1, y: 1 }],
+    }]);
+});
+
 test('snapshot excludes detached nodes regardless of their vector type', () => {
     const root = QuadNode.createRoot(2);
     const nodes = [0, 1, 2].map((x) => {
         const node = root.findByPoint({ x, y: 0, z: 2 }, true);
         assert.ok(node);
-        node.setTileData({ terrain: [{ type: 'urban', value: x === 1 ? 0 : 1 }] });
+        node.setTileData({ terrain: [{ type: 'urban', value: x === 1 ? 0 : 1 }, { type: 'elevation', value: 0.5 }] });
         return node;
     });
     nodes[1].setTileData({ vectors: [
@@ -129,7 +175,7 @@ test('a plan cannot join or follow roads on detached tiles', () => {
     const nodes = [0, 1, 2, 3].map((x) => {
         const node = root.findByPoint({ x, y: 0, z: 2 }, true);
         assert.ok(node);
-        node.setTileData({ terrain: [{ type: 'urban', value: x === 0 || x === 3 ? 1 : 0 }] });
+        node.setTileData({ terrain: [{ type: 'urban', value: x === 0 || x === 3 ? 1 : 0 }, { type: 'elevation', value: 0.5 }] });
         return node;
     });
     for (const node of [nodes[1], nodes[2]]) {
@@ -152,8 +198,8 @@ test('detached endpoints do not create boundary roads', () => {
     const left = root.findByPoint({ x: 0, y: 0, z: 1 }, true);
     const right = root.findByPoint({ x: 1, y: 0, z: 1 }, true);
     assert.ok(left && right);
-    left.setTileData({ terrain: [{ type: 'urban', value: 1 }] });
-    right.setTileData({ terrain: [{ type: 'urban', value: 1 }] });
+    left.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'elevation', value: 0.5 }] });
+    right.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'elevation', value: 0.5 }] });
     right.detach();
     const before = structuredClone(right.getOwnVectors());
     const snapshot = createRoadPlanningSnapshot(root, 1, { x: 0, y: 0, width: 2, height: 1 });
@@ -170,10 +216,10 @@ test('boundary planning preserves locked-node data', () => {
     const left = root.findByPoint({ x: 0, y: 0, z: 1 }, true);
     const right = root.findByPoint({ x: 2, y: 0, z: 1 }, true);
     assert.ok(left && right);
-    left.setTileData({ terrain: [{ type: 'urban', value: 1 }] });
-    right.setTileData({ terrain: [{ type: 'urban', value: 1 }] });
+    left.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'elevation', value: 0.5 }] });
+    right.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'elevation', value: 0.5 }] });
     const child = right.getQuadrants(true)[0];
-    child.setTileData({ terrain: [{ type: 'urban', value: 1 }] });
+    child.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'elevation', value: 0.5 }] });
     child.detach();
     assert.equal(right.isLocked(), true);
     const before = structuredClone(root.getDetachedTiles());

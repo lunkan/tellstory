@@ -1,6 +1,7 @@
 import { dehydrate } from "../../../engine/world/hydrator/hydrate";
+import { invalidateTerrainNeighbours } from "../../../engine/world/hydrator/invalidate-terrain";
 import { QuadNode } from "../../../engine/world/quad-node";
-import { invalidateNearbyVectors } from "../../../engine/world/vector-generation/invalidate-nearby-vectors";
+import { invalidateVectorsAround } from "../../../engine/world/vector-generation/invalidate-nearby-vectors";
 import { SelectedEntity } from "../../store/editorStore";
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
@@ -40,7 +41,6 @@ export class DrawHandler extends CanvasEventHandler {
 
         node.detach();
         node.getQuadrants().forEach((quadNode) => dehydrate(quadNode));
-        invalidateNearbyVectors(node);
 
         let value = this._value;
 
@@ -51,6 +51,7 @@ export class DrawHandler extends CanvasEventHandler {
                 value,
             }],
         });
+        invalidateVectorsAround([node, ...invalidateTerrainNeighbours(node)]);
 
         /*node.tile.setTerrain({
             type: this._type,

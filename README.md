@@ -13,6 +13,37 @@
   Vector generation tests (PowerShell):
   npx tsx --test engine\world\vector-generation\*.test.ts src\editor\canvas\road-planning\*.test.ts src\editor\canvas\HydrationScheduler.test.ts
 
+  Terrain hydration tests (PowerShell):
+  npx tsx --test engine\world\hydrator\*.test.ts
+
+  Terrain children use their parent's cardinal neighbours at the same depth.
+  An existing neighbour without a tile contributes zero elevation; world edges
+  retain the parent's elevation. Other missing terrain remains unchanged.
+  Their values stay within 0–1, but their average can differ from the parent.
+  Neighbour influence, per-type smoothness and seeded variation are constants
+  in hydrateTile.ts. Clustering uses each palette's cluster value (default 0.5),
+  with an urban multiplier; higher values concentrate child terrain, biased
+  towards neighbouring terrain. Smoothness and clustering are independent.
+  The shared planner accepts settings for any terrain type. Existing dominant
+  water hydration is unchanged. Generated values differ from earlier versions;
+  authored tiles are not overwritten. Edits invalidate affected generated
+  terrain and nearby generated vectors so they can be rebuilt.
+
+  Tile terrain stores configured values. `getResolvedTerrain()` calculates
+  coverage on demand: ocean reserves its configured share, non-typography land
+  types share the remaining area proportionally only when their total exceeds
+  it, and typography properties remain unchanged. Lakes do not reserve coverage
+  yet. Hydration uses configured terrain and generates ocean from child elevation:
+  1 at or below 0.05, 0 at or above 0.15, linearly interpolated in between.
+  Missing elevation resolves to zero; when both elevation and ocean are missing,
+  ocean resolves to 1 without changing stored values. Authored ocean is preserved.
+  Nodes resolve terrain through their calculated tile, or as ocean if no tile
+  exists; this does not create or hydrate a tile. Road planning still reports
+  missing tiles for hydration. These changes alter
+  generated terrain and the coastline of existing maps. The sea mask uses an
+  interpolated ocean coverage contour of 0.55. Road planning uses resolved urban
+  coverage and treats fully ocean-covered tiles as blocked.
+
   Generated vector edges are ordinary vectors on hydrated tiles. Like generated
   terrain, they are saved when their tile is detached, including when a child
   edit locks the ancestor. They use the normal placement at deeper depths.

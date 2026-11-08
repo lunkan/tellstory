@@ -128,10 +128,7 @@ function _getGridNode(nodeGrid: NodeGrid, x: number, y: number): QuadNode | unde
 }
 
 function _getTerrainWeightsFromNode(node: QuadNode): TileDrawData[] {
-    const tile = node.getTile();
-    if (!tile) return [];
-
-    return _getTerrainWeights(tile.terrain);
+    return _getTerrainWeights(node.getResolvedTerrain());
 }
 
 /**
@@ -185,7 +182,7 @@ const SMOOTH_RADIUS = 0.25; //0.5;
 
 /**
  * Terrain values at a point, blended from the surrounding tiles (see SMOOTH_RADIUS).
- * Empty cells count as value 0 for every terrain type.
+ * Cells without land terrain count as value 0 for land coverage.
  */
 function _getBlendedTerrain(nodeGrid: NodeGrid, x: number, y: number): TerrainSetting[] {
     const tileX = Math.floor(x);
@@ -212,8 +209,8 @@ function _getBlendedTerrain(nodeGrid: NodeGrid, x: number, y: number): TerrainSe
             const weight = Math.max(0, 1 - distance / SMOOTH_RADIUS);
             if (weight === 0) continue;
 
-            // Empty cells (no node or no tile) add weight but no value, so terrain fades out towards them
-            const terrains = row[tileX + dx]?.getTile()?.terrain ?? [];
+            // Cells without a node add weight but no value, so terrain fades out towards them.
+            const terrains = row[tileX + dx]?.getResolvedTerrain() ?? [];
             for (const terrain of terrains) {
                 weightedSums.set(terrain.type, (weightedSums.get(terrain.type) ?? 0) + terrain.value * weight);
             }
@@ -232,4 +229,3 @@ function _getBlendedTerrain(nodeGrid: NodeGrid, x: number, y: number): TerrainSe
 function _isWater(terrainSetting: TerrainSetting): boolean {
     return !!config.getTile(terrainSetting.type)?.tags.includes('water');
 }
-

@@ -64,6 +64,12 @@ export function createRoadPlanningSnapshot(root: QuadNode, depth: number, bounds
                 terrain.push(null);
                 continue;
             }
+            const resolved = tile.getResolvedTerrain();
+            if ((resolved.find((item) => item.type === 'ocean')?.value ?? 0) >= 1) {
+                blocked.push(terrain.length);
+                terrain.push(null);
+                continue;
+            }
             if (node && !node.canHydrate()) {
                 protectedCells.push({
                     index: terrain.length,
@@ -80,8 +86,8 @@ export function createRoadPlanningSnapshot(root: QuadNode, depth: number, bounds
                 }
             }
             terrain.push({
-                urban: tile.terrain.find((item) => item.type === 'urban')?.value ?? 0,
-                elevation: tile.terrain.find((item) => item.type === 'elevation')?.value ?? 0,
+                urban: resolved.find((item) => item.type === 'urban')?.value ?? 0,
+                elevation: resolved.find((item) => item.type === 'elevation')?.value ?? 0,
             });
         }
     }

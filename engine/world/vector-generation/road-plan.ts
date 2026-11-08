@@ -15,7 +15,7 @@ export const SHALLOW_ROAD_TARGET_VALUE = 0.3;
 /** Minimum connection scores for distances of one through four tiles. */
 export const ROAD_CONNECTION_PRODUCT_THRESHOLDS = [0.06, 0.12, 0.18, 0.24] as const;
 /** Density bonus for urban-to-urban connections at each endpoint distance. */
-export const ROAD_URBAN_DISTANCE_BONUSES = [0, 0, 2, 4] as const; //[0, 0, 0.5, 1] as const;
+export const ROAD_URBAN_DISTANCE_BONUSES = [0, 2, 4, 8] as const; //[0, 0, 2, 4] as const; //[0, 0, 0.5, 1] as const;
 /** Discount applied to complete existing road segments when selecting a route. */
 export const EXISTING_ROAD_DISCOUNT = 0.5;
 

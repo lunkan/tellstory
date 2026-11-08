@@ -3,15 +3,15 @@ import { config } from '../../config/config';
 import { getRandFromSeeds } from '../../util/number-generator';
 import { QuadNode } from '../quad-node';
 
-export function hydrateMarkers(node: QuadNode): void {
+export function hydrateMarkers(node: QuadNode, targets?: ReadonlySet<QuadNode>): void {
     if (!node?.parent) {
         return;
     }
 
-    _hydrateSubTiles(node.parent);
+    _hydrateSubTiles(node.parent, targets);
 }
 
-function _hydrateSubTiles(parent: QuadNode): void {
+function _hydrateSubTiles(parent: QuadNode, targets?: ReadonlySet<QuadNode>): void {
 
     const quadrantA = parent.getQuadrantAt(0, 0, true);
     const quadrantB = parent.getQuadrantAt(1, 0, true);
@@ -19,7 +19,7 @@ function _hydrateSubTiles(parent: QuadNode): void {
     const quadrantD = parent.getQuadrantAt(1, 1, true);
 
     [quadrantA, quadrantB, quadrantC, quadrantD]
-        .filter((quadrant) => quadrant?.canHydrate())
+        .filter((quadrant) => quadrant?.canHydrate() && (!targets || targets.has(quadrant)))
         .forEach((quadrant) => _hydrateSubTile(quadrant!));
 }
 
@@ -29,8 +29,9 @@ function _hydrateSubTile(node: QuadNode): void {
         return; // Can't generate markers without terrain
     }
 
-    tile.terrain
-        .filter((terrainConfig) => terrainConfig.type !== 'elevation')
+    tile.getResolvedTerrain()
+        .filter((terrainConfig) => terrainConfig.value > 0 && terrainConfig.type !== 'ocean'
+            && terrainConfig.type !== 'elevation' && config.getTile(terrainConfig.type)?.category !== 'typography')
         .forEach((terrainConfig) => {
             const markers = config.getMarkersByFilter({ scale: node.scale, tags: [terrainConfig.type] });
             let numMarkers = Math.ceil(terrainConfig.value * 3);

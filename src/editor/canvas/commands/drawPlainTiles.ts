@@ -1,7 +1,6 @@
 import { config } from "../../../../engine/config/config";
 import { TerrainSetting } from "../../../../engine/types";
 import { QuadNode } from "../../../../engine/world/quad-node";
-import { Tile } from "../../../../engine/world/tile";
 
 type DrawPlainTilesOptions = {
     ctx: CanvasRenderingContext2D;
@@ -16,67 +15,45 @@ export function drawPlainTiles(options: DrawPlainTilesOptions): void {
     const { ctx, nodes } = options;
 
     for (const node of nodes) {
-        if (node && node.state !== QuadNode.STATE_EMPTY) {
-            const tile = node.getTile();
-            if (!tile) continue;
+        const resolved = node.getResolvedTerrain();
+        const baseTerrain = _getBaseTerrain(resolved);
+        const baseColor = config.getTile(baseTerrain.type)?.meta?.color
+            || (baseTerrain.type === 'ocean' ? '#247ba0' : '#000000');
 
-            // IF elevation - base or ocean
-            // Blend terrain types weight by value
+        let terrainColorSum = 0;
+        const terrainColorArgs = resolved
+            .filter((terrain) => !BASE_TERRAIN_TYPES.includes(terrain.type))
+            .map((terrain) => {
+                const terrainHexColor = config.getTile(terrain.type)?.meta?.color || '#000000';
+                terrainColorSum += terrain.value;
 
-            const baseTerrain = _getBaseTerrain(tile);
-            const baseColor = config.getTile(baseTerrain.type)?.meta?.color || '#000000'
+                return {
+                    color: _hexToRgb(terrainHexColor),
+                    weight: terrain.value,
+                };
+            });
 
-            let terrainColorSum = 0;
-            const terrainColorArgs = tile.terrain
-                .filter((terrain) => !BASE_TERRAIN_TYPES.includes(terrain.type))
-                .map((terrain) => {
-                    const terrainHexColor = config.getTile(terrain.type)?.meta?.color || '#000000'
-                    terrainColorSum += terrain.value;
-
-                    return {
-                        color: _hexToRgb(terrainHexColor),
-                        weight: terrain.value,
-                    };
-                });
-
-            // Normalize values
-            if (terrainColorSum > WEIGHT_ROOF) {
-                const mod = WEIGHT_ROOF / terrainColorSum;
-                terrainColorArgs.forEach((terrainColorArg) => {
-                    terrainColorArg.weight = terrainColorArg.weight * mod;
-                });
-            }
-
-            const blendedColor = _blendColors(_hexToRgb(baseColor), terrainColorArgs);
-
-            // Bounds are already in world units, the same space the canvas draws in
-            ctx.fillStyle = blendedColor;
-            ctx.beginPath();
-            ctx.rect(node.bounds.x, node.bounds.y, node.bounds.size, node.bounds.size);
-            ctx.fill();
-
-            /*const forrestConfig = tile.getTerrain('forrest');
-            if (forrestConfig && forrestConfig.value > 0) {
-                _drawTile(forrestConfig, node.bounds, options);
-                continue;
-            }
-
-            const elevationConfig = tile.getTerrain('elevation');
-            if (elevationConfig && elevationConfig.value > 0) {
-                _drawTile(elevationConfig, node.bounds, options);
-                continue;
-            }
-
-            //_blendColors
-
-
-            _drawTile({ type: 'ocean', value: 1 }, node.bounds, options);*/
+        if (terrainColorSum > WEIGHT_ROOF) {
+            const mod = WEIGHT_ROOF / terrainColorSum;
+            terrainColorArgs.forEach((terrainColorArg) => {
+                terrainColorArg.weight = terrainColorArg.weight * mod;
+            });
         }
+
+        const blendedColor = _blendColors(_hexToRgb(baseColor), terrainColorArgs);
+        ctx.fillStyle = blendedColor;
+        ctx.beginPath();
+        ctx.rect(node.bounds.x, node.bounds.y, node.bounds.size, node.bounds.size);
+        ctx.fill();
     }
 }
 
-function _getBaseTerrain(tile: Tile): TerrainSetting {
-    const elevationConfig = tile.getTerrain('elevation');
+function _getBaseTerrain(terrain: TerrainSetting[]): TerrainSetting {
+    const ocean = terrain.find((item) => item.type === 'ocean');
+    if (ocean && ocean.value >= 1) {
+        return ocean;
+    }
+    const elevationConfig = terrain.find((item) => item.type === 'elevation');
     if (elevationConfig && elevationConfig.value > 0) {
         return elevationConfig;
     }

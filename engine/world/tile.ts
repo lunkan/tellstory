@@ -209,6 +209,33 @@ export class Tile {
         return this.terrain.find((terrain) => terrain.type === type);
     }
 
+    /** Resolve ocean and land coverage without changing configured terrain values. */
+    public getResolvedTerrain(): TerrainSetting[] {
+        return Tile.resolveTerrain(this.terrain);
+    }
+
+    public static resolveTerrain(terrain: readonly TerrainSetting[]): TerrainSetting[] {
+        const elevation = terrain.find((item) => item.type === 'elevation');
+        const configuredOcean = terrain.find((item) => item.type === 'ocean');
+        const ocean = configuredOcean?.value ?? (elevation ? 0 : 1);
+        const isCoverage = (terrain: TerrainSetting) => terrain.type !== 'elevation'
+            && terrain.type !== 'ocean' && config.getTile(terrain.type)?.category !== 'typography';
+        const total = terrain.reduce((sum, item) => sum + (isCoverage(item) ? item.value : 0), 0);
+        const available = 1 - ocean;
+        const factor = total > available ? available / total : 1;
+        const resolved = terrain.map((item) => ({
+            ...item,
+            value: isCoverage(item) ? item.value * factor : item.value,
+        }));
+        if (!elevation) resolved.push({ type: 'elevation', value: 0 });
+        if (!configuredOcean && !elevation) resolved.push({ type: 'ocean', value: ocean });
+        return resolved;
+    }
+
+    public getResolvedTerrainByType(type: string): TerrainSetting | undefined {
+        return this.getResolvedTerrain().find((terrain) => terrain.type === type);
+    }
+
     // Adds/reduce value on top of current
     /*private _applyTerrain(mutadedTerrain: TerrainSetting): void {
         if (this.hasTerrain(mutadedTerrain.type)) {

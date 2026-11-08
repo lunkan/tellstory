@@ -3,9 +3,11 @@ import { QuadNode } from "../../../../engine/world/quad-node";
 import { GridBounds } from "../types";
 
 const THRESHOLDS = [0.0, 0.01, 0.2, 0.4, 0.6, 0.8, 0.93];
+const OCEAN_CONTOUR_THRESHOLD = 0.55;
+const SEA_COLOR = "#247ba0";
 
 const COLORS = [
-    "#247ba0", // sea
+    "#7ca888", // below the first elevation band; ocean is drawn separately
     "#7ca888", // lowlands
     "#b6c28d", // hills
     "#e5d493", // highlands
@@ -31,6 +33,7 @@ export function drawElevation(options: DrawElevationOptions): void {
 
     // One value per cell, row-major (index = y * xSize + x) - the layout d3-contour expects
     const values = new Array<number>(xSize * ySize).fill(0);
+    const oceanValues = new Array<number>(xSize * ySize).fill(0);
     for (const node of nodes) {
         const x = Math.round((node.bounds.x - originX) / tileSize);
         const y = Math.round((node.bounds.y - originY) / tileSize);
@@ -38,7 +41,9 @@ export function drawElevation(options: DrawElevationOptions): void {
             continue;
         }
 
-        values[y * xSize + x] = node.getTile()?.getTerrain('elevation')?.value ?? 0;
+        const resolved = node.getResolvedTerrain();
+        values[y * xSize + x] = resolved.find((terrain) => terrain.type === 'elevation')?.value ?? 0;
+        oceanValues[y * xSize + x] = resolved.find((terrain) => terrain.type === 'ocean')?.value ?? 0;
     }
 
     const bands = contours()
@@ -69,13 +74,10 @@ export function drawElevation(options: DrawElevationOptions): void {
     });
 
     if (seaCtx) {
-        // Band 1 is everything above sea level. The sea is the area outside it, so the outer
-        // rectangle plus the land rings, filled even-odd, leaves exactly the water.
-        const land = bands[1];
+        const ocean = contours().size([xSize, ySize]).thresholds([OCEAN_CONTOUR_THRESHOLD]).smooth(true)(oceanValues)[0];
         seaCtx.beginPath();
-        seaCtx.rect(originX, originY, xSize * tileSize, ySize * tileSize);
 
-        for (const polygon of land?.coordinates ?? []) {
+        for (const polygon of ocean?.coordinates ?? []) {
             for (const ring of polygon) {
                 ring.forEach(([x, y], j) => {
                     const gridX = originX + x * tileSize;
@@ -89,7 +91,7 @@ export function drawElevation(options: DrawElevationOptions): void {
             }
         }
 
-        seaCtx.fillStyle = COLORS[0];
+        seaCtx.fillStyle = SEA_COLOR;
         seaCtx.fill("evenodd");
     }
 }

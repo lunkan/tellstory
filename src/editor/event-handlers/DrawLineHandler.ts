@@ -1,6 +1,7 @@
 import { connectNodes } from "../../../engine/world/connect-nodes";
 import { QuadNode } from "../../../engine/world/quad-node";
-import { invalidateNearbyVectors } from "../../../engine/world/vector-generation/invalidate-nearby-vectors";
+import { invalidateTerrainNeighbours } from "../../../engine/world/hydrator/invalidate-terrain";
+import { invalidateVectorsAround } from "../../../engine/world/vector-generation/invalidate-nearby-vectors";
 import { SelectedEntity } from '../../store/editorStore';
 import { CanvasRenderer } from "../canvas/CanvasRenderer";
 import { CanvasEventHandler } from "./CanvasEventHandler";
@@ -46,9 +47,13 @@ export class DrawLineHandler extends CanvasEventHandler {
         }
 
         const vectorValue = Math.max(0, Math.min(1, this._value));
+        const previousWasDetached = previousNode.isDetached();
+        const targetWasDetached = node.isDetached();
         if (connectNodes(previousNode, node, this._type, vectorValue)) {
-            invalidateNearbyVectors(previousNode);
-            invalidateNearbyVectors(node);
+            const affected = [previousNode, node];
+            if (!previousWasDetached) affected.push(...invalidateTerrainNeighbours(previousNode));
+            if (!targetWasDetached) affected.push(...invalidateTerrainNeighbours(node));
+            invalidateVectorsAround(affected);
         }
 
         previousNode = node;

@@ -47,7 +47,7 @@
 import { QuadNodeKey } from "./quad-node-key";
 import { QuadNodeBounds } from "./quad-node-bounds";
 import { Tile } from "./tile";
-import { MarkerSetting, QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TileBounds, TileData, TileDataEntry, VectorSetting } from "../types";
+import { MarkerSetting, QuadNodeData, QuadNodeDelta, QuadNodeNormVector, QuadNodePoint, QuadNodesRect, TerrainSetting, TileBounds, TileData, TileDataEntry, VectorSetting } from "../types";
 //import { hydrate } from "./hydrator/hydrate";
 import { TileMapObject } from "../schemas/tile-map-json-schema";
 import { getTileSizeMeter, LEAF_SIZE_METER } from "./scale";
@@ -147,8 +147,12 @@ export class QuadNode {
         this.subscribe(QuadNode.EVENT_NODE_DETACHED, this._onDetached.bind(this));
     }
 
-    public subscribe(type: string, callback: QuadNodeEventCallback): void {
-        this._registeredSubscribers.push({ type, callback });
+    public subscribe(type: string, callback: QuadNodeEventCallback): () => void {
+        const subscriber = { type, callback };
+        this._registeredSubscribers.push(subscriber);
+        return () => {
+            this._registeredSubscribers = this._registeredSubscribers.filter((entry) => entry !== subscriber);
+        };
     }
 
     /*    this._registeredSubscribers.push(callback);
@@ -494,6 +498,11 @@ export class QuadNode {
 
         // hola ho.
         return this._tile;
+    }
+
+    /** Effective terrain, including defaults for a missing tile; does not hydrate the node. */
+    public getResolvedTerrain(): TerrainSetting[] {
+        return this.getTile()?.getResolvedTerrain() ?? Tile.resolveTerrain([]);
     }
 
     public getDetachedTiles(): TileDataEntry[] {

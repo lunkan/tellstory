@@ -43,7 +43,7 @@ function setup(depth = 3): {
         { id: 1, name: 'test', size: depth, palette: 1, tiles: [] },
         { id: 1, name: 'test', version: '1', tiles: [], vectors: [], markers: [] },
     );
-    world.quadtree.setTileData({ terrain: [{ type: 'urban', value: 1 }] });
+    world.quadtree.setTileData({ terrain: [{ type: 'urban', value: 1 }, { type: 'elevation', value: 0.5 }] });
     world.quadtree.detach();
     let subscriber: RenderSubscriber | undefined;
     let current: RenderRequest | undefined;
